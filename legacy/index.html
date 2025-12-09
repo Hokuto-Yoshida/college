@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mind University Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1024;
+      --bg-2: #0f1a36;
+      --accent: #81e6d9;
+      --accent-2: #8fe7ff;
+      --warm: #ffb86c;
+      --card: rgba(255, 255, 255, 0.04);
+      --stroke: rgba(255, 255, 255, 0.1);
+      --text: #e7ecf7;
+      --muted: #9fb2d7;
+      --gate: #1d2f4d;
+      --floor-1: #ff8b64;
+      --floor-2: #ffd166;
+      --floor-3: #7dd3fc;
+      --floor-4: #a78bfa;
+      --floor-5: #67e8f9;
+      --floor-6: #a3e635;
+      --floor-7: #f9a8d4;
+      --floor-b: #7c3aed;
+      --radius: 18px;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.35);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Space Grotesk', 'Noto Sans JP', system-ui, -apple-system, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at 20% 20%, #14204a, transparent 35%),
+                  radial-gradient(circle at 80% 10%, #16355d, transparent 30%),
+                  linear-gradient(140deg, var(--bg), var(--bg-2));
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    .glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(129, 230, 217, 0.18), transparent 35%),
+        radial-gradient(circle at 20% 60%, rgba(255, 184, 108, 0.15), transparent 30%),
+        radial-gradient(circle at 80% 70%, rgba(143, 231, 255, 0.14), transparent 25%);
+      filter: blur(60px);
+      z-index: 0;
+    }
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+    header {
+      position: relative;
+      padding: 28px 24px;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: -120px auto auto -120px;
+      width: 360px;
+      height: 360px;
+      background: radial-gradient(circle, rgba(143, 231, 255, 0.24), transparent 60%);
+      filter: blur(40px);
+      z-index: 0;
+      opacity: 0.7;
+    }
+    header .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 32px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+    h1 {
+      font-family: 'DM Serif Display', 'Space Grotesk', serif;
+      font-size: clamp(34px, 4vw, 48px);
+      letter-spacing: 0.03em;
+      margin: 0 0 12px;
+    }
+    p.lead {
+      color: var(--muted);
+      margin: 0 0 18px;
+      font-size: 16px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      color: var(--accent);
+      background: rgba(129, 230, 217, 0.08);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+    .scene {
+      position: relative;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 22px;
+      background: var(--card);
+      min-height: 260px;
+      overflow: hidden;
+    }
+    .scene svg {
+      width: 100%;
+      height: 240px;
+      opacity: 0.95;
+    }
+    section {
+      margin-top: 32px;
+    }
+    .section-title {
+      font-size: 22px;
+      margin: 0 0 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .section-title .dot {
+      width: 12px;
+      height: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 50%;
+      box-shadow: 0 0 14px rgba(129, 230, 217, 0.7);
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--stroke);
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 17px;
+    }
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--stroke);
+      color: var(--text);
+      font-size: 12px;
+    }
+    .pill {
+      display: inline-flex;
+      padding: 4px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      font-size: 12px;
+      color: var(--muted);
+      margin-right: 8px;
+    }
+    .layers {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .layer-card {
+      padding: 16px;
+      border-radius: var(--radius);
+      border: 1px solid var(--stroke);
+      background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+      position: relative;
+      overflow: hidden;
+    }
+    .layer-card::after {
+      content: '';
+      position: absolute;
+      inset: auto 16px 10px auto;
+      width: 80px;
+      height: 80px;
+      background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 70%);
+      opacity: 0.4;
+    }
+    .layer-num {
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      margin-bottom: 4px;
+    }
+    .stacked {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: center;
+    }
+    .tower {
+      position: relative;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: linear-gradient(180deg, rgba(129, 230, 217, 0.04), rgba(255,255,255,0.01));
+      min-height: 360px;
+      box-shadow: var(--shadow);
+    }
+    .floor {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.03);
+    }
+    .floor strong { letter-spacing: 0.01em; }
+    .floor span { color: var(--muted); font-size: 12px; }
+    .floor:nth-child(1) { background: linear-gradient(90deg, rgba(255, 138, 100, 0.28), transparent); }
+    .floor:nth-child(2) { background: linear-gradient(90deg, rgba(255, 209, 102, 0.26), transparent); }
+    .floor:nth-child(3) { background: linear-gradient(90deg, rgba(125, 211, 252, 0.26), transparent); }
+    .floor:nth-child(4) { background: linear-gradient(90deg, rgba(167, 139, 250, 0.26), transparent); }
+    .floor:nth-child(5) { background: linear-gradient(90deg, rgba(103, 232, 249, 0.26), transparent); }
+    .floor:nth-child(6) { background: linear-gradient(90deg, rgba(163, 230, 53, 0.26), transparent); }
+    .floor:nth-child(7) { background: linear-gradient(90deg, rgba(249, 168, 212, 0.28), transparent); }
+    .floor:nth-child(8) { background: linear-gradient(90deg, rgba(124, 58, 237, 0.24), transparent); border: 1px dashed var(--stroke); }
+    .spiral {
+      border: 1px dashed var(--stroke);
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.02);
+    }
+    .spiral-step {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--stroke);
+    }
+    .spiral-step:last-child { border-bottom: none; }
+    .form-wall { display: grid; grid-template-columns: 1.05fr 1fr; gap: 18px; }
+    form {
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: var(--card);
+      box-shadow: var(--shadow);
+    }
+    form h3 { margin: 0 0 10px; }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    textarea { min-height: 120px; resize: vertical; }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #042024;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 120ms ease, box-shadow 120ms ease;
+      box-shadow: 0 12px 32px rgba(129, 230, 217, 0.35);
+    }
+    button:hover { transform: translateY(-1px); }
+    .responses {
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      padding: 14px;
+      background: rgba(255,255,255,0.02);
+      max-height: 420px;
+      overflow: auto;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+    }
+    .response {
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: rgba(255,255,255,0.03);
+    }
+    .response-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    .response h4 {
+      margin: 0 0 6px;
+      font-size: 15px;
+    }
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 10px 0;
+    }
+    .filter-btn {
+      padding: 6px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 120ms ease;
+      font-size: 13px;
+    }
+    .filter-btn.active {
+      border-color: var(--accent);
+      color: var(--text);
+      background: rgba(129, 230, 217, 0.12);
+    }
+    .stats {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .stat {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,0.03);
+      font-size: 13px;
+    }
+    .lab {
+      border: 1px dashed var(--stroke);
+      border-radius: var(--radius);
+      padding: 16px;
+      background: linear-gradient(180deg, rgba(124, 58, 237, 0.12), rgba(255,255,255,0.02));
+    }
+    @media (max-width: 900px) {
+      header .grid { grid-template-columns: 1fr; }
+      .stacked { grid-template-columns: 1fr; }
+      .form-wall { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="glow"></div>
+  <main>
+    <header>
+      <div class="grid">
+        <div>
+          <div class="badge">Mind Process Design University</div>
+          <h1>心には階層がある。<br>その階層を歩む透明な螺旋階段へようこそ。</h1>
+          <p class="lead">
+            久瑠あさ美が提唱する「マインドの法則」に共鳴する人々が教える大学。7階層の建物と地下研究所で、感情・思考・感性を行き来しながら心の視点を引き上げる実践の場です。
+          </p>
+          <div class="pill">即興で生まれるワーク</div>
+          <div class="pill">透明な螺旋階段の体験</div>
+          <div class="pill">潜在意識の研究所と連動</div>
+        </div>
+        <div class="scene">
+          <svg viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="10" y="160" width="300" height="60" rx="14" fill="url(#grad-gate)" stroke="rgba(255,255,255,0.2)" />
+            <rect x="40" y="90" width="240" height="70" rx="16" fill="url(#grad-yard)" stroke="rgba(255,255,255,0.2)" />
+            <path d="M90 180 L160 60 L230 180 Z" fill="url(#grad-building)" stroke="rgba(255,255,255,0.25)" />
+            <rect x="120" y="120" width="80" height="50" rx="10" fill="rgba(12,22,46,0.9)" stroke="rgba(255,255,255,0.15)" />
+            <path d="M160 180 C180 150 200 150 220 180" stroke="rgba(129,230,217,0.7)" stroke-width="4" stroke-linecap="round"/>
+            <path d="M160 180 C140 210 120 210 100 180" stroke="rgba(255,184,108,0.7)" stroke-width="4" stroke-linecap="round"/>
+            <circle cx="160" cy="180" r="6" fill="rgba(129,230,217,0.9)" />
+            <defs>
+              <linearGradient id="grad-building" x1="90" y1="60" x2="230" y2="200" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#92F2E1" stop-opacity="0.18"/>
+                <stop offset="1" stop-color="#5AC0FF" stop-opacity="0.25"/>
+              </linearGradient>
+              <linearGradient id="grad-gate" x1="10" y1="160" x2="310" y2="220" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#122041" stop-opacity="0.9"/>
+                <stop offset="1" stop-color="#0F1B33" stop-opacity="0.9"/>
+              </linearGradient>
+              <linearGradient id="grad-yard" x1="40" y1="90" x2="280" y2="160" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#102F3A" stop-opacity="0.8"/>
+                <stop offset="1" stop-color="#0F222C" stop-opacity="0.9"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div style="position:absolute;bottom:12px;right:12px;font-size:12px;color:var(--muted);">広大なゲート・中庭と逆台形の建物、螺旋の光が地下へ</div>
+        </div>
+      </div>
+    </header>
+
+    <section>
+      <div class="section-title"><div class="dot"></div>ページTOPコピー</div>
+      <div class="layer-card">
+        <p style="margin:0; color:var(--text);">
+          心には階層があります。この大学はその心の階層を、7階建ての建物で表現しています。<br>
+          「心の視点を引き上げる」ための学びの場と空間が各階で繰り広げられています。<br>
+          この心の視点を引き上げていくトレーニングを透明な螺旋階段に例えてお伝えします。<br><br>
+          あなたの心の視点を引き上げてくれるのは、透明な螺旋階段です。<br>
+          それぞれの領域を行ったりきたり自由に気になる空間に参加してみてください。
+        </p>
+      </div>
+    </section>
+
+    <section class="stacked">
+      <div>
+        <div class="section-title"><div class="dot"></div>7階層と地下研究所</div>
+        <div class="tower">
+          <div class="floor"><strong>7F 感性｜光の屋上</strong> <span>透明な螺旋が空へ</span></div>
+          <div class="floor"><strong>6F 感性｜創造スタジオ</strong> <span>未来の景色を描く</span></div>
+          <div class="floor"><strong>5F 思考｜設計ラボ</strong> <span>心のプロセスをデザイン</span></div>
+          <div class="floor"><strong>4F 思考｜対話ホール</strong> <span>問いを磨く場所</span></div>
+          <div class="floor"><strong>3F 感情｜情動の中庭</strong> <span>地上と地下の接点</span></div>
+          <div class="floor"><strong>2F 感情｜静かな階</strong> <span>心拍と呼吸を聴く</span></div>
+          <div class="floor"><strong>1F 情動｜ゲート</strong> <span>緑と水のエントランス</span></div>
+          <div class="floor"><strong>B1 研究所｜地下ホール</strong> <span>潜在意識と螺旋階段</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title"><div class="dot"></div>透明な螺旋階段｜Mind Process</div>
+        <div class="spiral">
+          <div class="spiral-step">
+            <div class="tag">Step 1</div>
+            <div>情動に気づく。足元の階段を確かめるように、今ここを丁寧に踏む。</div>
+          </div>
+          <div class="spiral-step">
+            <div class="tag">Step 2</div>
+            <div>感情を観察し、静かに手すりを掴む。言葉にならない揺れを感じ切る。</div>
+          </div>
+          <div class="spiral-step">
+            <div class="tag">Step 3</div>
+            <div>思考を再設計する。階段のリズムを整え、視点を少し高く持ち上げる。</div>
+          </div>
+          <div class="spiral-step">
+            <div class="tag">Step 4</div>
+            <div>感性が拓ける。階段は透明に輝き、上層の光と下層の静けさが重なる。</div>
+          </div>
+          <div class="spiral-step">
+            <div class="tag">Step 5</div>
+            <div>潜在意識が動き出す。地上と地下を往復することでリズムが身体化する。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><div class="dot"></div>心の領域と階層</div>
+      <div class="layers">
+        <div class="layer-card" style="border-left:3px solid var(--floor-1);">
+          <div class="layer-num">情動｜地下室 & 1F</div>
+          <p>からだと心の最下層。触覚・呼吸・衝動を確かめ、足元の階段を踏みしめる。</p>
+        </div>
+        <div class="layer-card" style="border-left:3px solid var(--floor-2);">
+          <div class="layer-num">感情｜2-3F</div>
+          <p>揺れ動く情緒を見つめ、光と風のある中庭で解像度を上げる。</p>
+        </div>
+        <div class="layer-card" style="border-left:3px solid var(--floor-3);">
+          <div class="layer-num">思考｜4-5F</div>
+          <p>問いを立て、構造を描き、マインドプロセスデザインで思考を整える。</p>
+        </div>
+        <div class="layer-card" style="border-left:3px solid var(--floor-6);">
+          <div class="layer-num">感性｜6-7F</div>
+          <p>未知を招き入れ、未来の自分と出会う。透明な螺旋が空へと伸びる。</p>
+        </div>
+        <div class="layer-card" style="border-left:3px solid var(--floor-b);">
+          <div class="layer-num">地下研究所｜B1</div>
+          <p>潜在意識を扱うホール。螺旋階段が直接つながり、ワークと研究が同時進行する。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><div class="dot"></div>マインドの次元カリキュラム（年間の骨格）</div>
+      <div class="cards">
+        <div class="card">
+          <div class="tag">春｜地上と地下室</div>
+          <h3>情動を扱う</h3>
+          <p>身体感覚のマッピング、呼吸と姿勢、揺らぎを安全にほどくプロトコル。</p>
+        </div>
+        <div class="card">
+          <div class="tag">夏｜中庭と対話</div>
+          <h3>感情を扱う</h3>
+          <p>透明なジャーナリング、感情のスペクトラム観察、共鳴と境界のデザイン。</p>
+        </div>
+        <div class="card">
+          <div class="tag">秋｜設計フロア</div>
+          <h3>思考を扱う</h3>
+          <p>思考のリフレーミング、問いの編成、マインドプロセスのシナリオ化。</p>
+        </div>
+        <div class="card">
+          <div class="tag">冬｜屋上と研究所</div>
+          <h3>感性を扱う</h3>
+          <p>未来の感覚を先取りするワーク、直観の証跡化、静寂と未知を共存させる。</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><div class="dot"></div>ライブワークと回答ウォール</div>
+      <p class="lead" style="margin-bottom:10px;">
+        Google Formで終わらせず、誰がどの階層で何を学び取ったのかを可視化します。フォーム投稿は即座にウォールへ流れ、全員が閲覧・共有できます（ローカル保存）。オンライン講義中の即興ワークをここで管理してください。
+      </p>
+      <div class="form-wall">
+        <form id="response-form">
+          <h3>回答を記録する</h3>
+          <label for="session">セッションID（講義ごとに分ける）</label>
+          <input id="session" name="session" value="session-1" placeholder="例: 2024-12-ワークショップA">
+          <label for="name">名前 / ハンドル</label>
+          <input id="name" name="name" placeholder="例: 光のスタジオ / Aki">
+          <label for="floor">階層を選択</label>
+          <select id="floor" name="floor">
+            <option value="7F">7F 感性｜屋上</option>
+            <option value="6F">6F 感性｜スタジオ</option>
+            <option value="5F">5F 思考｜設計</option>
+            <option value="4F">4F 思考｜対話</option>
+            <option value="3F">3F 感情｜中庭</option>
+            <option value="2F">2F 感情｜静かな階</option>
+            <option value="1F">1F 情動｜ゲート</option>
+            <option value="B1">B1 研究所｜地下</option>
+          </select>
+          <label for="prompt">今日のワーク / テーマ</label>
+          <input id="prompt" name="prompt" placeholder="例: 透明な螺旋を登るときの呼吸を言語化する">
+          <label for="answer">気づき・観察・発見</label>
+          <textarea id="answer" name="answer" placeholder="起こったこと、感じたこと、思考の変化、次の一歩を書いてください。"></textarea>
+          <button type="submit">ウォールに追加する</button>
+          <p style="color:var(--muted); font-size:12px; margin-top:8px;">
+            ※デモではブラウザのローカルに保存します。実運用ではスプレッドシート/APIに接続して全員の投稿を共有できます。
+            セッションIDを共有すると、同じ部屋に参加できます（URLに `?session=...` を付与）。
+          </p>
+        </form>
+        <div>
+          <div class="filters" style="align-items:center;">
+            <button class="filter-btn active" data-filter="all">すべて</button>
+            <button class="filter-btn" data-filter="感性">感性</button>
+            <button class="filter-btn" data-filter="思考">思考</button>
+            <button class="filter-btn" data-filter="感情">感情</button>
+            <button class="filter-btn" data-filter="情動">情動</button>
+            <button class="filter-btn" data-filter="研究所">研究所</button>
+            <input id="search" placeholder="キーワード検索" style="padding:7px 10px; border-radius:10px; border:1px solid var(--stroke); background:rgba(255,255,255,0.05); color:var(--text); min-width:180px;">
+          </div>
+          <div style="margin:6px 0; display:flex; gap:10px; flex-wrap:wrap;">
+            <label style="color:var(--muted); font-size:12px;">セッション一覧:</label>
+            <select id="session-list" style="padding:7px 10px; border-radius:10px; border:1px solid var(--stroke); background:rgba(255,255,255,0.05); color:var(--text); min-width:140px;"></select>
+            <button id="new-session" type="button" style="background:rgba(255,255,255,0.08); color:var(--text); border-color:var(--stroke); box-shadow:none;">新しいセッションIDを作成</button>
+          </div>
+          <div class="responses" id="responses"></div>
+          <div class="stats" id="stats"></div>
+          <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="copy-link" type="button" style="background:rgba(255,255,255,0.08); color:var(--text); border-color:var(--stroke); box-shadow:none;">このセッションURLをコピー</button>
+            <button id="export-json" type="button" style="background:rgba(255,255,255,0.08); color:var(--text); border-color:var(--stroke); box-shadow:none;">JSONでエクスポート</button>
+            <button id="export-csv" type="button" style="background:rgba(255,255,255,0.08); color:var(--text); border-color:var(--stroke); box-shadow:none;">CSVでエクスポート</button>
+            <label for="import-json" style="display:inline-flex; align-items:center; gap:6px; padding:8px 12px; border-radius:10px; border:1px solid var(--stroke); background:rgba(255,255,255,0.03); cursor:pointer;">JSONをインポート<input id="import-json" type="file" accept="application/json" style="display:none;"></label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="section-title"><div class="dot"></div>地下研究所（B1）</div>
+      <div class="lab">
+        <p style="margin:0 0 8px;">
+          地下ホールには螺旋階段が直接つながり、講義中のワークと連動します。透明な床の下で光が脈打ち、潜在意識の実験が続きます。
+        </p>
+        <div class="cards">
+          <div class="card">
+            <div class="tag">実験 01</div>
+            <h3>呼吸と情動の同期</h3>
+            <p>心拍・呼吸のテンポと情動の強度を記録し、感情変化の前兆を可視化する。</p>
+          </div>
+          <div class="card">
+            <div class="tag">実験 02</div>
+            <h3>螺旋ステップ・リフレーム</h3>
+            <p>階段を一段戻る/進むメタ認知のプロンプトを試し、思考の流れを書き換える。</p>
+          </div>
+          <div class="card">
+            <div class="tag">実験 03</div>
+            <h3>感性の証跡化</h3>
+            <p>「未来の感覚」を言葉と画像で残し、次回セッションで更新し続ける。</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // Floors grouped by mental domain for filtering.
+    const floorDomainMap = {
+      '7F': '感性',
+      '6F': '感性',
+      '5F': '思考',
+      '4F': '思考',
+      '3F': '感情',
+      '2F': '感情',
+      '1F': '情動',
+      'B1': '研究所'
+    };
+
+    // Seed responses for demo viewing.
+    const seedResponses = [
+      {
+        name: '光のスタジオ',
+        floor: '6F',
+        prompt: '未来の自分に聞く：今日の判断をどう評価する？',
+        answer: '呼吸を細く長くしたら、判断よりも「余白」が見えた。未来の私が「静かなところから選んだね」と言っていた。',
+        timestamp: Date.now() - 1000 * 60 * 60 * 4
+      },
+      {
+        name: 'Gatekeeper',
+        floor: '1F',
+        prompt: '身体の小さな緊張を見つけ、ほどく。',
+        answer: '右肩のこわばりを見つけて手で押さえた。押さえるほど呼吸が深くなり、地下へ降りる階段が見えた。',
+        timestamp: Date.now() - 1000 * 60 * 60 * 2
+      },
+      {
+        name: '問いの建築士',
+        floor: '5F',
+        prompt: '今日の思考を再設計する一文を書く。',
+        answer: '「疑いは防御ではなく、問いの起点」と書き換えた。手すりが滑らかになり、上に登りやすくなる感覚。',
+        timestamp: Date.now() - 1000 * 60 * 50
+      },
+      {
+        name: '地下の観察者',
+        floor: 'B1',
+        prompt: '情動の波形をメモし、再現する。',
+        answer: '怒りの波を3行で記述。再読するとエネルギーが熱から光に変換される感じがした。',
+        timestamp: Date.now() - 1000 * 60 * 25
+      },
+      {
+        name: '中庭の風',
+        floor: '3F',
+        prompt: '感情の色を言葉で分光する。',
+        answer: '悔しさは群青、安堵は曇りの日の銀色。中庭の緑に透けて、どちらも同じ光源だとわかった。',
+        timestamp: Date.now() - 1000 * 60 * 8
+      }
+    ];
+
+    const form = document.getElementById('response-form');
+    const responsesEl = document.getElementById('responses');
+    const statsEl = document.getElementById('stats');
+    const filterButtons = Array.from(document.querySelectorAll('.filter-btn'));
+    const searchInput = document.getElementById('search');
+    const sessionList = document.getElementById('session-list');
+
+    const STORAGE_KEY = 'mind-university-responses';
+    let currentFilter = 'all';
+    let currentSession = new URLSearchParams(location.search).get('session') || 'session-1';
+    let searchTerm = '';
+
+    // Sync session field with URL for shareable "rooms".
+    const sessionInput = document.getElementById('session');
+    sessionInput.value = currentSession;
+
+    function loadResponses() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const parsed = saved ? JSON.parse(saved) : [];
+      // Merge seeds on first load only.
+      if (!saved) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(seedResponses));
+        return seedResponses;
+      }
+      return parsed;
+    }
+
+    function getSessions(list) {
+      const sessions = Array.from(new Set(list.map(i => i.session || 'session-1')));
+      if (!sessions.includes(currentSession)) sessions.push(currentSession);
+      return sessions;
+    }
+
+    function saveResponses(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    }
+
+    function renderStats(list) {
+      const scoped = list.filter(item => (item.session || 'session-1') === currentSession);
+      const total = scoped.length;
+      const byDomain = scoped.reduce((acc, item) => {
+        const domain = floorDomainMap[item.floor] || 'その他';
+        acc[domain] = (acc[domain] || 0) + 1;
+        return acc;
+      }, {});
+      statsEl.innerHTML = '';
+      const totalEl = document.createElement('div');
+      totalEl.className = 'stat';
+      totalEl.textContent = `投稿: ${total} 件`;
+      statsEl.appendChild(totalEl);
+      Object.entries(byDomain).forEach(([key, count]) => {
+        const el = document.createElement('div');
+        el.className = 'stat';
+        el.textContent = `${key}: ${count}`;
+        statsEl.appendChild(el);
+      });
+    }
+
+    function renderSessionList(list) {
+      const sessions = getSessions(list);
+      sessionList.innerHTML = '';
+      sessions.forEach(id => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = id;
+        if (id === currentSession) opt.selected = true;
+        sessionList.appendChild(opt);
+      });
+    }
+
+    function renderResponses(list) {
+      responsesEl.innerHTML = '';
+      const filtered = list
+        .filter(item => {
+          if ((item.session || 'session-1') !== currentSession) return false;
+          if (currentFilter !== 'all') {
+            const domain = floorDomainMap[item.floor] || '';
+            if (currentFilter === '研究所') {
+              if (item.floor !== 'B1') return false;
+            } else if (domain !== currentFilter) {
+              return false;
+            }
+          }
+          if (searchTerm) {
+            const hay = `${item.name} ${item.prompt} ${item.answer} ${item.floor}`.toLowerCase();
+            if (!hay.includes(searchTerm)) return false;
+          }
+          return true;
+        });
+      const sorted = filtered.sort((a, b) => b.timestamp - a.timestamp);
+      if (!sorted.length) {
+        responsesEl.innerHTML = '<p style="color:var(--muted);">まだ投稿がありません。セッションIDを共有して最初のステップを踏んでください。</p>';
+        renderStats(list);
+        return;
+      }
+      sorted.forEach(item => {
+        const wrap = document.createElement('div');
+        wrap.className = 'response';
+        const header = document.createElement('div');
+        header.className = 'response-header';
+        const tag = document.createElement('div');
+        tag.className = 'tag';
+        tag.textContent = item.floor;
+        const who = document.createElement('span');
+        who.textContent = item.name || '匿名';
+        header.append(tag, who);
+        const title = document.createElement('h4');
+        title.textContent = item.prompt || 'ワークテーマ';
+        const body = document.createElement('p');
+        body.style.margin = '0';
+        body.style.color = 'var(--text)';
+        body.textContent = item.answer || '';
+        wrap.append(header, title, body);
+        responsesEl.appendChild(wrap);
+      });
+      renderStats(list);
+      renderSessionList(list);
+    }
+
+    function handleSubmit(e) {
+      e.preventDefault();
+      const name = form.name.value.trim() || '匿名';
+      const floor = form.floor.value;
+      const prompt = form.prompt.value.trim() || '即興ワーク';
+      const answer = form.answer.value.trim();
+      if (!answer) {
+        alert('気づき・発見を入力してください');
+        return;
+      }
+      currentSession = form.session.value.trim() || 'session-1';
+      const list = loadResponses();
+      list.push({ session: currentSession, name, floor, prompt, answer, timestamp: Date.now() });
+      saveResponses(list);
+      renderResponses(list);
+      form.reset();
+      form.session.value = currentSession;
+      updateUrlSession();
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderResponses(loadResponses());
+      });
+    });
+
+    searchInput.addEventListener('input', () => {
+      searchTerm = searchInput.value.trim().toLowerCase();
+      renderResponses(loadResponses());
+    });
+
+    sessionList.addEventListener('change', () => {
+      currentSession = sessionList.value;
+      form.session.value = currentSession;
+      updateUrlSession();
+      renderResponses(loadResponses());
+    });
+
+    document.getElementById('new-session').addEventListener('click', () => {
+      const id = `session-${Date.now().toString(36)}`;
+      currentSession = id;
+      form.session.value = id;
+      updateUrlSession();
+      renderResponses(loadResponses());
+    });
+
+    function updateUrlSession() {
+      const url = new URL(location.href);
+      url.searchParams.set('session', currentSession);
+      history.replaceState(null, '', url.toString());
+    }
+
+    // Copy current session link for sharing.
+    document.getElementById('copy-link').addEventListener('click', () => {
+      const url = new URL(location.href);
+      url.searchParams.set('session', currentSession);
+      navigator.clipboard.writeText(url.toString())
+        .then(() => alert('このセッションのURLをコピーしました'))
+        .catch(() => alert('コピーに失敗しました'));
+    });
+
+    // Export current session responses as JSON.
+    document.getElementById('export-json').addEventListener('click', () => {
+      const list = loadResponses().filter(item => (item.session || 'session-1') === currentSession);
+      const blob = new Blob([JSON.stringify(list, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${currentSession}-responses.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('export-csv').addEventListener('click', () => {
+      const list = loadResponses().filter(item => (item.session || 'session-1') === currentSession);
+      const header = ['session', 'name', 'floor', 'prompt', 'answer', 'timestamp'];
+      const rows = [header.join(',')].concat(list.map(r => header.map(h => `"${(r[h] || '').toString().replace(/"/g, '""')}"`).join(',')));
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${currentSession}-responses.csv`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    document.getElementById('import-json').addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const imported = JSON.parse(reader.result);
+          if (!Array.isArray(imported)) throw new Error('配列ではありません');
+          const list = loadResponses().concat(imported.map(i => ({ ...i, session: i.session || currentSession })));
+          saveResponses(list);
+          renderResponses(list);
+          alert('インポートしました');
+        } catch (err) {
+          alert('インポートに失敗しました: ' + err.message);
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // Listen to storage events to reflect updates from other tabs (same browser).
+    window.addEventListener('storage', (event) => {
+      if (event.key === STORAGE_KEY) {
+        renderResponses(loadResponses());
+      }
+    });
+
+    form.addEventListener('submit', handleSubmit);
+    renderResponses(loadResponses());
+  </script>
+</body>
+</html>
