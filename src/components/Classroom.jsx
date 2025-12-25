@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight } from 'lucide-react';
+
 import { ResponseModal } from './ResponseModal';
+import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -11,6 +13,8 @@ export function Classroom({ currentFloorId, lectures = [] }) {
 
     const [activeLecture, setActiveLecture] = useState(null);
     const [activeWorkshop, setActiveWorkshop] = useState(null);
+
+    const { user } = useAuth();
     const [responses, setResponses] = useState([]);
     const [formAnswers, setFormAnswers] = useState({}); // { qId: text }
     const [viewMode, setViewMode] = useState('WALL'); // 'FORM' or 'WALL'
@@ -55,8 +59,11 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         const newResponse = {
             id: Date.now(),
             workshopId: activeWorkshop.id,
-            name: formAnswers.name || '匿名',
+
+            userId: user ? user.id : null,
+            name: user ? user.username : (formAnswers.name || '匿名'),
             answers: formAnswers,
+
             timestamp: Date.now(),
             floorId: currentFloorId
         };
@@ -181,13 +188,21 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                                 <form onSubmit={handlSubmit}>
                                     <div style={{ marginBottom: '24px' }}>
                                         <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                                            表示名 (任意)
+                                            表示名 {user && '(ログイン中)'}
                                         </label>
                                         <input
                                             type="text"
                                             placeholder="ニックネーム"
-                                            onChange={e => setFormAnswers({ ...formAnswers, name: e.target.value })}
-                                            style={{ width: '100%', padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'white' }}
+                                            value={user ? user.username : (formAnswers.name || '')}
+                                            readOnly={!!user}
+                                            onChange={e => !user && setFormAnswers({ ...formAnswers, name: e.target.value })}
+                                            style={{
+                                                width: '100%', padding: '12px', borderRadius: '12px',
+                                                background: user ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)',
+                                                border: '1px solid var(--glass-border)',
+                                                color: user ? 'var(--floor-5)' : 'white',
+                                                cursor: user ? 'not-allowed' : 'text'
+                                            }}
                                         />
                                     </div>
 

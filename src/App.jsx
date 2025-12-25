@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers, Activity, ChevronDown, MapPin, Menu, X, ArrowUpCircle, ArrowDownCircle, Settings } from 'lucide-react';
+import { Layers, Activity, ChevronDown, MapPin, Menu, X, ArrowUpCircle, ArrowDownCircle, Settings, User } from 'lucide-react';
 import './index.css';
-import { floors } from './data/floors';
+import { buildings } from './data/buildings';
 import { SpiralNav } from './components/SpiralNav';
 import { Classroom } from './components/Classroom';
 import { AdminDashboard } from './components/AdminDashboard';
 import { useLectures } from './hooks/useLectures';
+import { useAuth } from './contexts/AuthContext';
+import { AuthModal } from './components/AuthModal';
+import { MyPage } from './components/MyPage';
 
 // Assets
 import imgExterior from './assets/exterior.png';
+import imgAnnex from './assets/annex_exterior.png';
 import imgLab from './assets/lab.png';
 import imgSpiral from './assets/spiral.png';
 import viewLow from './assets/view_low.png'; // 1F
@@ -33,9 +37,16 @@ const LoadingScreen = () => (
 
 function App() {
   const [loading, setLoading] = useState(true);
+  const [currentBuildingId, setCurrentBuildingId] = useState('main');
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [isAdminMode, setIsAdminMode] = useState(false);
+
+  // Auth State
+  const { user } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [myPageOpen, setMyPageOpen] = useState(false);
 
   // Data Hook
   const { lectures, addLecture, addWorkshop, updateWorkshop, deleteWorkshop } = useLectures();
@@ -45,28 +56,39 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const activeFloor = floors.find(f => f.id === currentFloorId);
-  const activeFloorIndex = floors.findIndex(f => f.id === currentFloorId);
+  const activeBuilding = buildings.find(b => b.id === currentBuildingId) || buildings[0];
+  const activeFloors = activeBuilding.floors;
+  const activeFloor = activeFloors.find(f => f.id === currentFloorId);
+  const activeFloorIndex = activeFloors.findIndex(f => f.id === currentFloorId);
 
   const handleNextFloor = () => {
     if (activeFloorIndex > 0) {
-      setCurrentFloorId(floors[activeFloorIndex - 1].id);
+      setCurrentFloorId(activeFloors[activeFloorIndex - 1].id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const handlePrevFloor = () => {
-    if (activeFloorIndex < floors.length - 1) {
-      setCurrentFloorId(floors[activeFloorIndex + 1].id);
+    if (activeFloorIndex < activeFloors.length - 1) {
+      setCurrentFloorId(activeFloors[activeFloorIndex + 1].id);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   if (loading) return <LoadingScreen />;
 
+
+  const buildingImages = {
+    main: imgExterior,
+    annex: imgAnnex
+  };
+
   // Background Logic
   const getBgImage = (fid) => {
-    if (!fid) return imgExterior; // Hero uses exterior
+    if (!fid) {
+      // Return active building's image
+      return buildingImages[currentBuildingId] || imgExterior;
+    }
     switch (fid) {
       case '7F': return viewRoof;
       case '6F': return view6F;
@@ -84,6 +106,7 @@ function App() {
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
 
       {/* Admin Dashboard Overlay */}
+
       {isAdminMode && (
         <AdminDashboard
           lectures={lectures}
@@ -94,6 +117,12 @@ function App() {
           onClose={() => setIsAdminMode(false)}
         />
       )}
+
+      {/* Auth & MyPage Overlays */}
+      <AuthModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} />
+      <AnimatePresence>
+        {myPageOpen && <MyPage onClose={() => setMyPageOpen(false)} />}
+      </AnimatePresence>
 
       {/* Dynamic Background */}
       <div style={{ position: 'fixed', inset: 0, zIndex: -1, transition: 'all 1s ease' }}>
@@ -130,6 +159,36 @@ function App() {
         </div>
 
         <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
+          {/* Auth Button */}
+          <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
+            {user ? (
+              <button
+                onClick={() => setMyPageOpen(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.1)', border: '1px solid var(--floor-5)',
+                  color: 'white', padding: '6px 12px', borderRadius: '20px', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: '8px'
+                }}
+              >
+                <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--floor-7)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                  {user.username[0].toUpperCase()}
+                </div>
+                <span style={{ fontSize: '0.9rem' }}>My Page</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setAuthModalOpen(true)}
+                style={{
+                  background: 'transparent', border: '1px solid var(--glass-border)',
+                  color: 'var(--text-muted)', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+                  fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
+                }}
+              >
+                <User size={16} /> Login
+              </button>
+            )}
+          </div>
+
           {/* Admin Toggle Button */}
           <div className="glass-panel" style={{ padding: '8px', borderRadius: '30px' }}>
             <button
@@ -182,7 +241,7 @@ function App() {
             </div>
             <h2 style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: '1.2rem' }}>Floor Guide</h2>
             <div style={{ overflowY: 'auto', flex: 1 }}>
-              <SpiralNav onSelectFloor={(id) => { setCurrentFloorId(id); setMobileMenuOpen(false); }} />
+              <SpiralNav floors={activeFloors} onSelectFloor={(id) => { setCurrentFloorId(id); setMobileMenuOpen(false); }} />
             </div>
           </motion.div>
         )}
@@ -211,15 +270,36 @@ function App() {
                   久瑠あさ美 提唱「マインドの法則」
                 </div>
                 <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', lineHeight: 1.1, marginBottom: '24px' }}>
-                  心には<br /><span className="text-gradient">階層がある</span>
+                  {activeBuilding.name}<br /><span className="text-gradient">入口</span>
                 </h1>
                 <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', maxWidth: '600px', marginBottom: '40px' }}>
-                  この大学は、心の階層を7階建ての建物で表現しています。<br />
-                  透明な螺旋階段を登りながら、情動・感情・感性の領域を行き来し、<br />
-                  心の視点を引き上げる実践の場所です。
+                  {activeBuilding.description}
                 </p>
+
+                {/* Building Selector */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '40px', flexWrap: 'wrap' }}>
+                  {buildings.map(b => (
+                    <button
+                      key={b.id}
+                      onClick={() => setCurrentBuildingId(b.id)}
+                      className="glass-panel"
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                        background: currentBuildingId === b.id ? 'var(--floor-7)' : 'rgba(255,255,255,0.05)',
+                        color: currentBuildingId === b.id ? 'black' : 'var(--text-muted)',
+                        border: '1px solid var(--glass-border)',
+                        fontWeight: currentBuildingId === b.id ? 'bold' : 'normal'
+                      }}
+                    >
+                      {b.name}
+                    </button>
+                  ))}
+                </div>
+
                 <button
-                  onClick={() => setCurrentFloorId('1F')}
+                  onClick={() => setCurrentFloorId(activeFloors[activeFloors.length - 1].id)} // Start from bottom floor usually, or top? User said "climb spiral staircase", so bottom.
                   className="glass-panel"
                   style={{
                     padding: '16px 32px',
@@ -233,7 +313,7 @@ function App() {
                     gap: '12px'
                   }}
                 >
-                  螺旋階段を登る <ChevronDown />
+                  {activeBuilding.name}に入る <ChevronDown />
                 </button>
               </motion.div>
             ) : (
@@ -273,13 +353,13 @@ function App() {
 
                 {/* Bottom Navigation Buttons */}
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '60px', paddingTop: '20px', borderTop: '1px solid var(--glass-border)' }}>
-                  {activeFloorIndex < floors.length - 1 && (
+                  {activeFloorIndex < activeFloors.length - 1 && (
                     <button
                       onClick={handlePrevFloor}
                       className="glass-panel"
                       style={{ padding: '12px 24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'var(--text-muted)' }}
                     >
-                      <ArrowDownCircle size={20} /> 下の階 ({floors[activeFloorIndex + 1].id})
+                      <ArrowDownCircle size={20} /> 下の階 ({activeFloors[activeFloorIndex + 1].id})
                     </button>
                   )}
 
@@ -287,9 +367,9 @@ function App() {
                     <button
                       onClick={handleNextFloor}
                       className="glass-panel"
-                      style={{ padding: '12px 24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'white', border: `1px solid ${floors[activeFloorIndex - 1].color}` }}
+                      style={{ padding: '12px 24px', borderRadius: '24px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', color: 'white', border: `1px solid ${activeFloors[activeFloorIndex - 1].color}` }}
                     >
-                      上の階 ({floors[activeFloorIndex - 1].id}) <ArrowUpCircle size={20} />
+                      上の階 ({activeFloors[activeFloorIndex - 1].id}) <ArrowUpCircle size={20} />
                     </button>
                   )}
                 </div>
@@ -302,7 +382,7 @@ function App() {
         {/* Right Column: Navigation (Desktop Sticky) */}
         <div className="desktop-nav" style={{ position: 'sticky', top: '100px', display: 'none', '@media(min-width: 900px)': { display: 'block' } }}>
           <div className="glass-panel" style={{ borderRadius: '24px', padding: '16px' }}>
-            <SpiralNav onSelectFloor={setCurrentFloorId} />
+            <SpiralNav floors={activeFloors} onSelectFloor={setCurrentFloorId} />
           </div>
 
           <div className="glass-panel" style={{ marginTop: '20px', borderRadius: '24px', padding: '20px', textAlign: 'center' }}>
