@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight } from 'lucide-react';
+import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight, ExternalLink } from 'lucide-react';
 
 import { ResponseModal } from './ResponseModal';
-import { useAuth } from '../contexts/AuthContext';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -14,7 +13,8 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     const [activeLecture, setActiveLecture] = useState(null);
     const [activeWorkshop, setActiveWorkshop] = useState(null);
 
-    const { user } = useAuth();
+    // Auth removed
+    const user = null;
     const [responses, setResponses] = useState([]);
     const [formAnswers, setFormAnswers] = useState({}); // { qId: text }
     const [viewMode, setViewMode] = useState('WALL'); // 'FORM' or 'WALL'
@@ -28,6 +28,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         setViewMode('WALL');
     }, [currentFloorId]);
 
+    // ... (useEffect for loading responses remains same)
     // Load responses
     useEffect(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -35,6 +36,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
             setResponses(JSON.parse(saved));
         }
     }, []);
+
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
@@ -44,7 +46,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     const handleWorkshopSelect = (w) => {
         setActiveWorkshop(w);
         setFormAnswers({}); // Reset form
-        setViewMode('FORM'); // Encourage answering first? Or Wall? Let's default to Form or Wall. Wall is better to see "others are here".
+        setViewMode('FORM');
     };
 
     const handlSubmit = (e) => {
@@ -60,8 +62,8 @@ export function Classroom({ currentFloorId, lectures = [] }) {
             id: Date.now(),
             workshopId: activeWorkshop.id,
 
-            userId: user ? user.id : null,
-            name: user ? user.username : (formAnswers.name || '匿名'),
+            userId: null,
+            name: formAnswers.name || '匿名',
             answers: formAnswers,
 
             timestamp: Date.now(),
@@ -112,6 +114,37 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                                 {l.title}
                             </button>
                         ))}
+                    </div>
+                )}
+
+                {/* Links Section */}
+                {activeLecture && activeLecture.links && activeLecture.links.length > 0 && (
+                    <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--glass-border)' }}>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>関連リソース:</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {activeLecture.links.map((link, idx) => (
+                                <a
+                                    key={idx}
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                        padding: '6px 12px', borderRadius: '12px',
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid var(--glass-border)',
+                                        color: 'var(--floor-3)',
+                                        fontSize: '0.85rem',
+                                        textDecoration: 'none',
+                                        transition: 'all 0.2s'
+                                    }}
+                                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
+                                    onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                >
+                                    <ExternalLink size={12} /> {link.title}
+                                </a>
+                            ))}
+                        </div>
                     </div>
                 )}
 
@@ -188,20 +221,19 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                                 <form onSubmit={handlSubmit}>
                                     <div style={{ marginBottom: '24px' }}>
                                         <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                                            表示名 {user && '(ログイン中)'}
+                                            表示名 (任意)
                                         </label>
                                         <input
                                             type="text"
                                             placeholder="ニックネーム"
-                                            value={user ? user.username : (formAnswers.name || '')}
-                                            readOnly={!!user}
-                                            onChange={e => !user && setFormAnswers({ ...formAnswers, name: e.target.value })}
+                                            value={formAnswers.name || ''}
+                                            onChange={e => setFormAnswers({ ...formAnswers, name: e.target.value })}
                                             style={{
                                                 width: '100%', padding: '12px', borderRadius: '12px',
-                                                background: user ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.5)',
+                                                background: 'rgba(0,0,0,0.5)',
                                                 border: '1px solid var(--glass-border)',
-                                                color: user ? 'var(--floor-5)' : 'white',
-                                                cursor: user ? 'not-allowed' : 'text'
+                                                color: 'white',
+                                                cursor: 'text'
                                             }}
                                         />
                                     </div>

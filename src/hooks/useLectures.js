@@ -24,14 +24,26 @@ export function useLectures() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(newLectures));
     };
 
-    const addLecture = (floorId, title) => {
+    const addLecture = (buildingId, floorId, title) => {
         const newLecture = {
             id: `L-${Date.now()}`,
+            buildingId,
             floorId,
             title,
+            links: [], // Initialize links
             workshops: []
         };
         saveLectures([...lectures, newLecture]);
+    };
+
+    const updateLecture = (lectureId, updatedData) => {
+        const newLectures = lectures.map(l => {
+            if (l.id === lectureId) {
+                return { ...l, ...updatedData };
+            }
+            return l;
+        });
+        saveLectures(newLectures);
     };
 
     const addWorkshop = (lectureId, workshop) => {
@@ -76,6 +88,7 @@ export function useLectures() {
     return {
         lectures,
         addLecture,
+        updateLecture,
         addWorkshop,
         updateWorkshop,
         deleteWorkshop,

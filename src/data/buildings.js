@@ -3,15 +3,29 @@ import { floors as mainFloors } from './floors';
 export const buildings = [
     {
         id: 'main',
-        name: 'Mind University',
-        description: '心の階層を7階建ての建物で表現。情動・感情・感性の領域を行き来する実践の場所。',
+        name: '本館',
+        description: '心の階層を7階建ての建物で表現。感性と論理を統合するメインキャンパス。',
         floors: mainFloors,
-        imageKey: 'exterior'
+        imageKey: 'exterior',
+        color: '#ff9a9e',
+        mapPosition: { top: '50%', left: '50%', scale: 1.2 }
     },
     {
-        id: 'annex',
-        name: 'Annex (別館)',
-        description: '深層心理を探求するための特別棟。より静かで個人的な内省のための空間。',
+        id: 'east',
+        name: '東館',
+        description: '「表現と創造」の塔。アート、音楽、身体表現など、アウトプットに特化したエリア。',
+        floors: [
+            { id: '1F', title: 'アトリエ', description: '色彩と形の実験室', color: '#a18cd1', bgCurrent: 'linear-gradient(135deg, #a18cd1, #fbc2eb)' },
+            { id: '2F', title: 'サウンドラボ', description: '音の波形をデザインする', color: '#ff9a9e', bgCurrent: 'linear-gradient(135deg, #ff9a9e, #fecfef)' }
+        ],
+        imageKey: 'annex_exterior', // Placeholder
+        color: '#a18cd1',
+        mapPosition: { top: '50%', left: '80%', scale: 0.9 }
+    },
+    {
+        id: 'west', // Formerly Annex
+        name: '西館',
+        description: '「深層と休息」の別邸。静寂の中で自己の内側深くへと潜るサンクチュアリ。',
         floors: [
             {
                 id: '3F',
@@ -44,6 +58,19 @@ export const buildings = [
                 icon: 'Minimize'
             }
         ],
-        imageKey: 'annex_exterior'
+        imageKey: 'annex_exterior',
+        color: '#4facfe',
+        mapPosition: { top: '50%', left: '20%', scale: 0.9 }
+    },
+    {
+        id: 'north',
+        name: '北館',
+        description: '「知恵と記録」の図書館。宇宙の法則や歴史、アカシックレコードにアクセスする。',
+        floors: [
+            { id: '1F', title: 'アーカイブ', description: '全歴史の記録', color: '#43e97b', bgCurrent: 'linear-gradient(135deg, #43e97b, #38f9d7)' }
+        ],
+        imageKey: 'exterior', // Placeholder
+        color: '#43e97b',
+        mapPosition: { top: '20%', left: '50%', scale: 0.8 }
     }
 ];
