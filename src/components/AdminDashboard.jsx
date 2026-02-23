@@ -350,9 +350,15 @@ function LectureEditor({ lecture, onSave, onCancel }) {
                 </div>
 
                 <div style={{ marginBottom: '32px' }}>
-                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#ccc' }}>
-                        <LinkIcon size={18} /> 関連リンク
-                    </h4>
+                    <div style={{ marginBottom: '16px' }}>
+                        <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 8px 0', color: '#ccc' }}>
+                            <LinkIcon size={18} /> 関連リンク
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#888' }}>
+                            ※「録画(シネマ)」で直接再生可能なURL: YouTube, Vimeo, MP4直接リンク (.mp4)<br />
+                            ※Zoom録画などを指定した場合は、別タブで開くボタンが表示されます。
+                        </p>
+                    </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {links.map((link, idx) => (
@@ -361,7 +367,7 @@ function LectureEditor({ lecture, onSave, onCancel }) {
                                     <input
                                         value={link.title}
                                         onChange={(e) => handleChangeLink(idx, 'title', e.target.value)}
-                                        placeholder="リンクタイトル"
+                                        placeholder="リンクタイトル (例: 第1回講義録画)"
                                         style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white' }}
                                     />
                                 </div>
@@ -369,9 +375,19 @@ function LectureEditor({ lecture, onSave, onCancel }) {
                                     <input
                                         value={link.url}
                                         onChange={(e) => handleChangeLink(idx, 'url', e.target.value)}
-                                        placeholder="https://..."
+                                        placeholder="URL (https://...)"
                                         style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white' }}
                                     />
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <select
+                                        value={link.type || 'recorded'}
+                                        onChange={(e) => handleChangeLink(idx, 'type', e.target.value)}
+                                        style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px', color: 'white', cursor: 'pointer' }}
+                                    >
+                                        <option value="recorded" style={{ color: 'black' }}>録画 (シネマ)</option>
+                                        <option value="realtime" style={{ color: 'black' }}>リアルタイム (教室)</option>
+                                    </select>
                                 </div>
                                 <button
                                     type="button"

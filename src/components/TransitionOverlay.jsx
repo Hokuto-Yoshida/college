@@ -7,12 +7,29 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {} }) {
         const imgSrc = images[type];
 
         if (imgSrc) {
+            let initial, animate, exit;
+
+            if (type === 'stairs-up') {
+                initial = { y: '-100%', opacity: 1 };
+                animate = { y: 0, opacity: 1 };
+                exit = { y: '100%', opacity: 1 };
+            } else if (type === 'stairs-down') {
+                initial = { y: '100%', opacity: 1 };
+                animate = { y: 0, opacity: 1 };
+                exit = { y: '-100%', opacity: 1 };
+            } else {
+                // door
+                initial = { opacity: 0, scale: 1.1 };
+                animate = { opacity: 1, scale: 1 };
+                exit = { opacity: 0, scale: 1.1 };
+            }
+
             return (
                 <motion.div
-                    initial={{ opacity: 0, scale: 1.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.1 }}
-                    transition={{ duration: 0.8 }}
+                    initial={initial}
+                    animate={animate}
+                    exit={exit}
+                    transition={{ duration: 0.8, ease: "easeInOut" }}
                     style={{
                         width: '100%', height: '100%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -4,6 +4,10 @@ export const lectures = [
         id: 'L1',
         floorId: '3F', // 感情
         title: '感情のスペクトル解析',
+        links: [
+            { title: '参考動画 (シネマテスト用)', url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', type: 'recorded' },
+            { title: 'オンライン講義室 (Zoom)', url: 'https://zoom.us/test', type: 'realtime' }
+        ],
         workshops: [
             {
                 id: 'W1-1',

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight, ExternalLink } from 'lucide-react';
+import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight, ExternalLink, PlayCircle, ArrowLeft } from 'lucide-react';
 
 import { ResponseModal } from './ResponseModal';
+import { CinemaModal } from './CinemaModal';
+import { ClassroomModal } from './ClassroomModal';
+import hallwayBg from '../assets/hospital_school_hallway.png'; // Updated Background
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -12,6 +15,11 @@ export function Classroom({ currentFloorId, lectures = [] }) {
 
     const [activeLecture, setActiveLecture] = useState(null);
     const [activeWorkshop, setActiveWorkshop] = useState(null);
+
+    // Cinema Modal State
+    const [cinemaData, setCinemaData] = useState({ isOpen: false, url: '', title: '' });
+    // Classroom Modal State (Real-time)
+    const [classroomModalData, setClassroomModalData] = useState({ isOpen: false, url: '', title: '' });
 
     // Auth removed
     const user = null;
@@ -26,9 +34,10 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         setActiveWorkshop(null);
         setFormAnswers({});
         setViewMode('WALL');
+        setCinemaData({ isOpen: false, url: '', title: '' });
+        setClassroomModalData({ isOpen: false, url: '', title: '' });
     }, [currentFloorId]);
 
-    // ... (useEffect for loading responses remains same)
     // Load responses
     useEffect(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -37,11 +46,34 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         }
     }, []);
 
+    // Keep active records in sync with `lectures` prop (e.g., when edited in Admin Dashboard)
+    useEffect(() => {
+        if (activeLecture) {
+            const updatedLecture = lectures.find(l => l.id === activeLecture.id);
+            if (updatedLecture && JSON.stringify(updatedLecture) !== JSON.stringify(activeLecture)) {
+                setActiveLecture(updatedLecture);
+                if (activeWorkshop) {
+                    const updatedWorkshop = updatedLecture.workshops.find(w => w.id === activeWorkshop.id);
+                    if (updatedWorkshop) {
+                        setActiveWorkshop(updatedWorkshop);
+                    } else {
+                        setActiveWorkshop(null);
+                    }
+                }
+            }
+        }
+    }, [lectures, activeLecture, activeWorkshop]);
+
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
         setActiveWorkshop(null); // Reset workshop
     };
+
+    const handleBackToHallway = () => {
+        setActiveLecture(null);
+        setActiveWorkshop(null);
+    }
 
     const handleWorkshopSelect = (w) => {
         setActiveWorkshop(w);
@@ -61,11 +93,9 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         const newResponse = {
             id: Date.now(),
             workshopId: activeWorkshop.id,
-
             userId: null,
             name: formAnswers.name || '匿名',
             answers: formAnswers,
-
             timestamp: Date.now(),
             floorId: currentFloorId
         };
@@ -78,101 +108,191 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         alert('回答を提出しました。ウォールに共有されました。');
     };
 
+    const openCinema = (e, url, title) => {
+        e.preventDefault();
+        setCinemaData({ isOpen: true, url, title });
+    };
+
+    const openClassroomModal = (e, url, title) => {
+        e.preventDefault();
+        setClassroomModalData({ isOpen: true, url, title });
+    };
+
     const activeResponses = responses.filter(r =>
         (!activeWorkshop || r.workshopId === activeWorkshop.id) &&
         r.floorId === currentFloorId
     );
 
-    return (
-        <div style={{ marginTop: '20px' }}>
+    // --- HALLWAY VIEW ---
+    if (!activeLecture) {
+        return (
+            <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden', marginTop: '20px', background: '#000' }}>
+                {/* Background Image */}
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: `url(${hallwayBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    opacity: 0.9 // Brighter for hospital feel
+                }} />
 
-            {/* 1. Header & Navigation */}
-            <div className="glass-panel" style={{ padding: '20px', borderRadius: '20px', marginBottom: '24px' }}>
-                <h3 style={{ margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <BookOpen size={20} color="var(--floor-7)" />
-                    {currentFloorId} Classroom
-                </h3>
+                {/* Header */}
+                <div style={{ position: 'absolute', top: '20px', left: '20px', right: '20px', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="glass-panel" style={{ padding: '12px 24px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.5)' }}>
+                        <BookOpen size={20} color="var(--floor-7)" />
+                        <span style={{ fontWeight: 'bold', color: 'white' }}>{currentFloorId} Hallway</span>
+                    </div>
+                </div>
 
-                {floorLectures.length === 0 ? (
-                    <p style={{ color: 'var(--text-muted)' }}>現在この階層で開講中の講座はありません。</p>
-                ) : (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {/* Lecture Select */}
-                        {floorLectures.map(l => (
-                            <button
+                {/* Doors (Lectures) */}
+                <div style={{ position: 'absolute', inset: 0, zIndex: 5, padding: '100px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignContent: 'center', backgroundColor: 'rgba(0,0,0,0.1)' }}>
+                    {floorLectures.length === 0 ? (
+                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'black', background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '10px', backdropFilter: 'blur(5px)' }}>
+                            <p style={{ fontSize: '1.2rem', margin: 0 }}>このフロアにはまだ開講中の講座（部屋）がありません</p>
+                        </div>
+                    ) : (
+                        floorLectures.map((l, index) => (
+                            <motion.div
                                 key={l.id}
+                                whileHover={{ scale: 1.05, y: -5 }}
+                                whileTap={{ scale: 0.95 }}
                                 onClick={() => handleLectureSelect(l)}
                                 style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '12px',
-                                    border: activeLecture?.id === l.id ? '1px solid var(--floor-5)' : '1px solid var(--glass-border)',
-                                    background: activeLecture?.id === l.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                    color: activeLecture?.id === l.id ? 'white' : 'var(--text-muted)',
-                                    cursor: 'pointer'
+                                    height: '300px',
+                                    // Make the "door" card darker to stand out against the bright hospital hallway
+                                    background: 'linear-gradient(180deg, rgba(10,20,30,0.8) 0%, rgba(0,0,0,0.95) 100%)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '8px 8px 0 0',
+                                    borderBottom: '4px solid var(--floor-4)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                                    padding: '20px',
+                                    textAlign: 'center',
+                                    position: 'relative',
+                                    overflow: 'hidden'
                                 }}
                             >
-                                {l.title}
-                            </button>
-                        ))}
-                    </div>
-                )}
+                                {/* Door Glow Effect on Hover */}
+                                <div className="door-glow" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at top, rgba(143,211,244,0.3) 0%, transparent 60%)', opacity: 0, transition: 'opacity 0.3s' }} />
 
-                {/* Links Section */}
-                {activeLecture && activeLecture.links && activeLecture.links.length > 0 && (
-                    <div style={{ marginTop: '16px', paddingTop: '12px', borderTop: '1px solid var(--glass-border)' }}>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>関連リソース:</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {activeLecture.links.map((link, idx) => (
-                                <a
-                                    key={idx}
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                        padding: '6px 12px', borderRadius: '12px',
-                                        background: 'rgba(255,255,255,0.05)',
-                                        border: '1px solid var(--glass-border)',
-                                        color: 'var(--floor-3)',
-                                        fontSize: '0.85rem',
-                                        textDecoration: 'none',
-                                        transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.1)'}
-                                    onMouseLeave={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
-                                >
-                                    <ExternalLink size={12} /> {link.title}
-                                </a>
-                            ))}
+                                <BookOpen size={32} color="var(--floor-4)" style={{ marginBottom: '16px', filter: 'drop-shadow(0 0 10px rgba(143,211,244,0.5))' }} />
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                    {l.title}
+                                </h4>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>ルームへ入る</p>
+
+                                <style>{`.door-glow:hover { opacity: 1 !important; }`}</style>
+                            </motion.div>
+                        ))
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // --- LECTURE ROOM VIEW ---
+    return (
+        <div style={{ marginTop: '20px' }}>
+            <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', marginBottom: '24px', position: 'relative' }}>
+                <button
+                    onClick={handleBackToHallway}
+                    style={{ position: 'absolute', top: '-10px', left: '20px', padding: '8px 16px', borderRadius: '20px', background: 'var(--glass-surface)', border: '1px solid var(--glass-border)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', zIndex: 10 }}
+                >
+                    <ArrowLeft size={14} /> 廊下へ戻る
+                </button>
+
+                <h2 style={{ margin: '20px 0 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <BookOpen size={24} color="var(--floor-4)" />
+                    {activeLecture.title}
+                </h2>
+
+                {/* Links / Cinema Section */}
+                {activeLecture.links && activeLecture.links.length > 0 && (
+                    <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', borderLeft: '4px solid var(--floor-3)' }}>
+                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 12px 0', fontWeight: 'bold' }}>講義リソース (クリックでシアターを表示)</p>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                            {activeLecture.links.map((link, idx) => {
+                                // Determine Type: Admin 'type' field takes precedence. Fallback to basic video check for older data.
+                                const isRealtime = link.type === 'realtime';
+                                const isRecorded = link.type === 'recorded' || (!link.type && (link.url.includes('youtube.com') || link.url.includes('youtu.be') || link.url.includes('vimeo')));
+                                const isExternal = !isRealtime && !isRecorded;
+
+                                return (
+                                    <a
+                                        key={idx}
+                                        href={link.url}
+                                        onClick={(e) => {
+                                            if (isRecorded) {
+                                                openCinema(e, link.url, link.title);
+                                            } else if (isRealtime) {
+                                                openClassroomModal(e, link.url, link.title);
+                                            }
+                                        }}
+                                        target={isExternal ? "_blank" : undefined}
+                                        rel={isExternal ? "noopener noreferrer" : undefined}
+                                        style={{
+                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
+                                            padding: '10px 16px', borderRadius: '12px',
+                                            background: isRecorded ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.3))'
+                                                : isRealtime ? 'linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0,0,0,0.3))'
+                                                    : 'rgba(255,255,255,0.05)',
+                                            border: isRecorded ? '1px solid var(--floor-3)'
+                                                : isRealtime ? '1px solid var(--floor-4)'
+                                                    : '1px solid var(--glass-border)',
+                                            color: isRecorded ? 'white' : isRealtime ? 'var(--floor-4)' : 'var(--floor-3)',
+                                            fontSize: '0.9rem',
+                                            fontWeight: (isRecorded || isRealtime) ? 'bold' : 'normal',
+                                            textDecoration: 'none',
+                                            transition: 'all 0.2s',
+                                            boxShadow: (isRecorded || isRealtime) ? '0 4px 12px rgba(0,0,0,0.2)' : 'none'
+                                        }}
+                                        onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
+                                        onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+                                    >
+                                        {isRecorded && <PlayCircle size={18} color="white" />}
+                                        {isRealtime && <User size={18} color="var(--floor-4)" />}
+                                        {isExternal && <ExternalLink size={14} />}
+                                        {link.title}
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
 
                 {/* Workshop Select */}
-                {activeLecture && (
-                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '8px' }}>ワークショップを選択:</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {activeLecture.workshops.map(w => (
+                <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
+                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: 'bold' }}>ワークショップ</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {activeLecture.workshops.length === 0 ? (
+                            <p style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic', margin: 0 }}>この講座には現在ワークショップがありません。</p>
+                        ) : (
+                            activeLecture.workshops.map(w => (
                                 <button
                                     key={w.id}
                                     onClick={() => handleWorkshopSelect(w)}
                                     style={{
-                                        padding: '8px 16px',
-                                        borderRadius: '12px',
-                                        border: activeWorkshop?.id === w.id ? '1px solid var(--floor-3)' : '1px solid var(--glass-border)',
-                                        background: activeWorkshop?.id === w.id ? 'rgba(255,255,255,0.1)' : 'transparent',
-                                        color: activeWorkshop?.id === w.id ? 'white' : 'var(--text-muted)',
+                                        padding: '10px 20px',
+                                        borderRadius: '20px',
+                                        border: activeWorkshop?.id === w.id ? '1px solid var(--floor-5)' : '1px solid var(--glass-border)',
+                                        background: activeWorkshop?.id === w.id ? 'var(--floor-5)' : 'rgba(0,0,0,0.3)',
+                                        color: activeWorkshop?.id === w.id ? 'black' : 'white',
+                                        fontWeight: activeWorkshop?.id === w.id ? 'bold' : 'normal',
                                         cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', gap: '6px'
+                                        display: 'flex', alignItems: 'center', gap: '8px',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <PenTool size={14} /> {w.title}
+                                    <PenTool size={16} /> {w.title}
                                 </button>
-                            ))}
-                        </div>
+                            ))
+                        )}
                     </div>
-                )}
+                </div>
             </div>
 
             {activeWorkshop ? (
@@ -321,6 +441,22 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                 onClose={() => setSelectedResponse(null)}
                 response={selectedResponse}
                 questions={activeWorkshop?.questions || []}
+            />
+
+            {/* Cinema Video Modal (Recorded) */}
+            <CinemaModal
+                isOpen={cinemaData.isOpen}
+                onClose={() => setCinemaData({ isOpen: false, url: '', title: '' })}
+                videoUrl={cinemaData.url}
+                title={cinemaData.title}
+            />
+
+            {/* Classroom Modal (Real-time) */}
+            <ClassroomModal
+                isOpen={classroomModalData.isOpen}
+                onClose={() => setClassroomModalData({ isOpen: false, url: '', title: '' })}
+                linkUrl={classroomModalData.url}
+                title={classroomModalData.title}
             />
         </div>
     );

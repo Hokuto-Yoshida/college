@@ -283,7 +283,9 @@ function App() {
                 <div style={{ overflowY: 'auto', flex: 1 }}>
                   <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
                     setMobileMenuOpen(false);
-                    performTransition('stairs-up', () => setCurrentFloorId(id));
+                    const targetIndex = activeFloors.findIndex(f => f.id === id);
+                    const direction = targetIndex < activeFloorIndex ? 'stairs-up' : 'stairs-down';
+                    performTransition(direction, () => setCurrentFloorId(id));
                   }} />
                 </div>
               </motion.div>
@@ -428,7 +430,9 @@ function App() {
             <div className="desktop-nav" style={{ position: 'sticky', top: '100px', display: 'none', '@media(min-width: 900px)': { display: 'block' } }}>
               <div className="glass-panel" style={{ borderRadius: '24px', padding: '16px' }}>
                 <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
-                  performTransition('stairs-up', () => setCurrentFloorId(id));
+                  const targetIndex = activeFloors.findIndex(f => f.id === id);
+                  const direction = targetIndex < activeFloorIndex ? 'stairs-up' : 'stairs-down';
+                  performTransition(direction, () => setCurrentFloorId(id));
                 }} />
               </div>
 
