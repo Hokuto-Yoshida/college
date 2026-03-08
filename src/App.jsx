@@ -66,14 +66,25 @@ function App() {
     setTransitionType(type);
     setIsTransitioning(true);
 
+    const isDoor = type === 'door';
+    const halfTime = isDoor ? 2000 : 3500; // time to swap DOM (middle of stairs animation)
+    const fullTime = isDoor ? 4000 : 7000; // total duration of overlay for auto-close
+
     setTimeout(() => {
       updateStateFn();
       window.scrollTo({ top: 0, behavior: 'instant' });
-    }, 1000);
+    }, halfTime);
 
-    setTimeout(() => {
-      setIsTransitioning(false);
-    }, 2000);
+    // Only auto-close for doors. Stairs wait for user to click button.
+    if (isDoor) {
+      setTimeout(() => {
+        setIsTransitioning(false);
+      }, fullTime);
+    }
+  };
+
+  const handleOverlayComplete = () => {
+    setIsTransitioning(false);
   };
 
   const handleNextFloor = () => {
@@ -149,7 +160,7 @@ function App() {
   return (
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
 
-      <TransitionOverlay isVisible={isTransitioning} type={transitionType} images={transitionImages} />
+      <TransitionOverlay isVisible={isTransitioning} type={transitionType} images={transitionImages} onComplete={handleOverlayComplete} />
 
       {/* Admin Dashboard Overlay */}
       {isAdminMode && (
@@ -387,12 +398,6 @@ function App() {
                     </h2>
                     <p style={{ fontSize: '1.4rem', color: activeFloor.color, marginBottom: '24px', fontFamily: 'var(--font-en)' }}>
                       {activeFloor.subtitle}
-                    </p>
-                    <p style={{ fontSize: '1.1rem', lineHeight: 2, color: 'var(--text-main)', maxWidth: '650px', background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '16px', borderLeft: `4px solid ${activeFloor.color}` }}>
-                      {activeFloor.description}
-                      <br /><br />
-                      この階層では、その瞬間のマインドに応じたワークが即興で生まれます。<br />
-                      答えを見つけるのではなく、向き合うことで階層が引き上がります。
                     </p>
 
                     {/* Enhanced Classroom Component */}

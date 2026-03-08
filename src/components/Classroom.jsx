@@ -6,8 +6,151 @@ import { ResponseModal } from './ResponseModal';
 import { CinemaModal } from './CinemaModal';
 import { ClassroomModal } from './ClassroomModal';
 import hallwayBg from '../assets/hospital_school_hallway.png'; // Updated Background
+import imgCinema from '../assets/cinema_room.png';
+import imgClassroom from '../assets/virtual_classroom.png';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
+
+const ResourceTransitionOverlay = ({ resource }) => {
+    if (!resource) return null;
+    const imgSrc = resource.isRecorded ? imgCinema : imgClassroom;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ backgroundColor: 'rgba(0,0,0,1)' }}
+                animate={{ backgroundColor: ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)'] }}
+                transition={{ duration: 4, times: [0, 0.4, 0.8, 1] }}
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    overflow: 'hidden', perspective: '1200px'
+                }}
+            >
+                {/* Door Container / Frame */}
+                <motion.div
+                    animate={{ scale: [1, 2, 10, 15], opacity: [1, 1, 1, 0] }}
+                    transition={{ duration: 4, times: [0, 0.4, 0.8, 1], ease: "easeInOut" }}
+                    style={{
+                        width: '280px', height: '420px',
+                        position: 'relative',
+                        display: 'flex',
+                        transformStyle: 'preserve-3d',
+                        zIndex: 1,
+                        background: '#fff', // White interior
+                        boxShadow: '0 0 50px rgba(255,255,255,0.8)' // Glow from inside
+                    }}
+                >
+                    {/* Left Door */}
+                    <motion.div
+                        animate={{ rotateY: [0, 0, -110, -110] }}
+                        transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                        style={{
+                            width: '50%', height: '100%',
+                            background: 'linear-gradient(135deg, #1a1a24 0%, #0d0d14 100%)',
+                            border: '3px solid #333', borderRight: '1px solid #000',
+                            transformOrigin: 'left',
+                            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+                            paddingRight: '12px',
+                            boxShadow: 'inset 0 0 20px rgba(129,230,217,0.1), 10px 0 20px rgba(0,0,0,0.5)'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '5%', bottom: '5%', left: '10%', right: '20%', border: '2px solid rgba(129,230,217,0.3)', borderRadius: '4px' }} />
+                        <div style={{ width: '10px', height: '60px', background: '#333', borderRadius: '4px', border: '1px solid #111', boxShadow: '-1px 0 5px rgba(0,0,0,0.5)', zIndex: 2 }} />
+                    </motion.div>
+
+                    {/* Right Door */}
+                    <motion.div
+                        animate={{ rotateY: [0, 0, 110, 110] }}
+                        transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                        style={{
+                            width: '50%', height: '100%',
+                            background: 'linear-gradient(225deg, #1a1a24 0%, #0d0d14 100%)',
+                            border: '3px solid #333', borderLeft: '1px solid #000',
+                            transformOrigin: 'right',
+                            display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
+                            paddingLeft: '12px',
+                            boxShadow: 'inset 0 0 20px rgba(129,230,217,0.1), -10px 0 20px rgba(0,0,0,0.5)'
+                        }}
+                    >
+                        <div style={{ position: 'absolute', top: '5%', bottom: '5%', right: '10%', left: '20%', border: '2px solid rgba(129,230,217,0.3)', borderRadius: '4px' }} />
+                        <div style={{ width: '10px', height: '60px', background: '#333', borderRadius: '4px', border: '1px solid #111', boxShadow: '1px 0 5px rgba(0,0,0,0.5)', zIndex: 2 }} />
+                    </motion.div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+};
+
+const BookTransitionOverlay = ({ resource }) => {
+    if (!resource) return null;
+
+    return (
+        <AnimatePresence>
+            <motion.div
+                initial={{ backgroundColor: 'rgba(0,0,0,0)' }}
+                animate={{ backgroundColor: ['rgba(0,0,0,0)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0.8)', 'rgba(0,0,0,0)'] }}
+                transition={{ duration: 2.5, times: [0, 0.2, 0.8, 1] }}
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    perspective: '2000px'
+                }}
+            >
+                <motion.div
+                    initial={{ scale: 0.8, opacity: 0, rotateX: 10 }}
+                    animate={{ scale: [0.8, 1.8, 2.8], opacity: [0, 1, 1], rotateX: [10, 0, 0] }}
+                    transition={{ duration: 2.5, times: [0, 0.4, 1], ease: "easeInOut" }}
+                    style={{
+                        position: 'relative',
+                        width: '30vh',
+                        height: '45vh',
+                        perspective: '1500px',
+                        transformStyle: 'preserve-3d',
+                        zIndex: 10
+                    }}
+                >
+                    {/* Back Cover (Pages) */}
+                    <div style={{
+                        position: 'absolute', top: 0, bottom: 0, left: 0, width: '100%',
+                        background: '#f8f9fa',
+                        border: '1px solid #dee2e6',
+                        borderRadius: '4px 12px 12px 4px',
+                        boxShadow: '10px 10px 30px rgba(0,0,0,0.5)',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                        padding: '20px'
+                    }}>
+                        <div style={{ width: '80%', height: '2px', background: '#e9ecef', marginBottom: '10px' }} />
+                        <div style={{ width: '80%', height: '2px', background: '#e9ecef', marginBottom: '10px' }} />
+                        <div style={{ width: '60%', height: '2px', background: '#e9ecef' }} />
+                    </div>
+
+                    {/* Front Cover */}
+                    <motion.div
+                        animate={{ rotateY: [0, 0, -150] }}
+                        transition={{ duration: 2.5, times: [0, 0.4, 1], ease: "easeInOut" }}
+                        style={{
+                            position: 'absolute', top: 0, bottom: 0, left: 0, width: '100%',
+                            background: `linear-gradient(135deg, ${resource.color || 'var(--floor-6)'} 0%, #151e32 100%)`,
+                            border: '2px solid #111',
+                            borderRadius: '4px 12px 12px 4px',
+                            transformOrigin: 'left center',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            padding: '24px', textAlign: 'center',
+                            boxShadow: 'inset 4px 0 10px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.5)'
+                        }}
+                    >
+                        <div style={{ border: '2px solid rgba(255,255,255,0.2)', position: 'absolute', inset: '12px', borderRadius: '8px' }} />
+                        <BookOpen size={48} color="white" style={{ marginBottom: '20px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
+                        <h3 style={{ color: 'white', margin: 0, fontSize: '1.4rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', fontFamily: 'var(--font-jp)' }}>
+                            {resource.title}
+                        </h3>
+                    </motion.div>
+                </motion.div>
+            </motion.div>
+        </AnimatePresence>
+    );
+};
 
 export function Classroom({ currentFloorId, lectures = [] }) {
     // Find applicable lectures for this floor
@@ -20,6 +163,9 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     const [cinemaData, setCinemaData] = useState({ isOpen: false, url: '', title: '' });
     // Classroom Modal State (Real-time)
     const [classroomModalData, setClassroomModalData] = useState({ isOpen: false, url: '', title: '' });
+    // Transition overlay state
+    const [transitioningResource, setTransitioningResource] = useState(null);
+    const [transitioningWorkshop, setTransitioningWorkshop] = useState(null);
 
     // Auth removed
     const user = null;
@@ -75,10 +221,43 @@ export function Classroom({ currentFloorId, lectures = [] }) {
         setActiveWorkshop(null);
     }
 
-    const handleWorkshopSelect = (w) => {
-        setActiveWorkshop(w);
-        setFormAnswers({}); // Reset form
-        setViewMode('FORM');
+    // Consistent colors for workshops
+    const workshopColors = [
+        '#9ae6b4', // Mint green
+        '#fbd38d', // Warm yellow/orange
+        '#e9d8fd', // Soft purple
+        '#fed7d7', // Light red/pink
+        '#bbf7d0', // Very light green
+        '#bfdbfe'  // Soft blue
+    ];
+
+    const getWorkshopColor = (id) => {
+        // Use a simple hash of the string to pick a predictable color index
+        if (!id) return workshopColors[0];
+        let hash = 0;
+        const str = id.toString();
+        for (let i = 0; i < str.length; i++) {
+            hash = str.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const index = Math.abs(hash) % workshopColors.length;
+        return workshopColors[index];
+    };
+
+    const handleWorkshopSelect = (w, color) => {
+        setTransitioningWorkshop({ ...w, color });
+
+        // After book opens and fills screen, reveal the workshop content
+        setTimeout(() => {
+            setActiveWorkshop(w);
+            setFormAnswers({}); // Reset form
+            setViewMode('FORM');
+            setTransitioningWorkshop(null);
+
+            // Scroll down so the workshop is in view
+            setTimeout(() => {
+                window.scrollBy({ top: 400, behavior: 'smooth' });
+            }, 100);
+        }, 2000); // Wait 2s for book animation
     };
 
     const handlSubmit = (e) => {
@@ -109,13 +288,37 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     };
 
     const openCinema = (e, url, title) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setCinemaData({ isOpen: true, url, title });
     };
 
     const openClassroomModal = (e, url, title) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         setClassroomModalData({ isOpen: true, url, title });
+    };
+
+    const startResourceTransition = (e, link, isRecorded, isRealtime, isExternal) => {
+        e.preventDefault();
+        if (isExternal) {
+            window.open(link.url, '_blank');
+            return;
+        }
+
+        setTransitioningResource({ link, isRecorded, isRealtime });
+
+        // Wait 2s (middle of door animation) to show the actual Modal
+        setTimeout(() => {
+            if (isRecorded) {
+                openCinema(null, link.url, link.title);
+            } else if (isRealtime) {
+                openClassroomModal(null, link.url, link.title);
+            }
+        }, 2000);
+
+        // Entire animation duration is 4s, hide the overlay afterwards
+        setTimeout(() => {
+            setTransitioningResource(null);
+        }, 4000);
     };
 
     const activeResponses = responses.filter(r =>
@@ -214,50 +417,51 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                 {activeLecture.links && activeLecture.links.length > 0 && (
                     <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', borderLeft: '4px solid var(--floor-3)' }}>
                         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 12px 0', fontWeight: 'bold' }}>講義リソース (クリックでシアターを表示)</p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                             {activeLecture.links.map((link, idx) => {
                                 // Determine Type: Admin 'type' field takes precedence. Fallback to basic video check for older data.
                                 const isRealtime = link.type === 'realtime';
                                 const isRecorded = link.type === 'recorded' || (!link.type && (link.url.includes('youtube.com') || link.url.includes('youtu.be') || link.url.includes('vimeo')));
                                 const isExternal = !isRealtime && !isRecorded;
+                                const bgImg = isRecorded ? imgCinema : imgClassroom;
 
                                 return (
-                                    <a
+                                    <motion.div
                                         key={idx}
-                                        href={link.url}
-                                        onClick={(e) => {
-                                            if (isRecorded) {
-                                                openCinema(e, link.url, link.title);
-                                            } else if (isRealtime) {
-                                                openClassroomModal(e, link.url, link.title);
-                                            }
-                                        }}
-                                        target={isExternal ? "_blank" : undefined}
-                                        rel={isExternal ? "noopener noreferrer" : undefined}
+                                        whileHover={{ scale: 1.05 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={(e) => startResourceTransition(e, link, isRecorded, isRealtime, isExternal)}
                                         style={{
-                                            display: 'inline-flex', alignItems: 'center', gap: '8px',
-                                            padding: '10px 16px', borderRadius: '12px',
-                                            background: isRecorded ? 'linear-gradient(135deg, rgba(255,255,255,0.1), rgba(0,0,0,0.3))'
-                                                : isRealtime ? 'linear-gradient(135deg, rgba(79, 172, 254, 0.2), rgba(0,0,0,0.3))'
-                                                    : 'rgba(255,255,255,0.05)',
-                                            border: isRecorded ? '1px solid var(--floor-3)'
-                                                : isRealtime ? '1px solid var(--floor-4)'
-                                                    : '1px solid var(--glass-border)',
-                                            color: isRecorded ? 'white' : isRealtime ? 'var(--floor-4)' : 'var(--floor-3)',
-                                            fontSize: '0.9rem',
-                                            fontWeight: (isRecorded || isRealtime) ? 'bold' : 'normal',
-                                            textDecoration: 'none',
-                                            transition: 'all 0.2s',
-                                            boxShadow: (isRecorded || isRealtime) ? '0 4px 12px rgba(0,0,0,0.2)' : 'none'
+                                            height: '160px',
+                                            backgroundImage: isExternal ? 'none' : `url(${bgImg})`,
+                                            backgroundSize: 'cover',
+                                            backgroundPosition: 'center',
+                                            borderRadius: '12px',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                            cursor: 'pointer',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            display: 'flex',
+                                            alignItems: 'flex-end',
+                                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                                            backgroundColor: isExternal ? 'rgba(255,255,255,0.05)' : 'transparent'
                                         }}
-                                        onMouseEnter={(e) => e.target.style.transform = 'translateY(-2px)'}
-                                        onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                                     >
-                                        {isRecorded && <PlayCircle size={18} color="white" />}
-                                        {isRealtime && <User size={18} color="var(--floor-4)" />}
-                                        {isExternal && <ExternalLink size={14} />}
-                                        {link.title}
-                                    </a>
+                                        {!isExternal && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 100%)' }} />}
+                                        <div style={{ position: 'relative', zIndex: 1, padding: '16px', width: '100%' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isRecorded ? 'white' : 'white', marginBottom: '8px' }}>
+                                                {isRecorded && <PlayCircle size={16} />}
+                                                {isRealtime && <User size={16} />}
+                                                {isExternal && <ExternalLink size={14} />}
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                                                    {isRecorded ? 'シアター室へ' : isRealtime ? 'オンライン講義室へ' : '外部リンク'}
+                                                </span>
+                                            </div>
+                                            <h4 style={{ margin: 0, color: 'white', fontSize: '1.05rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                                {link.title}
+                                            </h4>
+                                        </div>
+                                    </motion.div>
                                 );
                             })}
                         </div>
@@ -271,25 +475,51 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                         {activeLecture.workshops.length === 0 ? (
                             <p style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic', margin: 0 }}>この講座には現在ワークショップがありません。</p>
                         ) : (
-                            activeLecture.workshops.map(w => (
-                                <button
-                                    key={w.id}
-                                    onClick={() => handleWorkshopSelect(w)}
-                                    style={{
-                                        padding: '10px 20px',
-                                        borderRadius: '20px',
-                                        border: activeWorkshop?.id === w.id ? '1px solid var(--floor-5)' : '1px solid var(--glass-border)',
-                                        background: activeWorkshop?.id === w.id ? 'var(--floor-5)' : 'rgba(0,0,0,0.3)',
-                                        color: activeWorkshop?.id === w.id ? 'black' : 'white',
-                                        fontWeight: activeWorkshop?.id === w.id ? 'bold' : 'normal',
-                                        cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', gap: '8px',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    <PenTool size={16} /> {w.title}
-                                </button>
-                            ))
+                            activeLecture.workshops.map(w => {
+                                const isActive = activeWorkshop?.id === w.id;
+                                const wColor = getWorkshopColor(w.id);
+
+                                return (
+                                    <button
+                                        key={w.id}
+                                        onClick={() => handleWorkshopSelect(w, wColor)}
+                                        style={{
+                                            position: 'relative',
+                                            width: '130px',
+                                            height: '180px',
+                                            margin: '0 8px 16px 8px',
+                                            borderRadius: '4px 12px 12px 4px',
+                                            // Active state has a white outline/glow, inactive is just the border
+                                            border: isActive ? '3px solid white' : '1px solid rgba(0,0,0,0.2)',
+                                            background: wColor, // Book cover is always the designated pastel color
+                                            borderLeft: '10px solid rgba(0,0,0,0.3)', // Book spine
+                                            color: '#1a202c', // Dark text for pastel background
+                                            fontWeight: 'bold',
+                                            fontSize: '1rem',
+                                            cursor: 'pointer',
+                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px',
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: isActive ? '10px 10px 20px rgba(0,0,0,0.4), inset 2px 0 5px rgba(255,255,255,0.8)' : '5px 5px 15px rgba(0,0,0,0.3), inset 2px 0 5px rgba(255,255,255,0.4)',
+                                            padding: '16px',
+                                            textAlign: 'center',
+                                            transformStyle: 'preserve-3d',
+                                            outline: isActive ? '2px solid #1a202c' : 'none',
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(-10px) rotateY(-5deg) scale(1.05)';
+                                            e.currentTarget.style.boxShadow = '15px 15px 30px rgba(0,0,0,0.3), inset 2px 0 5px rgba(255,255,255,0.8)';
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.transform = 'translateY(0) rotateY(0) scale(1)';
+                                            e.currentTarget.style.boxShadow = isActive ? '10px 10px 20px rgba(0,0,0,0.4), inset 2px 0 5px rgba(255,255,255,0.8)' : '5px 5px 15px rgba(0,0,0,0.3), inset 2px 0 5px rgba(255,255,255,0.4)';
+                                        }}
+                                    >
+                                        <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '4px', background: 'rgba(255,255,255,0.5)', borderRadius: '0 8px 8px 0' }} />
+                                        <BookOpen size={28} color="#1a202c" style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.5))' }} />
+                                        <span style={{ fontFamily: 'var(--font-jp)', lineHeight: 1.3, zIndex: 1 }}>{w.title}</span>
+                                    </button>
+                                );
+                            })
                         )}
                     </div>
                 </div>
@@ -458,6 +688,10 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                 linkUrl={classroomModalData.url}
                 title={classroomModalData.title}
             />
+
+            {/* Transition Animation for Room Doors */}
+            <ResourceTransitionOverlay resource={transitioningResource} />
+            <BookTransitionOverlay resource={transitioningWorkshop} />
         </div>
     );
 }
