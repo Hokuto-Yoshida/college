@@ -20,7 +20,7 @@ const ResourceTransitionOverlay = ({ resource }) => {
             <motion.div
                 initial={{ backgroundColor: 'rgba(0,0,0,1)' }}
                 animate={{ backgroundColor: ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)'] }}
-                transition={{ duration: 4, times: [0, 0.4, 0.8, 1] }}
+                transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1] }}
                 style={{
                     position: 'fixed', inset: 0, zIndex: 99999, pointerEvents: 'none',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -29,8 +29,8 @@ const ResourceTransitionOverlay = ({ resource }) => {
             >
                 {/* Door Container / Frame */}
                 <motion.div
-                    animate={{ scale: [1, 2, 10, 15], opacity: [1, 1, 1, 0] }}
-                    transition={{ duration: 4, times: [0, 0.4, 0.8, 1], ease: "easeInOut" }}
+                    animate={{ scale: [1, 2, 20, 20], opacity: [1, 1, 1, 0] }}
+                    transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
                     style={{
                         width: '280px', height: '420px',
                         position: 'relative',
@@ -44,7 +44,7 @@ const ResourceTransitionOverlay = ({ resource }) => {
                     {/* Left Door */}
                     <motion.div
                         animate={{ rotateY: [0, 0, -110, -110] }}
-                        transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                        transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
                         style={{
                             width: '50%', height: '100%',
                             background: 'linear-gradient(135deg, #1a1a24 0%, #0d0d14 100%)',
@@ -62,7 +62,7 @@ const ResourceTransitionOverlay = ({ resource }) => {
                     {/* Right Door */}
                     <motion.div
                         animate={{ rotateY: [0, 0, 110, 110] }}
-                        transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                        transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
                         style={{
                             width: '50%', height: '100%',
                             background: 'linear-gradient(225deg, #1a1a24 0%, #0d0d14 100%)',
@@ -306,7 +306,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
 
         setTransitioningResource({ link, isRecorded, isRealtime });
 
-        // Wait 2s (middle of door animation) to show the actual Modal
+        // Wait mid-animation to show the actual Modal
         setTimeout(() => {
             if (isRecorded) {
                 openCinema(null, link.url, link.title);
@@ -315,10 +315,10 @@ export function Classroom({ currentFloorId, lectures = [] }) {
             }
         }, 2000);
 
-        // Entire animation duration is 4s, hide the overlay afterwards
+        // Hide overlay slightly faster after opening
         setTimeout(() => {
             setTransitioningResource(null);
-        }, 4000);
+        }, 3200);
     };
 
     const activeResponses = responses.filter(r =>

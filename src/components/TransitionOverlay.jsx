@@ -11,8 +11,8 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, onCom
                 return (
                     <motion.div
                         initial={{ backgroundColor: 'rgba(0,0,0,1)' }}
-                        animate={{ backgroundColor: ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0)'] }}
-                        transition={{ duration: 4, times: [0, 0.4, 0.5, 1] }}
+                        animate={{ backgroundColor: ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)'] }}
+                        transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1] }}
                         style={{
                             width: '100%', height: '100%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -21,32 +21,24 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, onCom
                             perspective: '1200px'
                         }}
                     >
-                        {/* Background Building Image */}
-                        <motion.img
-                            src={imgSrc}
-                            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', zIndex: -2 }}
-                            animate={{ scale: [1, 1.5, 2, 2], opacity: [0.5, 0.5, 0, 0] }}
-                            transition={{ duration: 4, times: [0, 0.4, 0.5, 1], ease: "easeInOut" }}
-                        />
-
-
-
                         {/* Door Container */}
                         <motion.div
-                            animate={{ scale: [1, 2, 15, 20] }}
-                            transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                            animate={{ scale: [1, 2, 20, 20], opacity: [1, 1, 1, 0] }}
+                            transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
                             style={{
                                 width: '280px', height: '420px',
                                 position: 'relative',
                                 display: 'flex',
                                 transformStyle: 'preserve-3d',
-                                zIndex: 1
+                                zIndex: 1,
+                                background: '#fff', // White interior
+                                boxShadow: '0 0 50px rgba(255,255,255,0.8)' // Glow from inside
                             }}
                         >
                             {/* Left Door */}
                             <motion.div
                                 animate={{ rotateY: [0, 0, -110, -110] }}
-                                transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                                transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
                                 style={{
                                     width: '50%', height: '100%',
                                     background: 'linear-gradient(135deg, #1a1a24 0%, #0d0d14 100%)',
@@ -64,7 +56,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, onCom
                             {/* Right Door */}
                             <motion.div
                                 animate={{ rotateY: [0, 0, 110, 110] }}
-                                transition={{ duration: 4, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                                transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
                                 style={{
                                     width: '50%', height: '100%',
                                     background: 'linear-gradient(225deg, #1a1a24 0%, #0d0d14 100%)',

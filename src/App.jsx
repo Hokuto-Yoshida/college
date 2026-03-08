@@ -67,8 +67,8 @@ function App() {
     setIsTransitioning(true);
 
     const isDoor = type === 'door';
-    const halfTime = isDoor ? 2000 : 3500; // time to swap DOM (middle of stairs animation)
-    const fullTime = isDoor ? 4000 : 7000; // total duration of overlay for auto-close
+    const halfTime = isDoor ? 2000 : 3500; // time to swap DOM (middle of stairs or door animation)
+    const fullTime = isDoor ? 3200 : 7000; // total duration of overlay for auto-close
 
     setTimeout(() => {
       updateStateFn();
