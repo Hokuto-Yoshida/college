@@ -8,6 +8,7 @@ import { TransitionOverlay } from './components/TransitionOverlay';
 import { SpiralNav } from './components/SpiralNav';
 import { Classroom } from './components/Classroom';
 import { AdminDashboard } from './components/AdminDashboard';
+import { IntroSequence } from './components/IntroSequence';
 import { useLectures } from './hooks/useLectures';
 
 // Assets
@@ -36,6 +37,7 @@ const LoadingScreen = () => (
 
 function App() {
   const [loading, setLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(!sessionStorage.getItem('introSeen'));
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -156,6 +158,20 @@ function App() {
       default: return imgExterior;
     }
   };
+
+  if (showIntro) {
+    const introImages = [imgExterior, viewRoof, imgSpiral, viewHigh, imgLab];
+    return (
+      <IntroSequence
+        images={introImages}
+        onEnter={() => {
+          sessionStorage.setItem('introSeen', 'true');
+          setShowIntro(false);
+          window.scrollTo(0, 0);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
