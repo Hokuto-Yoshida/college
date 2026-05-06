@@ -15,7 +15,7 @@ import { useLectures } from './hooks/useLectures';
 import imgExterior from './assets/exterior.png';
 import imgAnnex from './assets/annex_exterior.png';
 import imgLab from './assets/lab.png';
-import imgSpiral from './assets/spiral.png';
+import imgStairsSky from './assets/stairs_sky.jpg';
 import viewLow from './assets/view_low.png'; // 1F
 import view2F from './assets/view_2f.png';   // 2F
 import viewMid from './assets/view_mid.png'; // 3F
@@ -23,6 +23,9 @@ import view4F from './assets/view_4f.png';   // 4F
 import viewHigh from './assets/view_high.png'; // 5F
 import view6F from './assets/view_6f.png';   // 6F
 import viewRoof from './assets/view_roof.png'; // 7F
+import imgLibrary from './assets/library_bg.jpg'; // All floors
+import lobbyMain from './assets/lobby_main.png';
+import lobbyAnnex from './assets/lobby_annex.png';
 
 const LoadingScreen = () => (
   <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: '#000' }}>
@@ -47,6 +50,7 @@ function App() {
   // Transition State
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [transitionType, setTransitionType] = useState('door');
+  const [transitionTargetFloor, setTransitionTargetFloor] = useState(null);
 
   // Data Hook
   const { lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop } = useLectures();
@@ -91,24 +95,31 @@ function App() {
 
   const handleNextFloor = () => {
     if (activeFloorIndex > 0) {
+      const targetId = activeFloors[activeFloorIndex - 1].id;
+      setTransitionTargetFloor(targetId);
       performTransition('stairs-up', () => {
-        setCurrentFloorId(activeFloors[activeFloorIndex - 1].id);
+        setCurrentFloorId(targetId);
       });
     }
   };
 
   const handlePrevFloor = () => {
     if (activeFloorIndex < activeFloors.length - 1) {
+      const targetId = activeFloors[activeFloorIndex + 1].id;
+      setTransitionTargetFloor(targetId);
       performTransition('stairs-down', () => {
-        setCurrentFloorId(activeFloors[activeFloorIndex + 1].id);
+        setCurrentFloorId(targetId);
       });
     }
   };
 
   const handleEnterFloor = () => {
-    // Enter from Hero -> Bottom Floor
+    // デフォルトで「1F（エントランス）」を探し、なければ一番下の階に入る
+    const defaultEntrance = activeFloors.find(f => f.id === '1F') || activeFloors[activeFloors.length - 1];
+    const targetFloorId = defaultEntrance.id;
+    setTransitionTargetFloor(targetFloorId);
     performTransition('stairs-up', () => {
-      setCurrentFloorId(activeFloors[activeFloors.length - 1].id);
+      setCurrentFloorId(targetFloorId);
     });
   };
 
@@ -129,15 +140,15 @@ function App() {
 
 
   const buildingImages = {
-    main: imgExterior,
-    annex: imgAnnex
+    main: lobbyMain,
+    annex: lobbyAnnex
   };
 
   // Images for Transitions
   const transitionImages = {
     'door': imgExterior, // Entering building
-    'stairs-up': imgSpiral,
-    'stairs-down': imgSpiral
+    'stairs-up': imgStairsSky,
+    'stairs-down': imgStairsSky
   };
 
   // Background Logic
@@ -146,21 +157,11 @@ function App() {
       // Return active building's image
       return buildingImages[currentBuildingId] || imgExterior;
     }
-    switch (fid) {
-      case '7F': return viewRoof;
-      case '6F': return view6F;
-      case '5F': return viewHigh;
-      case '4F': return view4F;
-      case '3F': return viewMid;
-      case '2F': return view2F;
-      case '1F': return viewLow;
-      case 'B1': return imgLab;
-      default: return imgExterior;
-    }
+    return imgLibrary; // 全フロアで共通の図書館の背景を使用
   };
 
   if (showIntro) {
-    const introImages = [imgExterior, viewRoof, imgSpiral, viewHigh, imgLab];
+    const introImages = [imgExterior, viewRoof, imgStairsSky, viewHigh, imgLab];
     return (
       <IntroSequence
         images={introImages}
@@ -176,7 +177,7 @@ function App() {
   return (
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
 
-      <TransitionOverlay isVisible={isTransitioning} type={transitionType} images={transitionImages} onComplete={handleOverlayComplete} />
+      <TransitionOverlay isVisible={isTransitioning} type={transitionType} images={transitionImages} targetFloorId={transitionTargetFloor} onComplete={handleOverlayComplete} />
 
       {/* Admin Dashboard Overlay */}
       {isAdminMode && (
@@ -217,7 +218,7 @@ function App() {
             }} />
             <div style={{
               position: 'absolute', inset: 0,
-              backgroundImage: `url(${imgSpiral})`,
+              backgroundImage: `url(${imgStairsSky})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               opacity: currentFloorId ? 0.1 : 0.05,
@@ -312,6 +313,7 @@ function App() {
                     setMobileMenuOpen(false);
                     const targetIndex = activeFloors.findIndex(f => f.id === id);
                     const direction = targetIndex < activeFloorIndex ? 'stairs-up' : 'stairs-down';
+                    setTransitionTargetFloor(id);
                     performTransition(direction, () => setCurrentFloorId(id));
                   }} />
                 </div>
@@ -453,6 +455,7 @@ function App() {
                 <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
                   const targetIndex = activeFloors.findIndex(f => f.id === id);
                   const direction = targetIndex < activeFloorIndex ? 'stairs-up' : 'stairs-down';
+                  setTransitionTargetFloor(id);
                   performTransition(direction, () => setCurrentFloorId(id));
                 }} />
               </div>

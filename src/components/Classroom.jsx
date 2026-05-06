@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight, ExternalLink, PlayCircle, ArrowLeft } from 'lucide-react';
 
 import { ResponseModal } from './ResponseModal';
 import { CinemaModal } from './CinemaModal';
 import { ClassroomModal } from './ClassroomModal';
-import hallwayBg from '../assets/hospital_school_hallway.png'; // Updated Background
+import hallwayBg from '../assets/library_bg.jpg'; // All floors library background
+import avRoomBg from '../assets/av_room_bg.jpg';
+import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
 import imgCinema from '../assets/cinema_room.png';
 import imgClassroom from '../assets/virtual_classroom.png';
+import lectureBg from '../assets/lecture_bg.jpg';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -152,11 +155,174 @@ const BookTransitionOverlay = ({ resource }) => {
     );
 };
 
+const WorkshopLibrary = ({ workshops = [], activeWorkshop, onWorkshopSelect, getWorkshopColor }) => {
+    const containerRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        target: containerRef,
+        offset: ["start center", "end end"]
+    });
+
+    // Scale from 1.0 to 1.3 to simulate advancing deeper
+    const scale = useTransform(scrollYProgress, [0, 1], [1, 1.3]);
+
+    const bookPositions = [
+        { left: '33%', top: '65%' }, // Middle left table
+        { left: '67%', top: '65%' }, // Middle right table
+        { left: '25%', top: '80%' }, // Bottom left table
+        { left: '75%', top: '80%' }, // Bottom right table
+        { left: '50%', top: '72%' }, // Fallback center
+        { left: '40%', top: '85%' },
+        { left: '60%', top: '85%' },
+    ];
+
+    return (
+        <div ref={containerRef} style={{ height: '200vh', position: 'relative', marginTop: '40px', marginBottom: '40px' }}>
+            <div style={{ position: 'sticky', top: 0, height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', borderRadius: '20px' }}>
+                <motion.div
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        backgroundImage: `url(${workshopLibraryBg})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        scale,
+                        boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                        position: 'relative'
+                    }}
+                >
+                    {/* Books on Tables */}
+                    {workshops.map((w, idx) => {
+                        const pos = bookPositions[idx % bookPositions.length];
+                        const isActive = activeWorkshop?.id === w.id;
+                        const wColor = getWorkshopColor(w.id);
+
+                        return (
+                            <motion.button
+                                key={w.id}
+                                onClick={() => onWorkshopSelect(w, wColor)}
+                                whileHover={{ scale: 1.1, y: -10 }}
+                                whileTap={{ scale: 0.95 }}
+                                style={{
+                                    position: 'absolute',
+                                    left: pos.left,
+                                    top: pos.top,
+                                    x: '-50%',
+                                    y: '-50%',
+                                    width: '110px',
+                                    height: '150px',
+                                    borderRadius: '4px 10px 10px 4px',
+                                    border: isActive ? '3px solid white' : '1px solid rgba(0,0,0,0.2)',
+                                    background: wColor,
+                                    borderLeft: '10px solid rgba(0,0,0,0.4)',
+                                    color: '#1a202c',
+                                    fontWeight: 'bold',
+                                    fontSize: '0.85rem',
+                                    cursor: 'pointer',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                    boxShadow: isActive ? '10px 10px 20px rgba(0,0,0,0.6), inset 2px 0 5px rgba(255,255,255,0.8)' : '5px 5px 15px rgba(0,0,0,0.5), inset 2px 0 5px rgba(255,255,255,0.4)',
+                                    padding: '12px',
+                                    textAlign: 'center',
+                                    outline: 'none',
+                                    zIndex: isActive ? 6 : 5
+                                }}
+                            >
+                                <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '3px', background: 'rgba(255,255,255,0.5)', borderRadius: '0 6px 6px 0' }} />
+                                <BookOpen size={24} color="#1a202c" style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.5))' }} />
+                                <span style={{ fontFamily: 'var(--font-jp)', lineHeight: 1.2, zIndex: 1 }}>{w.title}</span>
+                            </motion.button>
+                        );
+                    })}
+                </motion.div>
+            </div>
+        </div>
+    );
+};
+
+const introTextLines = [
+    "潜在意識を最大化し、地球規模の「価値」を創出する",
+    "皆さま、ようこそ。",
+    "マインドデザイン研究所が体系化した「心の階層」のゴール、第7フロアへ。",
+    "これまでのプロセスでは、自分のマインドを整え、周囲に影響を与える「技術」を磨いてきました。しかし、この最高階層である「プロセス7」では、これまでの常識を一度手放していただきます。",
+    "この講義では、以下の3つのステップで「心の在り方」を書き換えていきます。",
+    "1. 「心の視座」を宇宙の高さまで引き上げる",
+    "日常の忙しさやストレスという「重力」から離れ、もっとも高い視点から自分を俯瞰（ふかん）してみましょう。時間軸を広げ、宇宙のような大きな視座を持つことで、目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。",
+    "2. 究極の自分軸「在（Being）」を体得する",
+    "「何かをしなければ（Doing）」という執着を捨て、ただ「自分として在る（Being）」ことに集中します。「何もない=無」の状態は、実はあらゆる可能性が詰まった「満たされている」状態です。言葉や論理を超えた「感じる世界」の感度を高めることで、しなやかで揺るぎない自分軸が完成します。",
+    "3. 「共生」によるサステナブルな繁栄",
+    "一人のリーダーがこの高い視座に立つことは、社会に計り知れない価値をもたらします。",
+    "「自分のため」という枠を超え、「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」という循環（共生）を、透明な設計図として描き出します。",
+    "あなたの心の変革が、地球の未来を創り出す。",
+    "人類の可能性を解き放つ、究極のメンタルトレーニングを始めましょう。"
+];
+
+const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
+    const scrollRef = useRef(null);
+    const { scrollYProgress } = useScroll({
+        container: scrollRef
+    });
+
+    const scale = useTransform(scrollYProgress, [0, 1], [1, 1.4]);
+    const buttonOpacity = useTransform(scrollYProgress, [0.8, 1], [0, 1]);
+    const buttonPointerEvents = useTransform(scrollYProgress, [0.8, 1], ['none', 'auto']);
+
+    return (
+        <div style={{ position: 'relative', marginTop: '20px', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden' }}>
+            <motion.div
+                style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: `url(${lectureBg})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    scale: scale,
+                    zIndex: 0
+                }}
+            />
+            {/* 背景を明るく保つためオーバーレイシャドウを削除 */}
+            
+            <button
+                onClick={onBack}
+                style={{ position: 'absolute', top: '20px', left: '20px', padding: '8px 16px', borderRadius: '20px', background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', zIndex: 10 }}
+            >
+                <ArrowLeft size={14} /> 廊下へ戻る
+            </button>
+
+            <div ref={scrollRef} style={{ position: 'relative', zIndex: 2, height: '100%', overflowY: 'auto', padding: '100px 40px', scrollbarWidth: 'none' }}>
+                <style>{`::-webkit-scrollbar { display: none; }`}</style>
+                <div style={{ maxWidth: '800px', margin: '0 auto', color: 'white', textShadow: '0px 2px 4px rgba(0,0,0,0.9), 0px 0px 10px rgba(0,0,0,0.8), 0px 0px 20px rgba(0,0,0,0.8), 0px 0px 30px rgba(0,0,0,0.8)', fontSize: '1.2rem', lineHeight: '2.0', fontFamily: 'var(--font-jp)', fontWeight: 'bold' }}>
+                    {lecture && (
+                        <h2 style={{ fontSize: '2.5rem', marginBottom: '60px', textAlign: 'center', color: 'white', textShadow: '0px 4px 10px rgba(0,0,0,0.9), 0px 0px 20px rgba(0,0,0,0.9)' }}>
+                            {lecture.title}
+                        </h2>
+                    )}
+                    {introTextLines.map((text, idx) => (
+                        <p key={idx} style={{ marginBottom: '32px' }}>{text}</p>
+                    ))}
+                    
+                    <div style={{ height: '40vh' }} /> {/* Extra space to allow scrolling past text */}
+
+                    <motion.div style={{ opacity: buttonOpacity, pointerEvents: buttonPointerEvents, display: 'flex', justifyContent: 'center', paddingBottom: '100px' }}>
+                        <button onClick={onComplete} style={{ background: '#e53e3e', color: 'white', fontSize: '1.2rem', padding: '16px 48px', borderRadius: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.5)', fontWeight: 'bold' }}>
+                            授業を受ける
+                        </button>
+                    </motion.div>
+                </div>
+            </div>
+            
+            <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 3, color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
+                    ↓ スクロールして講義へ進む
+                </motion.div>
+            </div>
+        </div>
+    );
+};
+
 export function Classroom({ currentFloorId, lectures = [] }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
     const [activeLecture, setActiveLecture] = useState(null);
+    const [isIntroFinished, setIsIntroFinished] = useState(false);
     const [activeWorkshop, setActiveWorkshop] = useState(null);
 
     // Cinema Modal State
@@ -166,6 +332,22 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     // Transition overlay state
     const [transitioningResource, setTransitioningResource] = useState(null);
     const [transitioningWorkshop, setTransitioningWorkshop] = useState(null);
+
+    const workshopsRef = useRef(null);
+
+    const scrollToWorkshops = () => {
+        if (workshopsRef.current) {
+            // Header height + some padding
+            const offset = 80;
+            const elementPosition = workshopsRef.current.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+            
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
+        }
+    };
 
     // Auth removed
     const user = null;
@@ -177,6 +359,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     // Reset selection when floor changes
     useEffect(() => {
         setActiveLecture(null);
+        setIsIntroFinished(false);
         setActiveWorkshop(null);
         setFormAnswers({});
         setViewMode('WALL');
@@ -213,12 +396,16 @@ export function Classroom({ currentFloorId, lectures = [] }) {
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
+        setIsIntroFinished(false);
         setActiveWorkshop(null); // Reset workshop
+        window.scrollTo(0, 0);
     };
 
     const handleBackToHallway = () => {
         setActiveLecture(null);
+        setIsIntroFinished(false);
         setActiveWorkshop(null);
+        window.scrollTo(0, 0);
     }
 
     // Consistent colors for workshops
@@ -362,8 +549,9 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                                 onClick={() => handleLectureSelect(l)}
                                 style={{
                                     height: '300px',
-                                    // Make the "door" card darker to stand out against the bright hospital hallway
-                                    background: 'linear-gradient(180deg, rgba(10,20,30,0.8) 0%, rgba(0,0,0,0.95) 100%)',
+                                    backgroundImage: `url(${lectureBg})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'center',
                                     border: '1px solid rgba(255,255,255,0.2)',
                                     borderRadius: '8px 8px 0 0',
                                     borderBottom: '4px solid var(--floor-4)',
@@ -379,11 +567,14 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                                     overflow: 'hidden'
                                 }}
                             >
+                                {/* Background Overlay for Text Readability */}
+                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)' }} />
+
                                 {/* Door Glow Effect on Hover */}
                                 <div className="door-glow" style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at top, rgba(143,211,244,0.3) 0%, transparent 60%)', opacity: 0, transition: 'opacity 0.3s' }} />
 
-                                <BookOpen size={32} color="var(--floor-4)" style={{ marginBottom: '16px', filter: 'drop-shadow(0 0 10px rgba(143,211,244,0.5))' }} />
-                                <h4 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
+                                <BookOpen size={32} color="var(--floor-4)" style={{ marginBottom: '16px', filter: 'drop-shadow(0 0 10px rgba(143,211,244,0.5))', position: 'relative', zIndex: 1 }} />
+                                <h4 style={{ margin: '0 0 8px 0', fontSize: '1.2rem', color: 'white', textShadow: '0 2px 4px rgba(0,0,0,0.8)', position: 'relative', zIndex: 1 }}>
                                     {l.title}
                                 </h4>
                                 <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0 }}>ルームへ入る</p>
@@ -395,6 +586,10 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                 </div>
             </div>
         );
+    }
+
+    if (activeLecture && !isIntroFinished) {
+        return <LectureIntroSequence lecture={activeLecture} onComplete={() => setIsIntroFinished(true)} onBack={handleBackToHallway} />;
     }
 
     // --- LECTURE ROOM VIEW ---
@@ -413,118 +608,163 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                     {activeLecture.title}
                 </h2>
 
-                {/* Links / Cinema Section */}
-                {activeLecture.links && activeLecture.links.length > 0 && (
-                    <div style={{ marginTop: '20px', padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', borderLeft: '4px solid var(--floor-3)' }}>
-                        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 12px 0', fontWeight: 'bold' }}>講義リソース (クリックでシアターを表示)</p>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                            {activeLecture.links.map((link, idx) => {
-                                // Determine Type: Admin 'type' field takes precedence. Fallback to basic video check for older data.
-                                const isRealtime = link.type === 'realtime';
-                                const isRecorded = link.type === 'recorded' || (!link.type && (link.url.includes('youtube.com') || link.url.includes('youtu.be') || link.url.includes('vimeo')));
-                                const isExternal = !isRealtime && !isRecorded;
-                                const bgImg = isRecorded ? imgCinema : imgClassroom;
+                {/* Links / Audio-Visual Room Section */}
+                {activeLecture.links && activeLecture.links.length > 0 && (() => {
+                    const recordedLinks = [];
+                    const realtimeLinks = [];
+                    const externalLinks = [];
 
-                                return (
-                                    <motion.div
-                                        key={idx}
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => startResourceTransition(e, link, isRecorded, isRealtime, isExternal)}
-                                        style={{
-                                            height: '160px',
-                                            backgroundImage: isExternal ? 'none' : `url(${bgImg})`,
-                                            backgroundSize: 'cover',
-                                            backgroundPosition: 'center',
-                                            borderRadius: '12px',
-                                            border: '1px solid rgba(255,255,255,0.2)',
-                                            cursor: 'pointer',
-                                            position: 'relative',
-                                            overflow: 'hidden',
-                                            display: 'flex',
-                                            alignItems: 'flex-end',
-                                            boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
-                                            backgroundColor: isExternal ? 'rgba(255,255,255,0.05)' : 'transparent'
-                                        }}
-                                    >
-                                        {!isExternal && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 100%)' }} />}
-                                        <div style={{ position: 'relative', zIndex: 1, padding: '16px', width: '100%' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: isRecorded ? 'white' : 'white', marginBottom: '8px' }}>
-                                                {isRecorded && <PlayCircle size={16} />}
-                                                {isRealtime && <User size={16} />}
-                                                {isExternal && <ExternalLink size={14} />}
-                                                <span style={{ fontSize: '0.8rem', fontWeight: 'bold', textTransform: 'uppercase' }}>
-                                                    {isRecorded ? 'シアター室へ' : isRealtime ? 'オンライン講義室へ' : '外部リンク'}
-                                                </span>
+                    activeLecture.links.forEach(link => {
+                        const isRealtime = link.type === 'realtime';
+                        const isRecorded = link.type === 'recorded' || (!link.type && (link.url.includes('youtube.com') || link.url.includes('youtu.be') || link.url.includes('vimeo')));
+                        if (isRealtime) realtimeLinks.push(link);
+                        else if (isRecorded) recordedLinks.push(link);
+                        else externalLinks.push(link);
+                    });
+
+                    // Combine realtime and external for the sofa area, or keep external separate.
+                    const sofaLinks = [...realtimeLinks, ...externalLinks];
+
+                    return (
+                        <div style={{ 
+                            marginTop: '24px', 
+                            position: 'relative',
+                            width: '100%',
+                            aspectRatio: '16/10', // roughly matches the room photo
+                            backgroundImage: `url(${avRoomBg})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            borderRadius: '16px',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                            overflow: 'hidden'
+                        }}>
+                            {/* Wall Area (Recorded Videos) */}
+                            {recordedLinks.length > 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '32%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    width: '70%',
+                                    height: '25%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    gap: '20px',
+                                    zIndex: 5
+                                }}>
+                                    {recordedLinks.map((link, idx) => (
+                                        <motion.div
+                                            key={`rec-${idx}`}
+                                            whileHover={{ scale: 1.05 }}
+                                            whileTap={{ scale: 0.95 }}
+                                            onClick={(e) => startResourceTransition(e, link, true, false, false)}
+                                            style={{
+                                                flex: 1,
+                                                maxWidth: '280px',
+                                                height: '100%',
+                                                backgroundImage: `url(${imgCinema})`,
+                                                backgroundSize: 'cover',
+                                                backgroundPosition: 'center',
+                                                borderRadius: '8px',
+                                                border: '2px solid #333',
+                                                boxShadow: '0 10px 20px rgba(0,0,0,0.6)',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'flex-end',
+                                                padding: '12px',
+                                                position: 'relative',
+                                                overflow: 'hidden'
+                                            }}
+                                        >
+                                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }} />
+                                            <div style={{ position: 'relative', zIndex: 1, color: 'white', width: '100%' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', marginBottom: '4px' }}>
+                                                    <PlayCircle size={14} /> シアター室へ
+                                                </div>
+                                                <div style={{ fontWeight: 'bold', fontSize: '0.95rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {link.title}
+                                                </div>
                                             </div>
-                                            <h4 style={{ margin: 0, color: 'white', fontSize: '1.05rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
-                                                {link.title}
-                                            </h4>
-                                        </div>
-                                    </motion.div>
-                                );
-                            })}
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Sofa Area (Zoom/Realtime/External Links) */}
+                            {sofaLinks.length > 0 && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '68%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    width: '80%',
+                                    height: '22%',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'flex-end',
+                                    gap: '30px',
+                                    zIndex: 5
+                                }}>
+                                    {sofaLinks.map((link, idx) => {
+                                        const isExternal = link.type !== 'realtime' && link.type !== 'recorded' && !link.url.includes('youtube') && !link.url.includes('vimeo');
+                                        return (
+                                            <motion.div
+                                                key={`sofa-${idx}`}
+                                                whileHover={{ scale: 1.05 }}
+                                                whileTap={{ scale: 0.95 }}
+                                                onClick={(e) => startResourceTransition(e, link, false, !isExternal, isExternal)}
+                                                style={{
+                                                    flex: 1,
+                                                    maxWidth: '240px',
+                                                    height: '100%',
+                                                    backgroundImage: isExternal ? 'none' : `url(${imgClassroom})`,
+                                                    backgroundColor: isExternal ? '#2d3748' : 'transparent',
+                                                    backgroundSize: 'cover',
+                                                    backgroundPosition: 'center',
+                                                    borderRadius: '8px',
+                                                    border: '2px solid #555',
+                                                    boxShadow: '0 10px 20px rgba(0,0,0,0.6)',
+                                                    cursor: 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'flex-end',
+                                                    padding: '12px',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                }}
+                                            >
+                                                {!isExternal && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }} />}
+                                                <div style={{ position: 'relative', zIndex: 1, color: 'white', width: '100%' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', marginBottom: '4px' }}>
+                                                        {isExternal ? <ExternalLink size={12} /> : <User size={12} />}
+                                                        {isExternal ? '外部リンク' : 'オンライン講義室へ'}
+                                                    </div>
+                                                    <div style={{ fontWeight: 'bold', fontSize: '0.85rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {link.title}
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
+                                </div>
+                            )}
                         </div>
-                    </div>
-                )}
+                    );
+                })()}
 
-                {/* Workshop Select */}
-                <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)' }}>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: 'bold' }}>ワークショップ</p>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                        {activeLecture.workshops.length === 0 ? (
-                            <p style={{ color: '#666', fontSize: '0.9rem', fontStyle: 'italic', margin: 0 }}>この講座には現在ワークショップがありません。</p>
-                        ) : (
-                            activeLecture.workshops.map(w => {
-                                const isActive = activeWorkshop?.id === w.id;
-                                const wColor = getWorkshopColor(w.id);
-
-                                return (
-                                    <button
-                                        key={w.id}
-                                        onClick={() => handleWorkshopSelect(w, wColor)}
-                                        style={{
-                                            position: 'relative',
-                                            width: '130px',
-                                            height: '180px',
-                                            margin: '0 8px 16px 8px',
-                                            borderRadius: '4px 12px 12px 4px',
-                                            // Active state has a white outline/glow, inactive is just the border
-                                            border: isActive ? '3px solid white' : '1px solid rgba(0,0,0,0.2)',
-                                            background: wColor, // Book cover is always the designated pastel color
-                                            borderLeft: '10px solid rgba(0,0,0,0.3)', // Book spine
-                                            color: '#1a202c', // Dark text for pastel background
-                                            fontWeight: 'bold',
-                                            fontSize: '1rem',
-                                            cursor: 'pointer',
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '12px',
-                                            transition: 'all 0.3s ease',
-                                            boxShadow: isActive ? '10px 10px 20px rgba(0,0,0,0.4), inset 2px 0 5px rgba(255,255,255,0.8)' : '5px 5px 15px rgba(0,0,0,0.3), inset 2px 0 5px rgba(255,255,255,0.4)',
-                                            padding: '16px',
-                                            textAlign: 'center',
-                                            transformStyle: 'preserve-3d',
-                                            outline: isActive ? '2px solid #1a202c' : 'none',
-                                        }}
-                                        onMouseEnter={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(-10px) rotateY(-5deg) scale(1.05)';
-                                            e.currentTarget.style.boxShadow = '15px 15px 30px rgba(0,0,0,0.3), inset 2px 0 5px rgba(255,255,255,0.8)';
-                                        }}
-                                        onMouseLeave={(e) => {
-                                            e.currentTarget.style.transform = 'translateY(0) rotateY(0) scale(1)';
-                                            e.currentTarget.style.boxShadow = isActive ? '10px 10px 20px rgba(0,0,0,0.4), inset 2px 0 5px rgba(255,255,255,0.8)' : '5px 5px 15px rgba(0,0,0,0.3), inset 2px 0 5px rgba(255,255,255,0.4)';
-                                        }}
-                                    >
-                                        <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '4px', background: 'rgba(255,255,255,0.5)', borderRadius: '0 8px 8px 0' }} />
-                                        <BookOpen size={28} color="#1a202c" style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.5))' }} />
-                                        <span style={{ fontFamily: 'var(--font-jp)', lineHeight: 1.3, zIndex: 1 }}>{w.title}</span>
-                                    </button>
-                                );
-                            })
-                        )}
-                    </div>
-                </div>
+                {/* Workshop Library (Scroll to advance deeper and select workshops) */}
+                <WorkshopLibrary 
+                    workshops={activeLecture.workshops} 
+                    activeWorkshop={activeWorkshop} 
+                    onWorkshopSelect={(w, color) => {
+                        handleWorkshopSelect(w, color);
+                        scrollToWorkshops();
+                    }}
+                    getWorkshopColor={getWorkshopColor} 
+                />
             </div>
 
+            <div ref={workshopsRef}>
             {activeWorkshop ? (
                 <>
                     {/* 2. Main Area: Tabs */}
@@ -664,6 +904,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                     <p>受講するワークショップを選択してください</p>
                 </div>
             )}
+            </div>
 
             {/* Modal for Details */}
             <ResponseModal

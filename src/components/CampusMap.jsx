@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buildings } from '../data/buildings';
-import bgCampus from '../assets/exterior.png'; // Fallback or generated image
+import bgCampus from '../assets/entrance_bg_zoomed_out.png';
 
 // Building Click Zone Component
 const BuildingZone = ({ id, label, color, position, onClick }) => {
@@ -67,20 +67,18 @@ export function CampusMap({ onSelectBuilding }) {
         <div style={{
             position: 'absolute',
             inset: 0,
-            background: '#000',
+            background: '#ffffff', // ベースの明るい背景
             overflow: 'hidden'
         }}>
-            {/* Background Image - Ground View */}
+            {/* メインの画像 (ズームアウトした画像なのでcoverでもメインの被写体は切れない) */}
             <div style={{
                 position: 'absolute',
                 inset: 0,
-                backgroundImage: `url(${bgCampus})`, // Use the ground view image
+                backgroundImage: `url(${bgCampus})`,
                 backgroundSize: 'cover',
-                backgroundPosition: 'center bottom', // Anchor to bottom for ground view
-                transition: 'transform 10s ease-out' // Subtle zoom effect could go here
+                backgroundPosition: 'center',
             }}>
-                {/* Dark Overlay for Atmosphere */}
-                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 50%, rgba(10,10,30,0.4) 100%)' }} />
+                {/* Dark Overlay removed for a brighter impression */}
             </div>
 
             {/* Title / HUD */}
@@ -107,43 +105,23 @@ export function CampusMap({ onSelectBuilding }) {
                 </motion.p>
             </div>
 
-            {/* Interactive Zones - Manually Positioned for Ground View */}
-
-            {/* North (Back/Top) */}
-            <BuildingZone
-                id="north"
-                label={getBuilding('north').name}
-                color={getBuilding('north').color}
-                position={{ top: '30%', left: '50%', transform: 'translate(-50%, -50%)', width: '20%', height: '15%' }}
-                onClick={onSelectBuilding}
-            />
-
-            {/* West (Left) */}
-            <BuildingZone
-                id="west"
-                label={getBuilding('west').name}
-                color={getBuilding('west').color}
-                position={{ top: '55%', left: '20%', transform: 'translate(-50%, -50%)', width: '25%', height: '30%' }}
-                onClick={onSelectBuilding}
-            />
-
-            {/* East (Right) */}
-            <BuildingZone
-                id="east"
-                label={getBuilding('east').name}
-                color={getBuilding('east').color}
-                position={{ top: '55%', left: '80%', transform: 'translate(-50%, -50%)', width: '25%', height: '30%' }}
-                onClick={onSelectBuilding}
-            />
-
-            {/* Main (Center) */}
-            <BuildingZone
-                id="main"
-                label={getBuilding('main').name}
-                color={getBuilding('main').color}
-                position={{ top: '65%', left: '50%', transform: 'translate(-50%, -50%)', width: '30%', height: '40%' }}
-                onClick={onSelectBuilding}
-            />
+            {/* Interactive Zones - Rendered dynamically from buildings data */}
+            {buildings.map(b => (
+                <BuildingZone
+                    key={b.id}
+                    id={b.id}
+                    label={b.name}
+                    color={b.color}
+                    position={{ 
+                        top: b.mapPosition.top, 
+                        left: b.mapPosition.left, 
+                        transform: `translate(-50%, -50%) scale(${b.mapPosition.scale || 1})`, 
+                        width: '18%', 
+                        height: '18%' 
+                    }}
+                    onClick={onSelectBuilding}
+                />
+            ))}
 
         </div>
     );

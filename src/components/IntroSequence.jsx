@@ -1,195 +1,162 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, useScroll, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ArrowRight } from 'lucide-react';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight } from 'lucide-react';
+
+import imgPath1 from '../assets/path_1.png';
+import imgPath2 from '../assets/path_2.png';
+import imgPath3 from '../assets/path_3.png';
+import imgPath4 from '../assets/path_4.png';
+import imgPath5 from '../assets/path_5.png';
 
 const sections = [
     {
-        title: "時代を揺り動かす心",
-        text: "これからもそしてこの先も、時代を揺り動かし変革を起こせるのは人の心です。\nその心の可能性をいかに拡げていけるか――\nこれは人類の未来における最も重要な課題です。"
+        text: "マインドデザイン研究所では、\nモノ×潜在意識\nコト×潜在意識\nヒト×潜在意識\n物理次元（社会）×マインド次元（潜在意識）\nの共創を実現するためのマインドデザインを構築し、\n様々な分野において、目に見える情報世界では\n動かしようのなかった革新的な潜在価値を創出します。\n\n潜在的な領域に切り込むことのできる「マインドの扱い方」を熟知し、\n例外なく、個人において、組織においても\n「マインドプロセスデザイン」を構築できるという強みを生かして、\n誰にでも当てはまる「マインドプロセスデザイン」を活用し、\n社会に活用していくための研究所です。"
     },
     {
-        title: "潜在意識ともう一人の自分",
-        text: "自らを俯瞰し、潜在的な「もう一人の自分」を創り出すことで、現実から新たな可能性が見出されます。\n感性の領域へ引き上げることで希望が溢れ出します。"
+        text: "マインドデザイン研究所は、\nこの意識できていない潜在的の領域にいかにアプローチするか、\nその”マインドプロセス”を研究し続けています。\n\nマインドデザイン研究所では、人間の潜在意識に着目しました。\nそれは人間のゲノムを探求し続け、\n革新的な発見を成し遂げてきた生物学や生命科学の領域と同じくして、"
     },
     {
-        title: "マインドプロセスデザイン",
-        text: "〈プロセス-1〉から〈プロセス7〉まで、9段階で構成される心の階層。\n10万人の心で実証されたこの透明な設計図が、【マインドプロセスデザイン】です。"
+        text: "一人一人違う考え方、行動をするマインド「心と脳の学問」として、\n「心のマイクロスコープ」によって潜在意識という領域にフォーカスを当て、\n様々な発見と開発を重ね挑み続けることで、実証してきた知見的モデルを、\n実装可能な状態で、組織、社会に拡く実用的なしくみに組み込むことが可能です。\n\n心のマイクロスコープでのぞき込んだ日常次元では見えてこないが\n確実に存在する人間の潜在意識（9割）を解き明かしていくことが、\nマインドデザイン研究所の使命です。"
     },
     {
-        title: "社会実装と真のWell-being",
-        text: "個の潜在能力を引き出す設計図を社会に実装することは、地球規模の課題を解決に導き、真のWell-beingを実現させます。\n一人ひとりの変化が、組織を変え、社会を変革するのです。"
+        text: "マインドデザイン―感性―”は、\n心の視点を引き上げる「マインドの法則」を体系化した\n【マインドプロセスデザイン-MPD- 】を活用し\n時代・産業を問わない普遍的な価値創出を実現していきます。\n\n人の行動の9割は無自覚な潜在意識が決めています。\n人間の知覚できている意識は、およそ1割以下と\n言われています。"
     },
     {
-        title: "希望が溢れ出す未来へ",
-        text: "心の視点が引き上がる時、個は自ずと社会へと繋がり、想像を超えた力が生まれます。\nさあ、自らの潜在能力を引き出す場所へ――"
+        text: "「意識できている自分」と\n「意識できていないもう一人の自分」という存在に、\n未だ多くの人は気づいていません。\n\nこの”無自覚な自分”が、自らの人生、\nそして、自らを取り巻く世界を創り出している──\n\nこの現状の真実にフォーカスを向け、\n1割の意識を読み取ったデータではなく\n潜在意識9割を読み解く“マインドデザイン―感性―”で\n世界は一変します。"
     }
 ];
 
-export const IntroSequence = ({ onEnter, images }) => {
-    const containerRef = useRef(null);
-    const { scrollYProgress } = useScroll({ container: containerRef });
+const bgImages = [imgPath1, imgPath2, imgPath3, imgPath4, imgPath5];
 
-    const numSections = sections.length;
-    const [activeIndex, setActiveIndex] = useState(0);
+export const IntroSequence = ({ onEnter }) => {
+    // 画面全体（Window）のスクロールを追跡するように変更（確実に動作させるため）
+    const { scrollYProgress } = useScroll();
 
-    useEffect(() => {
-        const unsubscribe = scrollYProgress.onChange((latest) => {
-            // Map 0 - 1 to 0 - 4 safely
-            const index = Math.min(Math.floor(latest * numSections), numSections - 1);
-            setActiveIndex(index);
-        });
-        return () => unsubscribe();
-    }, [scrollYProgress, numSections]);
+    // スクロールに応じた5枚の画像の不透明度マッピング
+    const opacity0 = useTransform(scrollYProgress, [0, 0.10, 0.20], [1, 1, 0]);
+    const opacity1 = useTransform(scrollYProgress, [0.10, 0.20, 0.35, 0.45], [0, 1, 1, 0]);
+    const opacity2 = useTransform(scrollYProgress, [0.35, 0.45, 0.60, 0.70], [0, 1, 1, 0]);
+    const opacity3 = useTransform(scrollYProgress, [0.60, 0.70, 0.85, 0.95], [0, 1, 1, 0]);
+    const opacity4 = useTransform(scrollYProgress, [0.85, 0.95, 1.0], [0, 1, 1]);
+    const opacities = [opacity0, opacity1, opacity2, opacity3, opacity4];
 
-    const scrollToNext = (idx) => {
-        if (containerRef.current) {
-            const nextIndex = idx + 1;
-            if (nextIndex < numSections) {
-                containerRef.current.scrollTo({
-                    top: containerRef.current.clientHeight * nextIndex,
-                    behavior: 'smooth'
-                });
-            }
-        }
-    };
+    // 切り替えタイミングで濃くなる靄（もや）の不透明度マッピング
+    const mistOpacity = useTransform(scrollYProgress, 
+        [0, 0.05, 0.15, 0.25, 0.30, 0.40, 0.50, 0.55, 0.65, 0.75, 0.80, 0.90, 1.0],
+        [0, 0,    1,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0  ]
+    );
 
     return (
-        <div
-            ref={containerRef}
-            style={{
-                position: 'relative',
-                height: '100vh',
-                overflowY: 'auto',
-                scrollSnapType: 'y mandatory',
-                background: '#000',
-                scrollBehavior: 'smooth'
-            }}
-        >
-
-            {/* Fixed Sticky Background Container */}
-            <div style={{ position: 'sticky', top: 0, left: 0, right: 0, height: '100vh', overflow: 'hidden', zIndex: 0 }}>
-                <AnimatePresence mode="popLayout">
+        <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
+            {/* Fixed Background Container */}
+            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100vh', overflow: 'hidden', zIndex: 0 }}>
+                {/* Scroll-Linked Images */}
+                {bgImages.map((img, idx) => (
                     <motion.div
-                        key={activeIndex}
-                        initial={{ opacity: 0, scale: 1.05 }}
-                        animate={{ opacity: 0.6, scale: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 1.2, ease: "easeInOut" }}
+                        key={idx}
                         style={{
                             position: 'absolute',
                             inset: 0,
-                            backgroundImage: `url(${images[Math.min(activeIndex, images.length - 1)]})`,
+                            backgroundImage: `url(${img})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
+                            opacity: opacities[idx],
+                            zIndex: 0
                         }}
                     />
-                </AnimatePresence>
+                ))}
+
+                {/* Scroll-Linked Mist Layer */}
+                <motion.div
+                    style={{
+                        position: 'absolute', inset: 0,
+                        background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 70%, transparent 100%)',
+                        backdropFilter: 'blur(16px)',
+                        pointerEvents: 'none',
+                        opacity: mistOpacity,
+                        zIndex: 1
+                    }}
+                />
 
                 {/* Dark Gradient Overlay for Readability */}
                 <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to bottom, transparent, rgba(5, 10, 20, 0.85))'
+                    background: 'linear-gradient(to bottom, transparent, rgba(5, 10, 20, 0.85))',
+                    zIndex: 2
                 }} />
             </div>
 
-            {/* Scrolling Content Panels */}
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 1 }}>
+            {/* Scrolling Content Panels (Contiguous text flow) */}
+            <div style={{ position: 'relative', zIndex: 10, paddingTop: '15vh', paddingBottom: '30vh' }}>
                 {sections.map((section, idx) => (
-                    <div key={idx} style={{
-                        height: '100vh',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        padding: '20px',
-                        scrollSnapAlign: 'start'
-                    }}>
-                        <motion.div
-                            initial={{ opacity: 0, y: 50 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ root: containerRef, once: false, amount: 0.5 }}
-                            transition={{ duration: 0.8 }}
-                            className="glass-panel"
+                    <motion.div 
+                        key={idx} 
+                        style={{
+                            minHeight: '60vh',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '20px',
+                            marginBottom: '35vh' // Provides the deep scrolling feeling
+                        }}
+                    >
+                        <div
                             style={{
-                                maxWidth: '640px',
+                                maxWidth: '800px',
                                 width: '100%',
-                                padding: '40px',
-                                borderRadius: '24px',
+                                padding: '50px 20px',
                                 textAlign: 'center',
-                                background: 'rgba(11, 16, 36, 0.7)',
-                                border: '1px solid rgba(129, 230, 217, 0.2)',
-                                boxShadow: '0 20px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.05)',
-                                backdropFilter: 'blur(12px)'
                             }}
                         >
-                            <h2 style={{
-                                fontSize: 'clamp(1.5rem, 5vw, 2.2rem)',
-                                marginBottom: '24px',
-                                background: 'linear-gradient(135deg, #fff, #81e6d9)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                fontWeight: 'bold',
+                            <div style={{
+                                fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)',
+                                color: '#ffffff',
+                                fontFamily: 'var(--font-jp)',
+                                textAlign: 'center',
+                                textShadow: '0 4px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.6)',
                                 letterSpacing: '0.05em'
                             }}>
-                                {section.title}
-                            </h2>
-                            <p style={{
-                                fontSize: 'clamp(1rem, 3vw, 1.15rem)',
-                                lineHeight: 2.0,
-                                color: 'rgba(255,255,255,0.9)',
-                                whiteSpace: 'pre-wrap',
-                                fontFamily: 'var(--font-jp)'
-                            }}>
-                                {section.text}
-                            </p>
-
-                            {idx === numSections - 1 ? (
-                                <motion.button
-                                    whileHover={{ scale: 1.05, boxShadow: '0 0 20px var(--floor-4)' }}
-                                    whileTap={{ scale: 0.95 }}
-                                    onClick={onEnter}
-                                    style={{
-                                        marginTop: '48px',
-                                        padding: '16px 36px',
-                                        borderRadius: '40px',
-                                        background: 'var(--floor-4)',
-                                        color: '#000',
-                                        border: 'none',
-                                        fontSize: '1.2rem',
-                                        fontWeight: 'bold',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '12px',
-                                        margin: '48px auto 0',
-                                        transition: 'box-shadow 0.3s ease'
-                                    }}
-                                >
-                                    大学ルームに入る <ArrowRight />
-                                </motion.button>
-                            ) : (
-                                <div style={{ marginTop: '48px', display: 'flex', justifyContent: 'center' }}>
-                                    <motion.button
-                                        onClick={() => scrollToNext(idx)}
-                                        animate={{ y: [0, 10, 0] }}
-                                        transition={{ repeat: Infinity, duration: 2 }}
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            color: 'rgba(129, 230, 217, 0.8)',
-                                            cursor: 'pointer',
-                                            padding: '10px'
-                                        }}
-                                        title="次のパートへすすむ"
-                                    >
-                                        <ChevronDown size={36} />
-                                    </motion.button>
-                                </div>
-                            )}
-                        </motion.div>
-                    </div>
+                                {/* Text paragraphs with margin for breathing room */}
+                                {section.text.split('\n\n').map((paragraph, p_idx) => (
+                                    <div key={p_idx} style={{ marginBottom: '3rem' }}>
+                                        {paragraph.split('\n').map((line, l_idx) => (
+                                            <p key={l_idx} style={{ margin: 0, lineHeight: 2.2 }}>
+                                                {line}
+                                            </p>
+                                        ))}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </motion.div>
                 ))}
+
+                {/* Final Enter Button */}
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10vh' }}>
+                    <motion.button
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px var(--floor-4)' }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={onEnter}
+                        style={{
+                            padding: '16px 48px',
+                            borderRadius: '40px',
+                            background: 'var(--floor-4)',
+                            color: '#000',
+                            border: 'none',
+                            fontSize: '1.3rem',
+                            fontWeight: 'bold',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '12px',
+                            transition: 'box-shadow 0.3s ease'
+                        }}
+                    >
+                        大学ルームに入る <ArrowRight />
+                    </motion.button>
+                </div>
             </div>
         </div>
     );
