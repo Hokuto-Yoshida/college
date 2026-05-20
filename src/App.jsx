@@ -9,6 +9,8 @@ import { SpiralNav } from './components/SpiralNav';
 import { Classroom } from './components/Classroom';
 import { AdminDashboard } from './components/AdminDashboard';
 import { IntroSequence } from './components/IntroSequence';
+import { MainBuildingIntro } from './components/MainBuildingIntro';
+import { Floor7Intro } from './components/Floor7Intro';
 import { useLectures } from './hooks/useLectures';
 
 // Assets
@@ -41,6 +43,8 @@ const LoadingScreen = () => (
 function App() {
   const [loading, setLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(!sessionStorage.getItem('introSeen'));
+  const [showMainIntro, setShowMainIntro] = useState(false);
+  const [showFloor7Intro, setShowFloor7Intro] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -66,6 +70,10 @@ function App() {
   const activeFloors = Array.isArray(activeBuilding.floors) ? activeBuilding.floors : [];
   const activeFloor = activeFloors.find(f => f.id === currentFloorId);
   const activeFloorIndex = activeFloors.findIndex(f => f.id === currentFloorId);
+  
+  // エントランス（null）の場合は「1F」として方向を計算する
+  const effectiveCurrentFloorId = currentFloorId || '1F';
+  const effectiveActiveFloorIndex = activeFloors.findIndex(f => f.id === effectiveCurrentFloorId);
 
   // Navigation with Transitions
   const performTransition = (type, updateStateFn) => {
@@ -99,6 +107,7 @@ function App() {
       setTransitionTargetFloor(targetId);
       performTransition('stairs-up', () => {
         setCurrentFloorId(targetId);
+        if (targetId === '7F') setShowFloor7Intro(true);
       });
     }
   };
@@ -109,6 +118,7 @@ function App() {
       setTransitionTargetFloor(targetId);
       performTransition('stairs-down', () => {
         setCurrentFloorId(targetId);
+        if (targetId === '7F') setShowFloor7Intro(true);
       });
     }
   };
@@ -120,6 +130,7 @@ function App() {
     setTransitionTargetFloor(targetFloorId);
     performTransition('stairs-up', () => {
       setCurrentFloorId(targetFloorId);
+      if (targetFloorId === '7F') setShowFloor7Intro(true);
     });
   };
 
@@ -127,12 +138,16 @@ function App() {
     performTransition('door', () => {
       setCurrentBuildingId(null);
       setCurrentFloorId(null);
+      setShowMainIntro(false);
     });
   };
 
   const handleEnterBuilding = (buildingId) => {
     performTransition('door', () => {
       setCurrentBuildingId(buildingId);
+      if (buildingId === 'main') {
+        setShowMainIntro(true);
+      }
     });
   };
 
@@ -193,7 +208,21 @@ function App() {
       )}
 
       {/* VIEW CONTENT */}
-      {!currentBuildingId ? (
+      {showMainIntro && currentBuildingId === 'main' ? (
+        <MainBuildingIntro 
+          onEnter={() => {
+            setShowMainIntro(false);
+            window.scrollTo(0, 0);
+          }} 
+        />
+      ) : showFloor7Intro && currentFloorId === '7F' ? (
+        <Floor7Intro 
+          onEnter={() => {
+            setShowFloor7Intro(false);
+            window.scrollTo(0, 0);
+          }} 
+        />
+      ) : !currentBuildingId ? (
         /* CAMPUS MAP VIEW */
         <CampusMap onSelectBuilding={handleEnterBuilding} />
       ) : (
@@ -312,9 +341,12 @@ function App() {
                   <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
                     setMobileMenuOpen(false);
                     const targetIndex = activeFloors.findIndex(f => f.id === id);
-                    const direction = targetIndex < activeFloorIndex ? 'stairs-up' : 'stairs-down';
+                    const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
                     setTransitionTargetFloor(id);
-                    performTransition(direction, () => setCurrentFloorId(id));
+                    performTransition(direction, () => {
+                      setCurrentFloorId(id);
+                      if (id === '7F') setShowFloor7Intro(true);
+                    });
                   }} />
                 </div>
               </motion.div>
@@ -454,9 +486,12 @@ function App() {
               <div className="glass-panel" style={{ borderRadius: '24px', padding: '16px' }}>
                 <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
                   const targetIndex = activeFloors.findIndex(f => f.id === id);
-                  const direction = targetIndex < activeFloorIndex ? 'stairs-up' : 'stairs-down';
+                  const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
                   setTransitionTargetFloor(id);
-                  performTransition(direction, () => setCurrentFloorId(id));
+                  performTransition(direction, () => {
+                    setCurrentFloorId(id);
+                    if (id === '7F') setShowFloor7Intro(true);
+                  });
                 }} />
               </div>
 

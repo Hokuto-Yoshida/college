@@ -47,6 +47,10 @@ body {
   line-height: 1.7;
 }
 
+* {
+  cursor: none !important;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;

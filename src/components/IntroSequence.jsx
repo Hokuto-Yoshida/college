@@ -33,17 +33,18 @@ export const IntroSequence = ({ onEnter }) => {
     const { scrollYProgress } = useScroll();
 
     // スクロールに応じた5枚の画像の不透明度マッピング
-    const opacity0 = useTransform(scrollYProgress, [0, 0.10, 0.20], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.10, 0.20, 0.35, 0.45], [0, 1, 1, 0]);
-    const opacity2 = useTransform(scrollYProgress, [0.35, 0.45, 0.60, 0.70], [0, 1, 1, 0]);
-    const opacity3 = useTransform(scrollYProgress, [0.60, 0.70, 0.85, 0.95], [0, 1, 1, 0]);
-    const opacity4 = useTransform(scrollYProgress, [0.85, 0.95, 1.0], [0, 1, 1]);
+    // テキストが画面中央に来るタイミング(約 0, 0.20, 0.42, 0.64, 0.85)に合わせて背景を切り替える
+    const opacity0 = useTransform(scrollYProgress, [0, 0.05, 0.15], [1, 1, 0]);
+    const opacity1 = useTransform(scrollYProgress, [0.05, 0.15, 0.26, 0.36], [0, 1, 1, 0]);
+    const opacity2 = useTransform(scrollYProgress, [0.26, 0.36, 0.48, 0.58], [0, 1, 1, 0]);
+    const opacity3 = useTransform(scrollYProgress, [0.48, 0.58, 0.69, 0.79], [0, 1, 1, 0]);
+    const opacity4 = useTransform(scrollYProgress, [0.69, 0.79, 1.0], [0, 1, 1]);
     const opacities = [opacity0, opacity1, opacity2, opacity3, opacity4];
 
-    // 切り替えタイミングで濃くなる靄（もや）の不透明度マッピング
-    const mistOpacity = useTransform(scrollYProgress, 
-        [0, 0.05, 0.15, 0.25, 0.30, 0.40, 0.50, 0.55, 0.65, 0.75, 0.80, 0.90, 1.0],
-        [0, 0,    1,    0,    0,    1,    0,    0,    1,    0,    0,    1,    0  ]
+    // 文字が中央にある時はレイヤーを透明にし、文字と文字の間の移動中に白レイヤーを濃くする
+    const whiteLayerOpacity = useTransform(scrollYProgress, 
+        [0, 0.06, 0.14, 0.20, 0.27, 0.35, 0.42, 0.49, 0.57, 0.64, 0.70, 0.78, 0.85, 1.0],
+        [0, 1,    1,    0,    1,    1,    0,    1,    1,    0,    1,    1,    0,    0  ]
     );
 
     return (
@@ -66,25 +67,24 @@ export const IntroSequence = ({ onEnter }) => {
                     />
                 ))}
 
-                {/* Scroll-Linked Mist Layer */}
-                <motion.div
-                    style={{
-                        position: 'absolute', inset: 0,
-                        background: 'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.6) 70%, transparent 100%)',
-                        backdropFilter: 'blur(16px)',
-                        pointerEvents: 'none',
-                        opacity: mistOpacity,
-                        zIndex: 1
-                    }}
-                />
-
-                {/* Dark Gradient Overlay for Readability */}
+                {/* Soft Gradient Overlay for slight Readability without being too dark */}
                 <div style={{
                     position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to bottom, transparent, rgba(5, 10, 20, 0.85))',
+                    background: 'linear-gradient(to bottom, transparent, rgba(5, 10, 20, 0.2))',
                     zIndex: 2
                 }} />
             </div>
+
+            {/* Scroll-Linked White Layer - 画面と文字全体を覆う薄い白レイヤー */}
+            <motion.div
+                style={{
+                    position: 'fixed', inset: 0,
+                    background: 'rgba(255, 255, 255, 0.4)', // 真っ白にならないよう、透過度を0.4に下げて薄いベールに
+                    pointerEvents: 'none',
+                    opacity: whiteLayerOpacity,
+                    zIndex: 20
+                }}
+            />
 
             {/* Scrolling Content Panels (Contiguous text flow) */}
             <div style={{ position: 'relative', zIndex: 10, paddingTop: '15vh', paddingBottom: '30vh' }}>
@@ -110,23 +110,24 @@ export const IntroSequence = ({ onEnter }) => {
                             }}
                         >
                             <div style={{
-                                fontSize: 'clamp(1.1rem, 3.5vw, 1.4rem)',
+                                fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)', // さらに文字を小さく
                                 color: '#ffffff',
                                 fontFamily: 'var(--font-jp)',
                                 textAlign: 'center',
-                                textShadow: '0 4px 8px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.6)',
-                                letterSpacing: '0.05em'
+                                textShadow: '0 2px 12px rgba(0,0,0,0.3)', // 黒いシャドウを大幅に弱くして明るい印象に
+                                letterSpacing: '0.1em' // 読みやすく間隔を広めに
                             }}>
                                 {/* Text paragraphs with margin for breathing room */}
-                                {section.text.split('\n\n').map((paragraph, p_idx) => (
-                                    <div key={p_idx} style={{ marginBottom: '3rem' }}>
-                                        {paragraph.split('\n').map((line, l_idx) => (
-                                            <p key={l_idx} style={{ margin: 0, lineHeight: 2.2 }}>
-                                                {line}
-                                            </p>
-                                        ))}
-                                    </div>
-                                ))}
+                                {section.text.split('\n').map((line, l_idx) => {
+                                    if (line.trim() === "") {
+                                        return <div key={l_idx} style={{ height: '8rem' }} />; // 空行には特大スペース
+                                    }
+                                    return (
+                                        <p key={l_idx} style={{ margin: 0, paddingBottom: '3rem', lineHeight: 2 }}> {/* 各行のすき間 */}
+                                            {line}
+                                        </p>
+                                    );
+                                })}
                             </div>
                         </div>
                     </motion.div>
@@ -144,7 +145,7 @@ export const IntroSequence = ({ onEnter }) => {
                             background: 'var(--floor-4)',
                             color: '#000',
                             border: 'none',
-                            fontSize: '1.3rem',
+                            fontSize: '1.1rem',
                             fontWeight: 'bold',
                             cursor: 'pointer',
                             display: 'flex',

@@ -39,16 +39,16 @@ const BuildingZone = ({ id, label, color, position, onClick }) => {
                 animate={{
                     opacity: isHovered ? 1 : 0.7,
                     y: isHovered ? -10 : 0,
-                    scale: isHovered ? 1.1 : 1
+                    scale: isHovered ? 1.1 : 1,
+                    backgroundColor: isHovered ? color : 'rgba(0, 0, 0, 0.7)',
+                    color: isHovered ? '#000' : '#fff',
+                    textShadow: isHovered ? 'none' : `0 0 10px ${color}`
                 }}
                 style={{
                     padding: '8px 16px',
-                    background: 'rgba(0, 0, 0, 0.7)',
                     border: `1px solid ${color}`,
                     borderRadius: '20px',
-                    color: '#fff',
                     fontWeight: 'bold',
-                    textShadow: `0 0 10px ${color}`,
                     backdropFilter: 'blur(4px)',
                     pointerEvents: 'none' // Let clicks pass to container
                 }}
