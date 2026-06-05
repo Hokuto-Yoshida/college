@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { buildings } from '../data/buildings';
-import bgCampus from '../assets/entrance_bg_zoomed_out.png';
+import bgCampus from '../assets/campus_bg.png';
 
 // Building Click Zone Component
 const BuildingZone = ({ id, label, color, position, onClick }) => {

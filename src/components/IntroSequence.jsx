@@ -2,11 +2,9 @@ import React, { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
-import imgPath1 from '../assets/path_1.png';
-import imgPath2 from '../assets/path_2.png';
-import imgPath3 from '../assets/path_3.png';
-import imgPath4 from '../assets/path_4.png';
-import imgPath5 from '../assets/path_5.png';
+import imgPath1 from '../assets/intro_new_1.jpg';
+import imgPath2 from '../assets/intro_new_2.jpg';
+import imgPath3 from '../assets/intro_new_3.jpg';
 
 const sections = [
     {
@@ -26,25 +24,24 @@ const sections = [
     }
 ];
 
-const bgImages = [imgPath1, imgPath2, imgPath3, imgPath4, imgPath5];
+const bgImages = [imgPath1, imgPath2, imgPath3];
 
 export const IntroSequence = ({ onEnter }) => {
     // 画面全体（Window）のスクロールを追跡するように変更（確実に動作させるため）
     const { scrollYProgress } = useScroll();
 
-    // スクロールに応じた5枚の画像の不透明度マッピング
-    // テキストが画面中央に来るタイミング(約 0, 0.20, 0.42, 0.64, 0.85)に合わせて背景を切り替える
-    const opacity0 = useTransform(scrollYProgress, [0, 0.05, 0.15], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.05, 0.15, 0.26, 0.36], [0, 1, 1, 0]);
-    const opacity2 = useTransform(scrollYProgress, [0.26, 0.36, 0.48, 0.58], [0, 1, 1, 0]);
-    const opacity3 = useTransform(scrollYProgress, [0.48, 0.58, 0.69, 0.79], [0, 1, 1, 0]);
-    const opacity4 = useTransform(scrollYProgress, [0.69, 0.79, 1.0], [0, 1, 1]);
-    const opacities = [opacity0, opacity1, opacity2, opacity3, opacity4];
+    // 5つのテキストセクションに合わせて、3枚の画像を切り替える
+    // 靄ピーク2（0.27-0.35）と画像0→1切り替えを同期
+    // 靄ピーク4（0.64-0.70）と画像1→2切り替えを同期
+    const opacity0 = useTransform(scrollYProgress, [0, 0.27, 0.35], [1, 1, 0]);
+    const opacity1 = useTransform(scrollYProgress, [0.27, 0.35, 0.64, 0.70], [0, 1, 1, 0]);
+    const opacity2 = useTransform(scrollYProgress, [0.64, 0.70, 1.0], [0, 1, 1]);
+    const opacities = [opacity0, opacity1, opacity2];
 
-    // 文字が中央にある時はレイヤーを透明にし、文字と文字の間の移動中に白レイヤーを濃くする
-    const whiteLayerOpacity = useTransform(scrollYProgress, 
-        [0, 0.06, 0.14, 0.20, 0.27, 0.35, 0.42, 0.49, 0.57, 0.64, 0.70, 0.78, 0.85, 1.0],
-        [0, 1,    1,    0,    1,    1,    0,    1,    1,    0,    1,    1,    0,    0  ]
+    // 画像切り替えのタイミングだけ靄をかける
+    const whiteLayerOpacity = useTransform(scrollYProgress,
+        [0, 0.20, 0.27, 0.35, 0.42, 0.57, 0.64, 0.70, 0.78, 1.0],
+        [0, 0,    1,    1,    0,    0,    1,    1,    0,    0  ]
     );
 
     return (
@@ -114,7 +111,7 @@ export const IntroSequence = ({ onEnter }) => {
                                 color: '#ffffff',
                                 fontFamily: 'var(--font-jp)',
                                 textAlign: 'center',
-                                textShadow: '0 2px 12px rgba(0,0,0,0.3)', // 黒いシャドウを大幅に弱くして明るい印象に
+                                textShadow: '0 2px 16px rgba(0,0,0,0.8), 0 0px 40px rgba(0,0,0,0.6)',
                                 letterSpacing: '0.1em' // 読みやすく間隔を広めに
                             }}>
                                 {/* Text paragraphs with margin for breathing room */}

@@ -1,5 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import doorInterior from '../assets/door_interior.png';
+import doorPanelLeft from '../assets/door_panel_left.png';
+import doorPanelRight from '../assets/door_panel_right.png';
 
 export function TransitionOverlay({ isVisible, type = 'door', images = {}, targetFloorId, onComplete }) {
     // Default fallback visuals (CSS) if no image provided
@@ -9,71 +12,57 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
         if (imgSrc) {
             if (type === 'door') {
                 return (
-                    <motion.div
-                        initial={{ backgroundColor: 'rgba(0,0,0,1)' }}
-                        animate={{ backgroundColor: ['rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,1)', 'rgba(0,0,0,0)'] }}
-                        transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1] }}
-                        style={{
-                            width: '100%', height: '100%',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            overflow: 'hidden',
-                            position: 'relative',
-                            perspective: '1200px'
-                        }}
-                    >
-                        {/* Door Container */}
-                        <motion.div
-                            animate={{ scale: [1, 2, 20, 20], opacity: [1, 1, 1, 0] }}
-                            transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
-                            style={{
-                                width: '280px', height: '420px',
-                                position: 'relative',
-                                display: 'flex',
-                                transformStyle: 'preserve-3d',
-                                zIndex: 1,
-                                background: '#fff', // White interior
-                                boxShadow: '0 0 50px rgba(255,255,255,0.8)' // Glow from inside
-                            }}
-                        >
-                            {/* Left Door */}
+                    <div style={{
+                        width: '100%', height: '100%',
+                        overflow: 'hidden',
+                        position: 'relative',
+                    }}>
+                        {/* Hall interior — always behind the door */}
+                        <div style={{
+                            position: 'absolute', inset: 0,
+                            backgroundImage: `url(${doorInterior})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }} />
+
+                        {/* Door panels — full height, width = corridor opening in background image
+                            Background image is 1688×1125. Opening spans ~49% of width (820/1688).
+                            On widescreen (ratio > 1.5) cover scales by width → 49vw.
+                            On portrait (ratio < 1.5) cover scales by height → 73vh.       */}
+                        <div style={{
+                            position: 'absolute',
+                            bottom: 0,
+                            height: '85vh',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: 'max(42vw, 62vh)',
+                            display: 'flex',
+                            zIndex: 1,
+                        }}>
                             <motion.div
-                                animate={{ rotateY: [0, 0, -110, -110] }}
-                                transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                                                                animate={{ x: ['0%', '0%', '-70%'] }}
+                                transition={{ duration: 2.0, times: [0, 0.3, 1], ease: 'easeInOut' }}
                                 style={{
                                     width: '50%', height: '100%',
-                                    background: 'linear-gradient(135deg, #1a1a24 0%, #0d0d14 100%)',
-                                    border: '3px solid #333', borderRight: '1px solid #000',
-                                    transformOrigin: 'left',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
-                                    paddingRight: '12px',
-                                    boxShadow: 'inset 0 0 20px rgba(129,230,217,0.1), 10px 0 20px rgba(0,0,0,0.5)'
+                                    backgroundImage: `url(${doorPanelLeft})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'right center',
+                                    boxShadow: '6px 0 24px rgba(0,0,0,0.6)',
                                 }}
-                            >
-                                <div style={{ position: 'absolute', top: '5%', bottom: '5%', left: '10%', right: '20%', border: '2px solid rgba(129,230,217,0.3)', borderRadius: '4px' }} />
-                                <div style={{ width: '10px', height: '60px', background: '#333', borderRadius: '4px', border: '1px solid #111', boxShadow: '-1px 0 5px rgba(0,0,0,0.5)', zIndex: 2 }} />
-                            </motion.div>
-
-                            {/* Right Door */}
+                            />
                             <motion.div
-                                animate={{ rotateY: [0, 0, 110, 110] }}
-                                transition={{ duration: 3.2, times: [0, 0.4, 0.9, 1], ease: "easeInOut" }}
+                                animate={{ x: ['0%', '0%', '70%'] }}
+                                transition={{ duration: 2.0, times: [0, 0.3, 1], ease: 'easeInOut' }}
                                 style={{
                                     width: '50%', height: '100%',
-                                    background: 'linear-gradient(225deg, #1a1a24 0%, #0d0d14 100%)',
-                                    border: '3px solid #333', borderLeft: '1px solid #000',
-                                    transformOrigin: 'right',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'flex-start',
-                                    paddingLeft: '12px',
-                                    boxShadow: 'inset 0 0 20px rgba(129,230,217,0.1), -10px 0 20px rgba(0,0,0,0.5)'
+                                    backgroundImage: `url(${doorPanelRight})`,
+                                    backgroundSize: 'cover',
+                                    backgroundPosition: 'left center',
+                                    boxShadow: '-6px 0 24px rgba(0,0,0,0.6)',
                                 }}
-                            >
-                                <div style={{ position: 'absolute', top: '5%', bottom: '5%', right: '10%', left: '20%', border: '2px solid rgba(129,230,217,0.3)', borderRadius: '4px' }} />
-                                <div style={{ width: '10px', height: '60px', background: '#333', borderRadius: '4px', border: '1px solid #111', boxShadow: '1px 0 5px rgba(0,0,0,0.5)', zIndex: 2 }} />
-                            </motion.div>
-                        </motion.div>
-
-
-                    </motion.div>
+                            />
+                        </div>
+                    </div>
                 );
             } else {
                 // クロスフェードでトランジション画面を出す
@@ -270,29 +259,12 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
         switch (type) {
             case 'door':
                 return (
-                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#000', perspective: '1200px' }}>
-                        {/* Door Container */}
-                        <motion.div
-                            animate={{ scale: [1, 2, 15] }}
-                            transition={{ duration: 4, times: [0, 0.4, 1], ease: "easeInOut" }}
-                            style={{
-                                width: '280px', height: '420px',
-                                position: 'relative',
-                                display: 'flex',
-                                transformStyle: 'preserve-3d',
-                            }}
-                        >
-                            <motion.div
-                                animate={{ rotateY: [0, 0, -110] }}
-                                transition={{ duration: 4, times: [0, 0.4, 1], ease: "easeInOut" }}
-                                style={{ width: '50%', height: '100%', background: '#1a1a24', border: '2px solid #333', transformOrigin: 'left' }}
-                            />
-                            <motion.div
-                                animate={{ rotateY: [0, 0, 110] }}
-                                transition={{ duration: 4, times: [0, 0.4, 1], ease: "easeInOut" }}
-                                style={{ width: '50%', height: '100%', background: '#1a1a24', border: '2px solid #333', transformOrigin: 'right' }}
-                            />
-                        </motion.div>
+                    <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${doorInterior})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                        <div style={{ position: 'absolute', bottom: 0, height: '80vh', left: '50%', transform: 'translateX(-50%)', width: 'max(39vw, 58vh)', display: 'flex', zIndex: 1 }}>
+                            <motion.div animate={{ x: ['0%', '-100%'] }} transition={{ duration: 1.6, ease: 'easeInOut' }} style={{ width: '50%', height: '100%', backgroundImage: `url(${doorPanelLeft})`, backgroundSize: 'cover', backgroundPosition: 'right center', boxShadow: '6px 0 24px rgba(0,0,0,0.6)' }} />
+                            <motion.div animate={{ x: ['0%', '100%'] }} transition={{ duration: 1.6, ease: 'easeInOut' }} style={{ width: '50%', height: '100%', backgroundImage: `url(${doorPanelRight})`, backgroundSize: 'cover', backgroundPosition: 'left center', boxShadow: '-6px 0 24px rgba(0,0,0,0.6)' }} />
+                        </div>
                     </div>
                 );
             case 'stairs-up':

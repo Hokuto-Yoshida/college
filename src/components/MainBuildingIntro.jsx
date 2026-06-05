@@ -2,10 +2,10 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
-import imgPath1 from '../assets/main_intro_1.png';
-import imgPath2 from '../assets/main_intro_2.png';
-import imgPath3 from '../assets/main_intro_3.png';
-import imgPath4 from '../assets/main_intro_4.png';
+import imgPath1 from '../assets/intro_bg_1.png';
+import imgPath2 from '../assets/intro_bg_2.png';
+import imgPath3 from '../assets/intro_bg_3.png';
+import imgPath4 from '../assets/intro_bg_4.png';
 
 const bgImages = [imgPath1, imgPath2, imgPath3, imgPath4];
 
