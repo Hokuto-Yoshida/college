@@ -41,7 +41,7 @@ export const Floor7Intro = ({ onEnter }) => {
 
     const lineStyle = {
         margin: 0,
-        lineHeight: 2.5
+        lineHeight: 4.0
     };
 
     return (

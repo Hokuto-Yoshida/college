@@ -25,14 +25,15 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                             backgroundPosition: 'center',
                         }} />
 
-                        {/* Door panels — full height, width = corridor opening in background image
-                            Background image is 1688×1125. Opening spans ~49% of width (820/1688).
-                            On widescreen (ratio > 1.5) cover scales by width → 49vw.
-                            On portrait (ratio < 1.5) cover scales by height → 73vh.       */}
+                        {/* Door panels — background-size:cover の挙動に合わせた比率
+                            背景画像 1688×1125 (比率 1.5)
+                            横長画面(比率>1.5): 幅基準スケール → ドア幅=49vw, 高さ=56.7vw
+                            縦長画面(比率<1.5): 高さ基準スケール → ドア幅=73.5vh, 高さ=85vh
+                            max() で自動切替 */}
                         <div style={{
                             position: 'absolute',
                             bottom: 0,
-                            height: '85vh',
+                            height: 'max(48vw, 85vh)',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             width: 'max(42vw, 62vh)',

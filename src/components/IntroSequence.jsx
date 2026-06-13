@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
@@ -6,132 +6,183 @@ import imgPath1 from '../assets/intro_new_1.jpg';
 import imgPath2 from '../assets/intro_new_2.jpg';
 import imgPath3 from '../assets/intro_new_3.jpg';
 
-const sections = [
-    {
-        text: "マインドデザイン研究所では、\nモノ×潜在意識\nコト×潜在意識\nヒト×潜在意識\n物理次元（社会）×マインド次元（潜在意識）\nの共創を実現するためのマインドデザインを構築し、\n様々な分野において、目に見える情報世界では\n動かしようのなかった革新的な潜在価値を創出します。\n\n潜在的な領域に切り込むことのできる「マインドの扱い方」を熟知し、\n例外なく、個人において、組織においても\n「マインドプロセスデザイン」を構築できるという強みを生かして、\n誰にでも当てはまる「マインドプロセスデザイン」を活用し、\n社会に活用していくための研究所です。"
-    },
-    {
-        text: "マインドデザイン研究所は、\nこの意識できていない潜在的の領域にいかにアプローチするか、\nその”マインドプロセス”を研究し続けています。\n\nマインドデザイン研究所では、人間の潜在意識に着目しました。\nそれは人間のゲノムを探求し続け、\n革新的な発見を成し遂げてきた生物学や生命科学の領域と同じくして、"
-    },
-    {
-        text: "一人一人違う考え方、行動をするマインド「心と脳の学問」として、\n「心のマイクロスコープ」によって潜在意識という領域にフォーカスを当て、\n様々な発見と開発を重ね挑み続けることで、実証してきた知見的モデルを、\n実装可能な状態で、組織、社会に拡く実用的なしくみに組み込むことが可能です。\n\n心のマイクロスコープでのぞき込んだ日常次元では見えてこないが\n確実に存在する人間の潜在意識（9割）を解き明かしていくことが、\nマインドデザイン研究所の使命です。"
-    },
-    {
-        text: "マインドデザイン―感性―”は、\n心の視点を引き上げる「マインドの法則」を体系化した\n【マインドプロセスデザイン-MPD- 】を活用し\n時代・産業を問わない普遍的な価値創出を実現していきます。\n\n人の行動の9割は無自覚な潜在意識が決めています。\n人間の知覚できている意識は、およそ1割以下と\n言われています。"
-    },
-    {
-        text: "「意識できている自分」と\n「意識できていないもう一人の自分」という存在に、\n未だ多くの人は気づいていません。\n\nこの”無自覚な自分”が、自らの人生、\nそして、自らを取り巻く世界を創り出している──\n\nこの現状の真実にフォーカスを向け、\n1割の意識を読み取ったデータではなく\n潜在意識9割を読み解く“マインドデザイン―感性―”で\n世界は一変します。"
-    }
-];
-
 const bgImages = [imgPath1, imgPath2, imgPath3];
 
 export const IntroSequence = ({ onEnter }) => {
-    // 画面全体（Window）のスクロールを追跡するように変更（確実に動作させるため）
     const { scrollYProgress } = useScroll();
 
-    // 5つのテキストセクションに合わせて、3枚の画像を切り替える
-    // 靄ピーク2（0.27-0.35）と画像0→1切り替えを同期
-    // 靄ピーク4（0.64-0.70）と画像1→2切り替えを同期
-    const opacity0 = useTransform(scrollYProgress, [0, 0.27, 0.35], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.27, 0.35, 0.64, 0.70], [0, 1, 1, 0]);
-    const opacity2 = useTransform(scrollYProgress, [0.64, 0.70, 1.0], [0, 1, 1]);
+    // 背景: レイヤーが退場するタイミングで切り替わる
+    const opacity0 = useTransform(scrollYProgress, [0, 0.215, 0.248], [1, 1, 0]);
+    const opacity1 = useTransform(scrollYProgress, [0.215, 0.248, 0.705, 0.748], [0, 1, 1, 0]);
+    const opacity2 = useTransform(scrollYProgress, [0.705, 0.748, 1.0], [0, 1, 1]);
     const opacities = [opacity0, opacity1, opacity2];
 
-    // 画像切り替えのタイミングだけ靄をかける
-    const whiteLayerOpacity = useTransform(scrollYProgress,
-        [0, 0.20, 0.27, 0.35, 0.42, 0.57, 0.64, 0.70, 0.78, 1.0],
-        [0, 0,    1,    1,    0,    0,    1,    1,    0,    0  ]
+    // Layer 1: 先に入って最後に出る（4サイクル）
+    const layer1Y = useTransform(scrollYProgress,
+        [0.000, 0.040, 0.215, 0.248,
+         0.249, 0.280, 0.320, 0.460, 0.498,
+         0.499, 0.530, 0.570, 0.705, 0.748,
+         0.749, 0.780, 0.820, 0.955, 0.985, 1.000],
+        ['100%', '0%', '0%', '-100%',
+         '100%', '100%', '0%', '0%', '-100%',
+         '100%', '100%', '0%', '0%', '-100%',
+         '100%', '100%', '0%', '0%', '-100%', '-100%']
     );
+
+    // Layer 2: 少し遅れて入って先に出る（4サイクル）
+    const layer2Y = useTransform(scrollYProgress,
+        [0.000, 0.080, 0.125, 0.215, 0.248,
+         0.249, 0.365, 0.405, 0.460, 0.498,
+         0.499, 0.610, 0.650, 0.705, 0.748,
+         0.749, 0.860, 0.900, 0.955, 0.985, 1.000],
+        ['100%', '100%', '0%', '0%', '-100%',
+         '100%', '100%', '0%', '0%', '-100%',
+         '100%', '100%', '0%', '0%', '-100%',
+         '100%', '100%', '0%', '0%', '-100%', '-100%']
+    );
+
+    // テキスト: 非アクティブ時は ±250vh に退避（layer2 が動いても絶対見えない距離）
+    const text1Y = useTransform(scrollYProgress,
+        [0.129, 0.130, 0.208, 0.209],
+        ['250vh', '100vh', '-60vh', '-250vh']
+    );
+    const text2Y = useTransform(scrollYProgress,
+        [0.407, 0.408, 0.455, 0.456],
+        ['250vh', '100vh', '-90vh', '-250vh']
+    );
+    const text3Y = useTransform(scrollYProgress,
+        [0.652, 0.653, 0.700, 0.701],
+        ['250vh', '100vh', '-85vh', '-250vh']
+    );
+    const text4Y = useTransform(scrollYProgress,
+        [0.902, 0.903, 0.950, 0.951],
+        ['250vh', '100vh', '-75vh', '-250vh']
+    );
+
+    const textStyle = {
+        maxWidth: '800px',
+        width: '100%',
+        textAlign: 'center',
+        fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)',
+        color: '#666666',
+        fontFamily: 'var(--font-jp)',
+        letterSpacing: '0.1em',
+        padding: '0 20px'
+    };
+
+    const lineStyle = { margin: 0, paddingBottom: '3rem', lineHeight: 4.0 };
+
+    const texts = [
+        {
+            y: text1Y,
+            lines: [
+                'この大学はその心の階層を、7つの建物で表現しています。',
+                '「心の視点を引き上げる」ための"学び"の場と空間が各建物で繰り広げられています。',
+                '自由自在に行ったり来たりを楽しみながら',
+                '素直にあなた自身の感じるままに─'
+            ]
+        },
+        {
+            y: text2Y,
+            lines: [
+                '「誰かのために貢献したい」',
+                'そう思う人々が世界に溢れることー',
+                'マインド大学は、「学び」を学ぶ"場と空間"を創り出しています。',
+                '学び続けるプロセスは多くの人にとって、勇気や希望となります。',
+                '自らの"心の力"を最大限に発揮できる、',
+                '「マインドの法則」をベースとした、',
+                '「本質的な」学びの"場"を通して、',
+                '訪れる人の潜在的な心の力を引き出し',
+                '未来の希望を創り出す人財を育成していきます。'
+            ]
+        },
+        {
+            y: text3Y,
+            lines: [
+                '大学で学べる事',
+                '人はすでに何かを持っている',
+                '人は、生まれ持った何かを持っています。',
+                'それはまだ言葉になっていない可能性',
+                'まだ形になっていない方向',
+                'まだ気づいていない力です。',
+                '人の心の奥には、',
+                'その人らしい可能性がすでに存在しています。'
+            ]
+        },
+        {
+            y: text4Y,
+            lines: [
+                'その人らしさが現れるとき',
+                '人は自分らしさと繋がるとき',
+                '自然に動き始めます。',
+                '努力して変わるのではなく',
+                '気づいたら変わっていたという形で変化が起こります。',
+                'それは外から与えられた変化ではなく',
+                '内側から生まれる変化だからです。'
+            ]
+        }
+    ];
 
     return (
         <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
-            {/* Fixed Background Container */}
+            {/* 背景画像 */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100vh', overflow: 'hidden', zIndex: 0 }}>
-                {/* Scroll-Linked Images */}
                 {bgImages.map((img, idx) => (
-                    <motion.div
-                        key={idx}
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            backgroundImage: `url(${img})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            opacity: opacities[idx],
-                            zIndex: 0
-                        }}
-                    />
+                    <motion.div key={idx} style={{
+                        position: 'absolute', inset: 0,
+                        backgroundImage: `url(${img})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        opacity: opacities[idx],
+                    }} />
                 ))}
-
-                {/* Soft Gradient Overlay for slight Readability without being too dark */}
-                <div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'linear-gradient(to bottom, transparent, rgba(5, 10, 20, 0.2))',
-                    zIndex: 2
-                }} />
             </div>
 
-            {/* Scroll-Linked White Layer - 画面と文字全体を覆う薄い白レイヤー */}
-            <motion.div
-                style={{
-                    position: 'fixed', inset: 0,
-                    background: 'rgba(255, 255, 255, 0.4)', // 真っ白にならないよう、透過度を0.4に下げて薄いベールに
-                    pointerEvents: 'none',
-                    opacity: whiteLayerOpacity,
-                    zIndex: 20
-                }}
-            />
+            {/* Layer 1 */}
+            <motion.div style={{
+                position: 'fixed', inset: 0,
+                background: 'rgba(255, 255, 255, 0.5)',
+                pointerEvents: 'none',
+                y: layer1Y,
+                zIndex: 10
+            }} />
 
-            {/* Scrolling Content Panels (Contiguous text flow) */}
-            <div style={{ position: 'relative', zIndex: 10, paddingTop: '15vh', paddingBottom: '30vh' }}>
-                {sections.map((section, idx) => (
-                    <motion.div 
-                        key={idx} 
-                        style={{
-                            minHeight: '60vh',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            padding: '20px',
-                            marginBottom: '35vh' // Provides the deep scrolling feeling
-                        }}
-                    >
-                        <div
-                            style={{
-                                maxWidth: '800px',
-                                width: '100%',
-                                padding: '50px 20px',
-                                textAlign: 'center',
-                            }}
-                        >
-                            <div style={{
-                                fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)', // さらに文字を小さく
-                                color: '#ffffff',
-                                fontFamily: 'var(--font-jp)',
-                                textAlign: 'center',
-                                textShadow: '0 2px 16px rgba(0,0,0,0.8), 0 0px 40px rgba(0,0,0,0.6)',
-                                letterSpacing: '0.1em' // 読みやすく間隔を広めに
-                            }}>
-                                {/* Text paragraphs with margin for breathing room */}
-                                {section.text.split('\n').map((line, l_idx) => {
-                                    if (line.trim() === "") {
-                                        return <div key={l_idx} style={{ height: '8rem' }} />; // 空行には特大スペース
-                                    }
-                                    return (
-                                        <p key={l_idx} style={{ margin: 0, paddingBottom: '3rem', lineHeight: 2 }}> {/* 各行のすき間 */}
-                                            {line}
-                                        </p>
-                                    );
-                                })}
+            {/* Layer 2 + テキスト（セット）: overflow は静的な外枠で処理 */}
+            <div style={{
+                position: 'fixed', inset: 0,
+                overflow: 'hidden',
+                zIndex: 11,
+                pointerEvents: 'none'
+            }}>
+                <motion.div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(255, 255, 255, 0.45)',
+                    y: layer2Y,
+                }}>
+                    {texts.map((item, idx) => (
+                        <motion.div key={idx} style={{
+                            position: 'absolute', left: 0, right: 0,
+                            display: 'flex', justifyContent: 'center',
+                            y: item.y
+                        }}>
+                            <div style={textStyle}>
+                                {item.lines.map((line, lIdx) => (
+                                    <p key={lIdx} style={lineStyle}>{line}</p>
+                                ))}
                             </div>
-                        </div>
-                    </motion.div>
-                ))}
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </div>
 
-                {/* Final Enter Button */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10vh' }}>
+            {/* スクロール量維持用スペーサー */}
+            <div style={{ position: 'relative', zIndex: 20, paddingTop: '400vh', paddingBottom: '40vh' }}>
+                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
+                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
+                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
+                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
+
+                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40vh' }}>
                     <motion.button
                         whileHover={{ scale: 1.05, boxShadow: '0 0 20px var(--floor-4)' }}
                         whileTap={{ scale: 0.95 }}
