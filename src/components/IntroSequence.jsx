@@ -144,7 +144,9 @@ export const IntroSequence = ({ onEnter }) => {
                 background: 'rgba(255, 255, 255, 0.5)',
                 pointerEvents: 'none',
                 y: layer1Y,
-                zIndex: 10
+                zIndex: 10,
+                maskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
+                WebkitMaskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
             }} />
 
             {/* Layer 2 + テキスト（セット）: overflow は静的な外枠で処理 */}
@@ -158,6 +160,8 @@ export const IntroSequence = ({ onEnter }) => {
                     position: 'absolute', inset: 0,
                     background: 'rgba(255, 255, 255, 0.45)',
                     y: layer2Y,
+                    maskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
+                    WebkitMaskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
                 }}>
                     {texts.map((item, idx) => (
                         <motion.div key={idx} style={{
