@@ -2,60 +2,78 @@ import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
-import imgPath1 from '../assets/intro_new_1.jpg';
+import imgPath1 from '../assets/intro_new_1.png';
 import imgPath2 from '../assets/intro_new_2.jpg';
 import imgPath3 from '../assets/intro_new_3.jpg';
+import overlayImg from '../assets/overlay_center.png';
 
 const bgImages = [imgPath1, imgPath2, imgPath3];
 
 export const IntroSequence = ({ onEnter }) => {
     const { scrollYProgress } = useScroll();
 
-    // 背景: レイヤーが退場するタイミングで切り替わる
-    const opacity0 = useTransform(scrollYProgress, [0, 0.215, 0.248], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.215, 0.248, 0.705, 0.748], [0, 1, 1, 0]);
-    const opacity2 = useTransform(scrollYProgress, [0.705, 0.748, 1.0], [0, 1, 1]);
+    // 背景: Layer3が在中している時（頂点）に切り替え
+    // cycle1: 0.185-0.210, cycle2: 0.485-0.510
+    const opacity0 = useTransform(scrollYProgress, [0, 0.185, 0.210], [1, 1, 0]);
+    const opacity1 = useTransform(scrollYProgress, [0.185, 0.210, 0.485, 0.510], [0, 1, 1, 0]);
+    const opacity2 = useTransform(scrollYProgress, [0.485, 0.510, 1.0], [0, 1, 1]);
     const opacities = [opacity0, opacity1, opacity2];
 
-    // Layer 1: 先に入って最後に出る（4サイクル）
+    // 0→1→2→3→2→1→0 を3サイクル繰り返し、最後に0→1で終わる
+    // 各サイクル幅0.300、サイクル内の構成:
+    //   0.000-0.030: 0→1 (Layer1入場)
+    //   0.040-0.070: 1→2 (Layer2入場)
+    //   0.070-0.160: Layer2状態【テキスト表示】
+    //   0.160-0.185: 2→3 (Layer3入場)
+    //   0.185-0.205: Layer3状態
+    //   0.205-0.230: 3→2 (Layer3退場)
+    //   0.230-0.260: 2→1 (Layer2退場・テキストなし)
+    //   0.260-0.285: 1→0 (Layer1退場)
+    //   0.285-0.300: Layer0状態【背景切り替え】
+
+    // Layer1: 各サイクルで最初に入場・最後に退場（最終サイクル後は再入場しない）
     const layer1Y = useTransform(scrollYProgress,
-        [0.000, 0.040, 0.215, 0.248,
-         0.249, 0.280, 0.320, 0.460, 0.498,
-         0.499, 0.530, 0.570, 0.705, 0.748,
-         0.749, 0.780, 0.820, 0.955, 0.985, 1.000],
-        ['100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%', '-100%']
+        [0.000, 0.030,  0.260, 0.285, 0.286, 0.300, 0.330,  0.560, 0.585, 0.586, 0.600, 0.630,  0.860, 0.885,  1.000],
+        ['100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // Layer 2: 少し遅れて入って先に出る（4サイクル）
+    // Layer2: 各サイクルでLayer1の後に入場、Layer3より先に退場
     const layer2Y = useTransform(scrollYProgress,
-        [0.000, 0.080, 0.125, 0.215, 0.248,
-         0.249, 0.365, 0.405, 0.460, 0.498,
-         0.499, 0.610, 0.650, 0.705, 0.748,
-         0.749, 0.860, 0.900, 0.955, 0.985, 1.000],
-        ['100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%', '-100%']
+        [0.000, 0.040, 0.070,  0.230, 0.260, 0.261, 0.340, 0.370,  0.530, 0.560, 0.561, 0.640, 0.670,  0.830, 0.860,  1.000],
+        ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // テキスト: 非アクティブ時は ±250vh に退避（layer2 が動いても絶対見えない距離）
+    // オーバーレイ画像: 0→1の入場に合わせて表示、Layer0に戻るとフェードアウト
+    // 各サイクルで繰り返す（cycle1: 0.000-0.285, cycle2: 0.300-0.585, cycle3: 0.600-0.885）
+    const overlayOpacity = useTransform(scrollYProgress,
+        [0.000, 0.030,  0.260, 0.285,  0.300, 0.330,  0.560, 0.585,  0.600, 0.630,  0.860, 0.885,  1.000],
+        [0,     1,      1,     0,       0,     1,      1,     0,       0,     1,      1,     0,       0]
+    );
+
+    // Layer3: 各サイクルの頂点で入退場
+    const layer3Y = useTransform(scrollYProgress,
+        [0.000, 0.160, 0.185,  0.205, 0.230, 0.231, 0.460, 0.485,  0.505, 0.530, 0.531, 0.760, 0.785,  0.805, 0.830,  1.000],
+        ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
+    );
+
+    // テキスト: 上昇フェーズのLayer2窓のみ表示（下降時はなし）
+    // サイクル1(bg0) Layer2窓: 0.070-0.160 → text1 + text2
     const text1Y = useTransform(scrollYProgress,
-        [0.129, 0.130, 0.208, 0.209],
+        [0.070, 0.071, 0.112, 0.113],
         ['250vh', '100vh', '-60vh', '-250vh']
     );
     const text2Y = useTransform(scrollYProgress,
-        [0.407, 0.408, 0.455, 0.456],
+        [0.110, 0.111, 0.158, 0.159],
         ['250vh', '100vh', '-90vh', '-250vh']
     );
+    // サイクル2(bg1) Layer2窓: 0.370-0.460 → text3
     const text3Y = useTransform(scrollYProgress,
-        [0.652, 0.653, 0.700, 0.701],
+        [0.370, 0.371, 0.455, 0.456],
         ['250vh', '100vh', '-85vh', '-250vh']
     );
+    // サイクル3(bg2) Layer2窓: 0.670-0.760 → text4
     const text4Y = useTransform(scrollYProgress,
-        [0.902, 0.903, 0.950, 0.951],
+        [0.670, 0.671, 0.755, 0.756],
         ['250vh', '100vh', '-75vh', '-250vh']
     );
 
@@ -138,6 +156,17 @@ export const IntroSequence = ({ onEnter }) => {
                 ))}
             </div>
 
+            {/* オーバーレイ画像: 背景とレイヤーの間、レイヤーがある間うっすら表示 */}
+            <motion.div style={{
+                position: 'fixed', inset: 0,
+                backgroundImage: `url(${overlayImg})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: overlayOpacity,
+                zIndex: 5,
+                pointerEvents: 'none',
+            }} />
+
             {/* Layer 1 */}
             <motion.div style={{
                 position: 'fixed', inset: 0,
@@ -145,11 +174,11 @@ export const IntroSequence = ({ onEnter }) => {
                 pointerEvents: 'none',
                 y: layer1Y,
                 zIndex: 10,
-                maskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
             }} />
 
-            {/* Layer 2 + テキスト（セット）: overflow は静的な外枠で処理 */}
+            {/* Layer 2 + テキスト */}
             <div style={{
                 position: 'fixed', inset: 0,
                 overflow: 'hidden',
@@ -160,8 +189,8 @@ export const IntroSequence = ({ onEnter }) => {
                     position: 'absolute', inset: 0,
                     background: 'rgba(255, 255, 255, 0.45)',
                     y: layer2Y,
-                    maskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
-                    WebkitMaskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
+                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
                 }}>
                     {texts.map((item, idx) => (
                         <motion.div key={idx} style={{
@@ -177,6 +206,22 @@ export const IntroSequence = ({ onEnter }) => {
                         </motion.div>
                     ))}
                 </motion.div>
+            </div>
+
+            {/* Layer 3 */}
+            <div style={{
+                position: 'fixed', inset: 0,
+                overflow: 'hidden',
+                zIndex: 12,
+                pointerEvents: 'none'
+            }}>
+                <motion.div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    y: layer3Y,
+                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                }} />
             </div>
 
             {/* スクロール量維持用スペーサー */}

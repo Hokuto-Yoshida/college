@@ -1,6 +1,6 @@
-import React from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { SpiralNav } from './SpiralNav';
 
 import imgPath1 from '../assets/intro_bg_1.png';
 import imgPath2 from '../assets/intro_bg_2.png';
@@ -9,56 +9,66 @@ import imgPath4 from '../assets/intro_bg_4.png';
 
 const bgImages = [imgPath1, imgPath2, imgPath3, imgPath4];
 
-export const MainBuildingIntro = ({ onEnter }) => {
+export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
     const { scrollYProgress } = useScroll();
 
-    // 背景: レイヤーが退場するタイミングで切り替わる
-    const opacity0 = useTransform(scrollYProgress, [0, 0.215, 0.248], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.215, 0.248, 0.460, 0.498], [0, 1, 1, 0]);
-    const opacity2 = useTransform(scrollYProgress, [0.460, 0.498, 0.705, 0.748], [0, 1, 1, 0]);
-    const opacity3 = useTransform(scrollYProgress, [0.705, 0.748, 1.0], [0, 1, 1]);
+    const [showElevator, setShowElevator] = useState(false);
+    const [buttonVisible, setButtonVisible] = useState(false);
+    useMotionValueEvent(scrollYProgress, 'change', (v) => {
+        setButtonVisible(v >= 0.88);
+    });
+
+    // 背景: Layer3頂点タイミングで切り替え（4枚 → 3サイクル分 + 最終）
+    // cycle1→2: 0.185-0.210, cycle2→3: 0.485-0.510, cycle3→final: 0.785-0.810
+    const opacity0 = useTransform(scrollYProgress, [0, 0.185, 0.210], [1, 1, 0]);
+    const opacity1 = useTransform(scrollYProgress, [0.185, 0.210, 0.485, 0.510], [0, 1, 1, 0]);
+    const opacity2 = useTransform(scrollYProgress, [0.485, 0.510, 0.785, 0.810], [0, 1, 1, 0]);
+    const opacity3 = useTransform(scrollYProgress, [0.785, 0.810, 1.0], [0, 1, 1]);
     const opacities = [opacity0, opacity1, opacity2, opacity3];
 
-    // Layer 1: 先に入って最後に出る（4サイクル）
+    // IntroSequenceと同じ 0→1→2→3→2→1→0 を3サイクル繰り返し
+    // 各サイクル幅0.300
+
+    // Layer1: 各サイクルで最初に入場・最後に退場
     const layer1Y = useTransform(scrollYProgress,
-        [0.000, 0.040, 0.215, 0.248,
-         0.249, 0.280, 0.320, 0.460, 0.498,
-         0.499, 0.530, 0.570, 0.705, 0.748,
-         0.749, 0.780, 0.820, 0.955, 0.985, 1.000],
-        ['100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%', '-100%']
+        [0.000, 0.030,  0.260, 0.285, 0.286, 0.300, 0.330,  0.560, 0.585, 0.586, 0.600, 0.630,  0.860, 0.885,  1.000],
+        ['100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // Layer 2: 少し遅れて入って先に出る（4サイクル）
+    // Layer2: Layer1の後に入場、Layer3より先に退場
     const layer2Y = useTransform(scrollYProgress,
-        [0.000, 0.080, 0.125, 0.215, 0.248,
-         0.249, 0.365, 0.405, 0.460, 0.498,
-         0.499, 0.610, 0.650, 0.705, 0.748,
-         0.749, 0.860, 0.900, 0.955, 0.985, 1.000],
-        ['100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%',
-         '100%', '100%', '0%', '0%', '-100%', '-100%']
+        [0.000, 0.040, 0.070,  0.230, 0.260, 0.261, 0.340, 0.370,  0.530, 0.560, 0.561, 0.640, 0.670,  0.830, 0.860,  1.000],
+        ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // テキスト: 非アクティブ時は ±250vh に退避（layer2 が動いても絶対見えない距離）
-    // アクティブ直前に 100vh へジャンプ→スクロールで流れる→直後に -250vh へ退避
+    // Layer3: 各サイクルの頂点で入退場
+    const layer3Y = useTransform(scrollYProgress,
+        [0.000, 0.160, 0.185,  0.205, 0.230, 0.231, 0.460, 0.485,  0.505, 0.530, 0.531, 0.760, 0.785,  0.805, 0.830,  1.000],
+        ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
+    );
+
+    // テキスト: 上昇フェーズのLayer2窓のみ表示
+    // サイクル1 Layer2窓(0.070-0.160): title + text1 + text2
+    const text0Y = useTransform(scrollYProgress,
+        [0.070, 0.071, 0.096, 0.097],
+        ['250vh', '100vh', '-50vh', '-250vh']
+    );
     const text1Y = useTransform(scrollYProgress,
-        [0.129, 0.130, 0.208, 0.209],
+        [0.094, 0.095, 0.124, 0.125],
         ['250vh', '100vh', '-60vh', '-250vh']
     );
     const text2Y = useTransform(scrollYProgress,
-        [0.407, 0.408, 0.455, 0.456],
+        [0.122, 0.123, 0.158, 0.159],
         ['250vh', '100vh', '-80vh', '-250vh']
     );
+    // サイクル2 Layer2窓(0.370-0.460): text3
     const text3Y = useTransform(scrollYProgress,
-        [0.652, 0.653, 0.700, 0.701],
+        [0.370, 0.371, 0.455, 0.456],
         ['250vh', '100vh', '-70vh', '-250vh']
     );
+    // サイクル3 Layer2窓(0.670-0.760): text4
     const text4Y = useTransform(scrollYProgress,
-        [0.902, 0.903, 0.950, 0.951],
+        [0.670, 0.671, 0.755, 0.756],
         ['250vh', '100vh', '-70vh', '-250vh']
     );
 
@@ -75,7 +85,26 @@ export const MainBuildingIntro = ({ onEnter }) => {
 
     const lineStyle = { margin: 0, paddingBottom: '3rem', lineHeight: 4.0 };
 
+    const titleStyle = {
+        maxWidth: '800px',
+        width: '100%',
+        textAlign: 'center',
+        fontFamily: 'var(--font-jp)',
+        letterSpacing: '0.15em',
+        padding: '0 20px'
+    };
+
     const texts = [
+        {
+            y: text0Y,
+            content: (
+                <div style={titleStyle}>
+                    <p style={{ margin: 0, paddingBottom: '1.2rem', lineHeight: 2.0, fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 'bold', color: '#333' }}>本館</p>
+                    <p style={{ margin: 0, paddingBottom: '1.5rem', lineHeight: 2.0, fontSize: 'clamp(0.9rem, 2vw, 1.2rem)', color: '#888', fontFamily: 'var(--font-en)', letterSpacing: '0.3em' }}>Entrance</p>
+                    <p style={{ margin: 0, lineHeight: 2.5, fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)', color: '#666' }}>心の階層を7階建ての建物で表現。感性と論理を統合するメインキャンパス。</p>
+                </div>
+            )
+        },
         {
             y: text1Y,
             content: (
@@ -154,34 +183,50 @@ export const MainBuildingIntro = ({ onEnter }) => {
                 pointerEvents: 'none',
                 y: layer1Y,
                 zIndex: 10,
-                maskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
             }} />
 
-            {/* Layer 2 + テキスト（セット）: overflow は静的な外枠で処理 */}
+            {/* Layer 2 + テキスト */}
             <div style={{
                 position: 'fixed', inset: 0,
                 overflow: 'hidden',
                 zIndex: 11,
                 pointerEvents: 'none'
             }}>
-            <motion.div style={{
-                position: 'absolute', inset: 0,
-                background: 'rgba(255, 255, 255, 0.45)',
-                y: layer2Y,
-                maskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
-                WebkitMaskImage: 'radial-gradient(ellipse 100% 80% at 50% 50%, white 40%, transparent 100%)',
+                <motion.div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(255, 255, 255, 0.45)',
+                    y: layer2Y,
+                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                }}>
+                    {texts.map((item, idx) => (
+                        <motion.div key={idx} style={{
+                            position: 'absolute', left: 0, right: 0,
+                            display: 'flex', justifyContent: 'center',
+                            y: item.y
+                        }}>
+                            <div style={textStyle}>{item.content}</div>
+                        </motion.div>
+                    ))}
+                </motion.div>
+            </div>
+
+            {/* Layer 3 */}
+            <div style={{
+                position: 'fixed', inset: 0,
+                overflow: 'hidden',
+                zIndex: 12,
+                pointerEvents: 'none'
             }}>
-                {texts.map((item, idx) => (
-                    <motion.div key={idx} style={{
-                        position: 'absolute', left: 0, right: 0,
-                        display: 'flex', justifyContent: 'center',
-                        y: item.y
-                    }}>
-                        <div style={textStyle}>{item.content}</div>
-                    </motion.div>
-                ))}
-            </motion.div>
+                <motion.div style={{
+                    position: 'absolute', inset: 0,
+                    background: 'rgba(255, 255, 255, 0.8)',
+                    y: layer3Y,
+                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                }} />
             </div>
 
             {/* スクロール量維持用スペーサー */}
@@ -191,31 +236,76 @@ export const MainBuildingIntro = ({ onEnter }) => {
                 <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
                 <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40vh' }}>
+                <div style={{ marginTop: '40vh' }} />
+            </div>
+
+            {/* 固定エレベーターボタン（最終背景時に表示） */}
+            {buttonVisible && (
+                <div style={{
+                    position: 'fixed',
+                    bottom: '10vh',
+                    left: 0, right: 0,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    zIndex: 30,
+                }}>
                     <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px var(--floor-1)' }}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
+                        whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={onEnter}
+                        onClick={() => setShowElevator(true)}
                         style={{
-                            padding: '16px 48px',
+                            padding: '14px 44px',
                             borderRadius: '40px',
-                            background: 'var(--floor-1)',
-                            color: '#000',
-                            border: 'none',
-                            fontSize: '1.1rem',
+                            background: 'rgba(255,255,255,0.15)',
+                            color: '#fff',
+                            border: '1px solid rgba(255,255,255,0.4)',
+                            fontSize: '1rem',
                             fontWeight: 'bold',
                             cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '12px',
-                            transition: 'box-shadow 0.3s ease'
+                            backdropFilter: 'blur(8px)',
+                            letterSpacing: '0.15em',
+                            fontFamily: 'var(--font-jp)',
                         }}
                     >
-                        本館に入る <ArrowRight />
+                        エレベーターに入る
                     </motion.button>
                 </div>
-            </div>
+            )}
+
+            {/* エレベーターパネル（右側スライドイン・SpiralNav） */}
+            {showElevator && (
+                <motion.div
+                    initial={{ x: '100%' }}
+                    animate={{ x: '0%' }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    style={{
+                        position: 'fixed', top: 0, right: 0, bottom: 0,
+                        width: '320px',
+                        zIndex: 100,
+                        background: 'rgba(10,10,20,0.95)',
+                        borderLeft: '1px solid rgba(255,255,255,0.1)',
+                        backdropFilter: 'blur(12px)',
+                        overflowY: 'auto',
+                        paddingTop: '60px',
+                    }}
+                >
+                    <button onClick={() => setShowElevator(false)} style={{
+                        position: 'absolute', top: '20px', right: '20px',
+                        background: 'none', border: 'none', color: '#888',
+                        fontSize: '1.2rem', cursor: 'pointer'
+                    }}>✕</button>
+                    <SpiralNav
+                        floors={floors}
+                        onSelectFloor={(id) => {
+                            setShowElevator(false);
+                            onSelectFloor && onSelectFloor(id);
+                        }}
+                    />
+                </motion.div>
+            )}
         </div>
     );
 };

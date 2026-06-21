@@ -42,7 +42,7 @@ const LoadingScreen = () => (
 
 function App() {
   const [loading, setLoading] = useState(true);
-  const [showIntro, setShowIntro] = useState(!sessionStorage.getItem('introSeen'));
+  const [showIntro, setShowIntro] = useState(true);
   const [showMainIntro, setShowMainIntro] = useState(false);
   const [showFloor7Intro, setShowFloor7Intro] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
@@ -181,7 +181,6 @@ function App() {
       <IntroSequence
         images={introImages}
         onEnter={() => {
-          sessionStorage.setItem('introSeen', 'true');
           setShowIntro(false);
           window.scrollTo(0, 0);
         }}
@@ -209,11 +208,19 @@ function App() {
 
       {/* VIEW CONTENT */}
       {showMainIntro && currentBuildingId === 'main' ? (
-        <MainBuildingIntro 
+        <MainBuildingIntro
           onEnter={() => {
             setShowMainIntro(false);
             window.scrollTo(0, 0);
-          }} 
+          }}
+          floors={activeFloors}
+          onSelectFloor={(floorId) => {
+            setShowMainIntro(false);
+            window.scrollTo(0, 0);
+            performTransition('door', () => {
+              setCurrentFloorId(floorId);
+            });
+          }}
         />
       ) : showFloor7Intro && currentFloorId === '7F' ? (
         <Floor7Intro 
