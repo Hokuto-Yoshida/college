@@ -6,76 +6,65 @@ import imgPath1 from '../assets/intro_new_1.png';
 import imgPath2 from '../assets/intro_new_2.jpg';
 import imgPath3 from '../assets/intro_new_3.jpg';
 import overlayImg from '../assets/overlay_center.png';
+import overlayMist2 from '../assets/overlay_mist2.png';
 
 const bgImages = [imgPath1, imgPath2, imgPath3];
+
+const MASK = [
+    'linear-gradient(to bottom,',
+    '  transparent 0%,',
+    '  rgba(0,0,0,0.08) 8%,',
+    '  rgba(0,0,0,0.2) 15%,',
+    '  rgba(0,0,0,0.45) 25%,',
+    '  rgba(0,0,0,0.75) 35%,',
+    '  #000 50%,',
+    '  rgba(0,0,0,0.75) 65%,',
+    '  rgba(0,0,0,0.45) 75%,',
+    '  rgba(0,0,0,0.2) 85%,',
+    '  rgba(0,0,0,0.08) 92%,',
+    '  transparent 100%',
+    ')'
+].join('');
 
 export const IntroSequence = ({ onEnter }) => {
     const { scrollYProgress } = useScroll();
 
-    // 背景: Layer3が在中している時（頂点）に切り替え
-    // cycle1: 0.185-0.210, cycle2: 0.485-0.510
+    // 背景: Layer3頂点タイミングで切り替え
     const opacity0 = useTransform(scrollYProgress, [0, 0.185, 0.210], [1, 1, 0]);
     const opacity1 = useTransform(scrollYProgress, [0.185, 0.210, 0.485, 0.510], [0, 1, 1, 0]);
     const opacity2 = useTransform(scrollYProgress, [0.485, 0.510, 1.0], [0, 1, 1]);
     const opacities = [opacity0, opacity1, opacity2];
 
-    // 0→1→2→3→2→1→0 を3サイクル繰り返し、最後に0→1で終わる
-    // 各サイクル幅0.300、サイクル内の構成:
-    //   0.000-0.030: 0→1 (Layer1入場)
-    //   0.040-0.070: 1→2 (Layer2入場)
-    //   0.070-0.160: Layer2状態【テキスト表示】
-    //   0.160-0.185: 2→3 (Layer3入場)
-    //   0.185-0.205: Layer3状態
-    //   0.205-0.230: 3→2 (Layer3退場)
-    //   0.230-0.260: 2→1 (Layer2退場・テキストなし)
-    //   0.260-0.285: 1→0 (Layer1退場)
-    //   0.285-0.300: Layer0状態【背景切り替え】
+    // オーバーレイ画像: レイヤーがある間表示
+    // 靄画像: レイヤーより早くスクロールで出入り
+    const mistY = useTransform(scrollYProgress,
+        [0.000, 0.010,  0.260, 0.280, 0.281, 0.290,  0.560, 0.580, 0.581, 0.590,  0.860, 0.880,  1.000],
+        ['100%', '0%',  '0%', '-100%', '100%', '0%',  '0%', '-100%', '100%', '0%',  '0%', '-100%',  '-100%']
+    );
 
-    // Layer1: 各サイクルで最初に入場・最後に退場（最終サイクル後は再入場しない）
+    // Layer1: 3サイクル
     const layer1Y = useTransform(scrollYProgress,
         [0.000, 0.030,  0.260, 0.285, 0.286, 0.300, 0.330,  0.560, 0.585, 0.586, 0.600, 0.630,  0.860, 0.885,  1.000],
         ['100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // Layer2: 各サイクルでLayer1の後に入場、Layer3より先に退場
+    // Layer2
     const layer2Y = useTransform(scrollYProgress,
         [0.000, 0.040, 0.070,  0.230, 0.260, 0.261, 0.340, 0.370,  0.530, 0.560, 0.561, 0.640, 0.670,  0.830, 0.860,  1.000],
         ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // オーバーレイ画像: 0→1の入場に合わせて表示、Layer0に戻るとフェードアウト
-    // 各サイクルで繰り返す（cycle1: 0.000-0.285, cycle2: 0.300-0.585, cycle3: 0.600-0.885）
-    const overlayOpacity = useTransform(scrollYProgress,
-        [0.000, 0.030,  0.260, 0.285,  0.300, 0.330,  0.560, 0.585,  0.600, 0.630,  0.860, 0.885,  1.000],
-        [0,     1,      1,     0,       0,     1,      1,     0,       0,     1,      1,     0,       0]
-    );
-
-    // Layer3: 各サイクルの頂点で入退場
+    // Layer3
     const layer3Y = useTransform(scrollYProgress,
         [0.000, 0.160, 0.185,  0.205, 0.230, 0.231, 0.460, 0.485,  0.505, 0.530, 0.531, 0.760, 0.785,  0.805, 0.830,  1.000],
         ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
     );
 
-    // テキスト: 上昇フェーズのLayer2窓のみ表示（下降時はなし）
-    // サイクル1(bg0) Layer2窓: 0.070-0.160 → text1 + text2
-    const text1Y = useTransform(scrollYProgress,
-        [0.070, 0.071, 0.112, 0.113],
-        ['250vh', '100vh', '-60vh', '-250vh']
-    );
-    const text2Y = useTransform(scrollYProgress,
-        [0.110, 0.111, 0.158, 0.159],
-        ['250vh', '100vh', '-90vh', '-250vh']
-    );
-    // サイクル2(bg1) Layer2窓: 0.370-0.460 → text3
-    const text3Y = useTransform(scrollYProgress,
-        [0.370, 0.371, 0.455, 0.456],
-        ['250vh', '100vh', '-85vh', '-250vh']
-    );
-    // サイクル3(bg2) Layer2窓: 0.670-0.760 → text4
-    const text4Y = useTransform(scrollYProgress,
-        [0.670, 0.671, 0.755, 0.756],
-        ['250vh', '100vh', '-75vh', '-250vh']
-    );
+    // テキスト
+    const text1Y = useTransform(scrollYProgress, [0.070, 0.071, 0.112, 0.113], ['250vh', '100vh', '-60vh', '-250vh']);
+    const text2Y = useTransform(scrollYProgress, [0.110, 0.111, 0.158, 0.159], ['250vh', '100vh', '-90vh', '-250vh']);
+    const text3Y = useTransform(scrollYProgress, [0.370, 0.371, 0.455, 0.456], ['250vh', '100vh', '-85vh', '-250vh']);
+    const text4Y = useTransform(scrollYProgress, [0.670, 0.671, 0.755, 0.756], ['250vh', '100vh', '-75vh', '-250vh']);
 
     const textStyle = {
         maxWidth: '800px',
@@ -156,16 +145,13 @@ export const IntroSequence = ({ onEnter }) => {
                 ))}
             </div>
 
-            {/* オーバーレイ画像: 背景とレイヤーの間、レイヤーがある間うっすら表示 */}
-            <motion.div style={{
-                position: 'fixed', inset: 0,
-                backgroundImage: `url(${overlayImg})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: overlayOpacity,
-                zIndex: 5,
-                pointerEvents: 'none',
-            }} />
+            {/* 靄画像: スクロールでスライドイン（レイヤーより早い） */}
+            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 5, pointerEvents: 'none' }}>
+                <motion.div style={{ position: 'absolute', inset: 0, y: mistY, maskImage: MASK, WebkitMaskImage: MASK }}>
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${overlayMist2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${overlayMist2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                </motion.div>
+            </div>
 
             {/* Layer 1 */}
             <motion.div style={{
@@ -174,23 +160,18 @@ export const IntroSequence = ({ onEnter }) => {
                 pointerEvents: 'none',
                 y: layer1Y,
                 zIndex: 10,
-                maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                maskImage: MASK,
+                WebkitMaskImage: MASK,
             }} />
 
             {/* Layer 2 + テキスト */}
-            <div style={{
-                position: 'fixed', inset: 0,
-                overflow: 'hidden',
-                zIndex: 11,
-                pointerEvents: 'none'
-            }}>
+            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 11, pointerEvents: 'none' }}>
                 <motion.div style={{
                     position: 'absolute', inset: 0,
                     background: 'rgba(255, 255, 255, 0.45)',
                     y: layer2Y,
-                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    maskImage: MASK,
+                    WebkitMaskImage: MASK,
                 }}>
                     {texts.map((item, idx) => (
                         <motion.div key={idx} style={{
@@ -209,18 +190,13 @@ export const IntroSequence = ({ onEnter }) => {
             </div>
 
             {/* Layer 3 */}
-            <div style={{
-                position: 'fixed', inset: 0,
-                overflow: 'hidden',
-                zIndex: 12,
-                pointerEvents: 'none'
-            }}>
+            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 12, pointerEvents: 'none' }}>
                 <motion.div style={{
                     position: 'absolute', inset: 0,
                     background: 'rgba(255, 255, 255, 0.8)',
                     y: layer3Y,
-                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    maskImage: MASK,
+                    WebkitMaskImage: MASK,
                 }} />
             </div>
 
@@ -233,15 +209,15 @@ export const IntroSequence = ({ onEnter }) => {
 
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40vh' }}>
                     <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px var(--floor-4)' }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onEnter}
                         style={{
                             padding: '16px 48px',
                             borderRadius: '40px',
-                            background: 'var(--floor-4)',
-                            color: '#000',
-                            border: 'none',
+                            background: 'rgba(255,255,255,0.12)',
+                            color: '#fff',
+                            border: '1px solid rgba(255,255,255,0.35)',
                             fontSize: '1.1rem',
                             fontWeight: 'bold',
                             cursor: 'pointer',
@@ -249,6 +225,7 @@ export const IntroSequence = ({ onEnter }) => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '12px',
+                            backdropFilter: 'blur(10px)',
                             transition: 'box-shadow 0.3s ease'
                         }}
                     >

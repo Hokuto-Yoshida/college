@@ -4,18 +4,11 @@ import { ArrowRight } from 'lucide-react';
 
 // ※添付いただいた画像の代わりに、既存の画像パスを仮で設定しています。
 // 実際の画像ファイル名に合わせて変更してください。
-import imgHallway from '../assets/hospital_school_hallway.png'; // 廊下
-import imgClassroom from '../assets/white_classroom_bg.jpg';   // 教室
-
-const bgImages = [imgHallway, imgClassroom];
+import imgHallway from '../assets/floor_bg.png'; // 7F intro背景
 
 export const Floor7Intro = ({ onEnter }) => {
     const { scrollYProgress } = useScroll();
 
-    // 2枚の画像の不透明度マッピング（廊下から教室へ）
-    const opacity0 = useTransform(scrollYProgress, [0, 0.4, 0.6], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.4, 0.6, 1.0], [0, 1, 1]);
-    const opacities = [opacity0, opacity1];
 
     // 文字が中央にある時はレイヤーを透明にし、文字と文字の間の移動中に白レイヤーを濃くする
     const whiteLayerOpacity = useTransform(scrollYProgress, 
@@ -48,20 +41,13 @@ export const Floor7Intro = ({ onEnter }) => {
         <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
             {/* Fixed Background Container */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100vh', overflow: 'hidden', zIndex: 0 }}>
-                {bgImages.map((img, idx) => (
-                    <motion.div
-                        key={idx}
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            backgroundImage: `url(${img})`,
-                            backgroundSize: 'cover',
-                            backgroundPosition: 'center',
-                            opacity: opacities[idx],
-                            zIndex: 0
-                        }}
-                    />
-                ))}
+                <div style={{
+                    position: 'absolute', inset: 0,
+                    backgroundImage: `url(${imgHallway})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    zIndex: 0
+                }} />
                 {/* 視認性向上のためのグラデーションオーバーレイ */}
                 <div style={{
                     position: 'absolute', inset: 0,
@@ -139,15 +125,15 @@ export const Floor7Intro = ({ onEnter }) => {
                 {/* Final Enter Button */}
                 <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10vh' }}>
                     <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px var(--floor-7)' }}
+                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onEnter}
                         style={{
                             padding: '16px 48px',
                             borderRadius: '40px',
-                            background: 'var(--floor-7)',
-                            color: '#000',
-                            border: 'none',
+                            background: 'rgba(255,255,255,0.12)',
+                            color: '#fff',
+                            border: '1px solid rgba(255,255,255,0.35)',
                             fontSize: '1.1rem',
                             fontWeight: 'bold',
                             cursor: 'pointer',
@@ -155,6 +141,7 @@ export const Floor7Intro = ({ onEnter }) => {
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '12px',
+                            backdropFilter: 'blur(10px)',
                             transition: 'box-shadow 0.3s ease'
                         }}
                     >

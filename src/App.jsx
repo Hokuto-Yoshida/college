@@ -18,6 +18,7 @@ import imgExterior from './assets/exterior.png';
 import imgAnnex from './assets/annex_exterior.png';
 import imgLab from './assets/lab.png';
 import imgStairsSky from './assets/stairs_sky.jpg';
+import imgStairsBg from './assets/stairs_bg.png';
 import viewLow from './assets/view_low.png'; // 1F
 import view2F from './assets/view_2f.png';   // 2F
 import viewMid from './assets/view_mid.png'; // 3F
@@ -26,6 +27,7 @@ import viewHigh from './assets/view_high.png'; // 5F
 import view6F from './assets/view_6f.png';   // 6F
 import viewRoof from './assets/view_roof.png'; // 7F
 import imgLibrary from './assets/library_bg.jpg'; // All floors
+import imgFloorBg from './assets/floor_bg2.png'; // 各階背景
 import lobbyMain from './assets/lobby_main.png';
 import lobbyAnnex from './assets/lobby_annex.png';
 
@@ -162,8 +164,8 @@ function App() {
   // Images for Transitions
   const transitionImages = {
     'door': imgExterior, // Entering building
-    'stairs-up': imgStairsSky,
-    'stairs-down': imgStairsSky
+    'stairs-up': imgStairsBg,
+    'stairs-down': imgStairsBg
   };
 
   // Background Logic
@@ -172,7 +174,7 @@ function App() {
       // Return active building's image
       return buildingImages[currentBuildingId] || imgExterior;
     }
-    return imgLibrary; // 全フロアで共通の図書館の背景を使用
+    return imgFloorBg; // 全フロアで共通の背景
   };
 
   if (showIntro) {
@@ -422,9 +424,10 @@ function App() {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '12px',
-                          background: activeBuilding.color,
-                          border: 'none',
-                          textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                          background: 'rgba(255,255,255,0.12)',
+                          border: '1px solid rgba(255,255,255,0.35)',
+                          backdropFilter: 'blur(10px)',
+                          textShadow: 'none'
                         }}
                       >
                         {activeBuilding.name}に入る <ChevronDown />

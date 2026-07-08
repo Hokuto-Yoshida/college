@@ -6,8 +6,11 @@ import imgPath1 from '../assets/intro_bg_1.png';
 import imgPath2 from '../assets/intro_bg_2.png';
 import imgPath3 from '../assets/intro_bg_3.png';
 import imgPath4 from '../assets/intro_bg_4.png';
+import overlayMist2 from '../assets/overlay_mist2.png';
 
 const bgImages = [imgPath1, imgPath2, imgPath3, imgPath4];
+
+const MASK = 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 8%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.45) 25%, rgba(0,0,0,0.75) 35%, #000 50%, #000 50%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.45) 75%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.08) 92%, transparent 100%)';
 
 export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
     const { scrollYProgress } = useScroll();
@@ -28,6 +31,12 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
 
     // IntroSequenceと同じ 0→1→2→3→2→1→0 を3サイクル繰り返し
     // 各サイクル幅0.300
+
+    // 靄画像: レイヤーより早くスクロールで出入り
+    const mistY = useTransform(scrollYProgress,
+        [0.000, 0.010,  0.260, 0.280, 0.281, 0.290,  0.560, 0.580, 0.581, 0.590,  0.860, 0.880,  1.000],
+        ['100%', '0%',  '0%', '-100%', '100%', '0%',  '0%', '-100%', '100%', '0%',  '0%', '-100%',  '-100%']
+    );
 
     // Layer1: 各サイクルで最初に入場・最後に退場
     const layer1Y = useTransform(scrollYProgress,
@@ -176,6 +185,14 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                 ))}
             </div>
 
+            {/* 靄画像: スクロールでスライドイン（レイヤーより早い） */}
+            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 5, pointerEvents: 'none' }}>
+                <motion.div style={{ position: 'absolute', inset: 0, y: mistY, maskImage: MASK, WebkitMaskImage: MASK }}>
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${overlayMist2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${overlayMist2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                </motion.div>
+            </div>
+
             {/* Layer 1 */}
             <motion.div style={{
                 position: 'fixed', inset: 0,
@@ -183,8 +200,8 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                 pointerEvents: 'none',
                 y: layer1Y,
                 zIndex: 10,
-                maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
-                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 8%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.45) 25%, rgba(0,0,0,0.75) 35%, #000 50%, #000 50%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.45) 75%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.08) 92%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.08) 8%, rgba(0,0,0,0.2) 15%, rgba(0,0,0,0.45) 25%, rgba(0,0,0,0.75) 35%, #000 50%, #000 50%, rgba(0,0,0,0.75) 65%, rgba(0,0,0,0.45) 75%, rgba(0,0,0,0.2) 85%, rgba(0,0,0,0.08) 92%, transparent 100%)',
             }} />
 
             {/* Layer 2 + テキスト */}
@@ -198,8 +215,7 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                     position: 'absolute', inset: 0,
                     background: 'rgba(255, 255, 255, 0.45)',
                     y: layer2Y,
-                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    maskImage: MASK, WebkitMaskImage: MASK,
                 }}>
                     {texts.map((item, idx) => (
                         <motion.div key={idx} style={{
@@ -224,8 +240,7 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                     position: 'absolute', inset: 0,
                     background: 'rgba(255, 255, 255, 0.8)',
                     y: layer3Y,
-                    maskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
-                    WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, white 3%, white 97%, transparent 100%)',
+                    maskImage: MASK, WebkitMaskImage: MASK,
                 }} />
             </div>
 
@@ -283,11 +298,12 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                     transition={{ duration: 0.4, ease: 'easeOut' }}
                     style={{
                         position: 'fixed', top: 0, right: 0, bottom: 0,
-                        width: '320px',
+                        width: '380px',
                         zIndex: 100,
-                        background: 'rgba(10,10,20,0.95)',
-                        borderLeft: '1px solid rgba(255,255,255,0.1)',
-                        backdropFilter: 'blur(12px)',
+                        background: 'rgba(255,255,255,0.08)',
+                        borderLeft: '1px solid rgba(255,255,255,0.2)',
+                        backdropFilter: 'blur(24px)',
+                        WebkitBackdropFilter: 'blur(24px)',
                         overflowY: 'auto',
                         paddingTop: '60px',
                     }}

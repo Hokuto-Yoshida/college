@@ -1,60 +1,157 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-import { ArrowUpCircle } from 'lucide-react';
+import thumbB1 from '../assets/floor_thumb_B1.png';
+import thumb1F from '../assets/floor_thumb_1F.png';
+import thumb2F from '../assets/floor_thumb_2F.png';
+import thumb3F from '../assets/floor_thumb_3F.png';
+import thumb4F from '../assets/floor_thumb_4F.png';
+import thumb5F from '../assets/floor_thumb_5F.png';
+import thumb6F from '../assets/floor_thumb_6F.png';
+import thumb7F from '../assets/floor_thumb_7F.png';
+
+const rowBgMap = {
+    '7F': 'rgba(248, 240, 200, 0.55)',
+    '6F': 'rgba(240, 220, 140, 0.55)',
+    '5F': 'rgba(230, 195, 70,  0.55)',
+    '4F': 'rgba(215, 160, 30,  0.55)',
+    '3F': 'rgba(195, 120, 15,  0.55)',
+    '2F': 'rgba(170,  85, 10,  0.55)',
+    '1F': 'rgba(140,  55,  8,  0.55)',
+    'B1': 'rgba(100,  30,  5,  0.55)',
+};
+
+const thumbMap = {
+    '7F': thumb7F,
+    '6F': thumb6F,
+    '5F': thumb5F,
+    '4F': thumb4F,
+    '3F': thumb3F,
+    '2F': thumb2F,
+    '1F': thumb1F,
+    'B1': thumbB1,
+};
+
+const processMap = {
+    '7F': { num: 7, viewpoint: '地球視点', action: '地球を動かす' },
+    '6F': { num: 6, viewpoint: '空視点',   action: '時代を動かす' },
+    '5F': { num: 5, viewpoint: '鳥視点',   action: '社会を動かす' },
+    '4F': { num: 4, viewpoint: '高層階',   action: '潜在意識を動かす' },
+    '3F': { num: 3, viewpoint: '中層階',   action: '他者を動かす' },
+    '2F': { num: 2, viewpoint: '低層階',   action: '自分を動かす' },
+    '1F': { num: 1, viewpoint: '地上層',   action: '自分を知る' },
+    'B1': { num: 0, viewpoint: '地下層',   action: '自分を知らない' },
+};
 
 export function SpiralNav({ floors, onSelectFloor }) {
     return (
-        <div className="spiral-nav-container" style={{ position: 'relative', padding: '20px 0' }}>
-            <h3 className="en-title" style={{ textAlign: 'center', marginBottom: '24px', opacity: 0.8 }}>
-                Floor Guide
+        <div style={{ padding: '0 0 24px' }}>
+            <h3 style={{
+                textAlign: 'center',
+                fontFamily: 'var(--font-en)',
+                letterSpacing: '0.3em',
+                fontSize: '0.95rem',
+                color: 'rgba(255,255,255,0.85)',
+                margin: '0 0 12px',
+                paddingBottom: '10px',
+                borderBottom: '1px solid rgba(255,255,255,0.12)',
+            }}>
+                FLOOR GUIDE
             </h3>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxWidth: '300px', margin: '0 auto' }}>
-                {floors.map((floor, index) => {
-                    // Apply a slight scaling to simulate the "Reverse Trapezoid" (wider at top)
-                    // The numbering logic assumes standard top-down ordering.
-                    const isBasement = floor.id === 'B1';
-                    // Dynamic scaling based on list length might need adjustment if floor counts vary wildly,
-                    // but for now, we'll keep a simple heuristic or remove the specific index math if it's too rigid.
-                    // Let's keep it simple: just render freely.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                {floors.map((floor) => {
+                    const proc = processMap[floor.id];
+                    if (!proc) return null;
 
                     return (
                         <motion.button
                             key={floor.id}
-                            whileHover={{ scale: 1.05, x: 10 }}
+                            whileHover={{ x: 3 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => onSelectFloor(floor.id)}
                             style={{
-                                background: `linear-gradient(90deg, rgba(255,255,255,0.03), ${floor.color}22)`,
-                                border: '1px solid var(--glass-border)',
+                                display: 'grid',
+                                gridTemplateColumns: '42px 80px 58px 1fr',
+                                alignItems: 'center',
+                                gap: '8px',
+                                background: rowBgMap[floor.id] ?? 'rgba(255,255,255,0.06)',
+                                border: 'none',
                                 borderLeft: `4px solid ${floor.color}`,
-                                borderRadius: '8px',
-                                padding: '12px 16px',
-                                textAlign: 'left',
-                                color: 'white',
+                                padding: '8px 12px 8px 10px',
                                 cursor: 'pointer',
-                                position: 'relative',
-                                overflow: 'hidden',
+                                textAlign: 'left',
+                                width: '100%',
+                                minHeight: '52px',
                             }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <span style={{ fontWeight: 'bold', fontSize: '1.1rem', marginRight: '8px', color: floor.color }}>
-                                        {floor.id}
-                                    </span>
-                                    <span style={{ fontSize: '0.9rem', opacity: 0.9 }}>{floor.domain}</span>
+                            {/* 階数 */}
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{
+                                    fontSize: '1rem',
+                                    fontWeight: 'bold',
+                                    color: floor.color,
+                                    fontFamily: 'var(--font-en)',
+                                    lineHeight: 1,
+                                    filter: 'brightness(1.4)',
+                                }}>
+                                    {floor.id}
                                 </div>
-                                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{floor.title}</span>
+                            </div>
+
+                            {/* プロセス情報 */}
+                            <div>
+                                <div style={{
+                                    fontSize: '0.68rem',
+                                    color: 'rgba(255,255,255,0.6)',
+                                    lineHeight: 1.4,
+                                    fontFamily: 'var(--font-jp)',
+                                }}>
+                                    プロセス{proc.num}
+                                </div>
+                                <div style={{
+                                    fontSize: '0.68rem',
+                                    color: 'rgba(255,255,255,0.45)',
+                                    fontFamily: 'var(--font-jp)',
+                                }}>
+                                    {proc.viewpoint}
+                                </div>
+                            </div>
+
+                            {/* サムネイル */}
+                            <div style={{
+                                width: '58px',
+                                height: '46px',
+                                overflow: 'hidden',
+                                borderRadius: '3px',
+                                background: 'rgba(255,255,255,0.08)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                            }}>
+                                {thumbMap[floor.id] && (
+                                    <img
+                                        src={thumbMap[floor.id]}
+                                        alt={floor.id}
+                                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                    />
+                                )}
+                            </div>
+
+                            {/* アクション */}
+                            <div style={{
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                color: floor.color,
+                                fontFamily: 'var(--font-jp)',
+                                filter: 'brightness(1.4)',
+                                lineHeight: 1.3,
+                            }}>
+                                {proc.action}
                             </div>
                         </motion.button>
                     );
                 })}
-            </div>
-
-            <div style={{ textAlign: 'center', marginTop: '24px', opacity: 0.6 }}>
-                <ArrowUpCircle size={24} className="animate-float" />
-                <p style={{ fontSize: '0.8rem' }}>Select a Floor</p>
             </div>
         </div>
     );

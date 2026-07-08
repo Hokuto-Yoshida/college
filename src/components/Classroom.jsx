@@ -10,7 +10,7 @@ import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
 import imgCinema from '../assets/cinema_room.png';
 import imgClassroom from '../assets/virtual_classroom.png';
-import lectureBg from '../assets/lecture_bg.jpg';
+import lectureBg from '../assets/lecture_bg2.png';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -516,25 +516,9 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     // --- HALLWAY VIEW ---
     if (!activeLecture) {
         return (
-            <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden', marginTop: '20px', background: '#000' }}>
-                {/* Background Image */}
-                <div style={{
-                    position: 'absolute', inset: 0,
-                    backgroundImage: `url(${hallwayBg})`,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                    opacity: 0.9 // Brighter for hospital feel
-                }} />
+            <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden', marginTop: '20px' }}>
 
-                {/* Header */}
-                <div style={{ position: 'absolute', top: '20px', left: '20px', right: '20px', zIndex: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div className="glass-panel" style={{ padding: '12px 24px', borderRadius: '30px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.5)' }}>
-                        <BookOpen size={20} color="var(--floor-7)" />
-                        <span style={{ fontWeight: 'bold', color: 'white' }}>{currentFloorId} Hallway</span>
-                    </div>
-                </div>
-
-                {/* Doors (Lectures) */}
+{/* Doors (Lectures) */}
                 <div style={{ position: 'absolute', inset: 0, zIndex: 5, padding: '100px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignContent: 'center', backgroundColor: 'rgba(0,0,0,0.1)' }}>
                     {floorLectures.length === 0 ? (
                         <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'black', background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '10px', backdropFilter: 'blur(5px)' }}>
