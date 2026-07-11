@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
 import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight, ExternalLink, PlayCircle, ArrowLeft } from 'lucide-react';
 
 import { ResponseModal } from './ResponseModal';
 import { CinemaModal } from './CinemaModal';
 import { ClassroomModal } from './ClassroomModal';
 import hallwayBg from '../assets/library_bg.jpg'; // All floors library background
+import floor6Reveal from '../assets/floor_6f_reveal.png';
+import floor6Base from '../assets/floor_bg2.png';
 import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
 import imgCinema from '../assets/cinema_room.png';
@@ -317,7 +319,13 @@ const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
     );
 };
 
+function Floor6View() {
+    return <div style={{ height: '540vh' }} />;
+}
+
 export function Classroom({ currentFloorId, lectures = [] }) {
+    if (currentFloorId === '6F') return <Floor6View />;
+
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 

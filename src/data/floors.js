@@ -71,11 +71,21 @@ export const floors = [
         icon: 'DoorOpen'
     },
     {
-        id: 'B1',
-        domain: '研究所',
+        id: '0F',
+        domain: '基底',
         title: '地下ホール',
         subtitle: '潜在意識と螺旋階段',
         description: '潜在意識を扱うホール。螺旋階段が直接つながり、ワークと研究が同時進行する。',
+        color: 'var(--floor-0)',
+        bgCurrent: 'linear-gradient(135deg, rgba(79,195,176,0.1), rgba(102,126,234,0.1))',
+        icon: 'Layers'
+    },
+    {
+        id: 'B1',
+        domain: '研究所',
+        title: '無意識の根',
+        subtitle: '最深層の意識',
+        description: '意識の最深部。言語化されていない衝動と記憶が眠る、螺旋の底。',
         color: 'var(--floor-b1)',
         bgCurrent: 'linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1))',
         icon: 'Zap'

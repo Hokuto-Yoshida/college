@@ -304,15 +304,9 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                         borderLeft: '1px solid rgba(255,255,255,0.2)',
                         backdropFilter: 'blur(24px)',
                         WebkitBackdropFilter: 'blur(24px)',
-                        overflowY: 'auto',
-                        paddingTop: '60px',
+                        overflow: 'hidden',
                     }}
                 >
-                    <button onClick={() => setShowElevator(false)} style={{
-                        position: 'absolute', top: '20px', right: '20px',
-                        background: 'none', border: 'none', color: '#888',
-                        fontSize: '1.2rem', cursor: 'pointer'
-                    }}>✕</button>
                     <SpiralNav
                         floors={floors}
                         onSelectFloor={(id) => {

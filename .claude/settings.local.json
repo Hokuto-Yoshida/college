@@ -3,7 +3,8 @@
     "allow": [
       "Bash(Copy-Item *)",
       "WebFetch(domain:kurusplace.com)",
-      "PowerShell(Copy-Item *)"
+      "PowerShell(Copy-Item *)",
+      "Bash(git *)"
     ]
   }
 }
