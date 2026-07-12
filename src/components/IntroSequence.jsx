@@ -1,214 +1,232 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import imgPath1 from '../assets/intro_new_1.png';
 import imgPath2 from '../assets/intro_new_2.jpg';
 import imgPath3 from '../assets/intro_new_3.jpg';
-import overlayImg from '../assets/overlay_center.png';
-import overlayMist2 from '../assets/overlay_mist2.png';
+import introOpening from '../assets/intro_opening.png';
 
-const bgImages = [imgPath1, imgPath2, imgPath3];
-
-const MASK = [
-    'linear-gradient(to bottom,',
-    '  transparent 0%,',
-    '  rgba(0,0,0,0.08) 8%,',
-    '  rgba(0,0,0,0.2) 15%,',
-    '  rgba(0,0,0,0.45) 25%,',
-    '  rgba(0,0,0,0.75) 35%,',
-    '  #000 50%,',
-    '  rgba(0,0,0,0.75) 65%,',
-    '  rgba(0,0,0,0.45) 75%,',
-    '  rgba(0,0,0,0.2) 85%,',
-    '  rgba(0,0,0,0.08) 92%,',
-    '  transparent 100%',
-    ')'
-].join('');
+// 上下の端をぼかすマスク
+const MASK = 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)';
 
 export const IntroSequence = ({ onEnter }) => {
     const { scrollYProgress } = useScroll();
 
-    // 背景: Layer3頂点タイミングで切り替え
-    const opacity0 = useTransform(scrollYProgress, [0, 0.185, 0.210], [1, 1, 0]);
-    const opacity1 = useTransform(scrollYProgress, [0.185, 0.210, 0.485, 0.510], [0, 1, 1, 0]);
-    const opacity2 = useTransform(scrollYProgress, [0.485, 0.510, 1.0], [0, 1, 1]);
-    const opacities = [opacity0, opacity1, opacity2];
+    // スクロール終盤でボタン表示（scrollイベント直読みで確実に）
+    const [buttonVisible, setButtonVisible] = useState(false);
+    useEffect(() => {
+        const onScroll = () => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = max > 0 ? window.scrollY / max : 0;
+            setButtonVisible(progress >= 0.93);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
-    // オーバーレイ画像: レイヤーがある間表示
-    // 靄画像: レイヤーより早くスクロールで出入り
-    const mistY = useTransform(scrollYProgress,
-        [0.000, 0.010,  0.260, 0.280, 0.281, 0.290,  0.560, 0.580, 0.581, 0.590,  0.860, 0.880,  1.000],
-        ['100%', '0%',  '0%', '-100%', '100%', '0%',  '0%', '-100%', '100%', '0%',  '0%', '-100%',  '-100%']
-    );
+    // ── 3サイクル均等設計 ─────────────────────────────────────────
+    // 各サイクル: 背景だけ → 画像挿入 → レイヤー＋テキスト → レイヤー消す → 背景と一緒に画像退場
+    // bg0: 0-0.33, bg1: 0.33-0.66, bg2: 0.66-1.00 (トランジション 0.06)
+    // 100% にすることでトランジション中点で bg どうしがぴったり接する（黒なし）
+    const bg0Y = useTransform(scrollYProgress, [0, 0.33, 0.39], ['0%', '0%', '-100%']);
+    const bg1Y = useTransform(scrollYProgress, [0.33, 0.39, 0.66, 0.72], ['100%', '0%', '0%', '-100%']);
+    const bg2Y = useTransform(scrollYProgress, [0.66, 0.72], ['100%', '0%']);
 
-    // Layer1: 3サイクル
-    const layer1Y = useTransform(scrollYProgress,
-        [0.000, 0.030,  0.260, 0.285, 0.286, 0.300, 0.330,  0.560, 0.585, 0.586, 0.600, 0.630,  0.860, 0.885,  1.000],
-        ['100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
-    );
+    // ── opening image: 下からスライドイン、退場は背景と同時 ──────
+    const open0Y = useTransform(scrollYProgress, [0.04, 0.09, 0.33, 0.39], ['100%', '0%', '0%', '-100%']);
+    const open1Y = useTransform(scrollYProgress, [0.41, 0.46, 0.66, 0.72], ['100%', '0%', '0%', '-100%']);
+    const open2Y = useTransform(scrollYProgress, [0.74, 0.79], ['100%', '0%']);
 
-    // Layer2
-    const layer2Y = useTransform(scrollYProgress,
-        [0.000, 0.040, 0.070,  0.230, 0.260, 0.261, 0.340, 0.370,  0.530, 0.560, 0.561, 0.640, 0.670,  0.830, 0.860,  1.000],
-        ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
-    );
+    // ── 白幕: 画像の後にスライドイン ─────────────────────────────
+    const veil0Y = useTransform(scrollYProgress, [0.11, 0.14, 0.27, 0.31], ['100%', '0%', '0%', '-100%']);
+    const veil1Y = useTransform(scrollYProgress, [0.46, 0.49, 0.59, 0.63], ['100%', '0%', '0%', '-100%']);
+    const veil2Y = useTransform(scrollYProgress, [0.79, 0.82, 0.89, 0.93], ['100%', '0%', '0%', '-100%']);
 
-    // Layer3
-    const layer3Y = useTransform(scrollYProgress,
-        [0.000, 0.160, 0.185,  0.205, 0.230, 0.231, 0.460, 0.485,  0.505, 0.530, 0.531, 0.760, 0.785,  0.805, 0.830,  1.000],
-        ['100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%', '100%', '100%', '0%',  '0%', '-100%',  '-100%']
-    );
+    // ── テキスト: 各白幕内でスクロール ───────────────────────────
+    // 白幕1: 2テキスト
+    const t0Y = useTransform(scrollYProgress, [0.14, 0.16, 0.19, 0.21], ['60vh', '0vh', '0vh', '-60vh']);
+    const t1Y = useTransform(scrollYProgress, [0.21, 0.23, 0.25, 0.27], ['60vh', '0vh', '0vh', '-60vh']);
+    // 白幕2: 1テキスト
+    const t2Y = useTransform(scrollYProgress, [0.49, 0.52, 0.56, 0.59], ['60vh', '0vh', '0vh', '-60vh']);
+    // 白幕3: 1テキスト
+    const t3Y = useTransform(scrollYProgress, [0.82, 0.84, 0.87, 0.89], ['60vh', '0vh', '0vh', '-60vh']);
 
-    // テキスト
-    const text1Y = useTransform(scrollYProgress, [0.070, 0.071, 0.112, 0.113], ['250vh', '100vh', '-60vh', '-250vh']);
-    const text2Y = useTransform(scrollYProgress, [0.110, 0.111, 0.158, 0.159], ['250vh', '100vh', '-90vh', '-250vh']);
-    const text3Y = useTransform(scrollYProgress, [0.370, 0.371, 0.455, 0.456], ['250vh', '100vh', '-85vh', '-250vh']);
-    const text4Y = useTransform(scrollYProgress, [0.670, 0.671, 0.755, 0.756], ['250vh', '100vh', '-75vh', '-250vh']);
-
+    // ── スタイル ──────────────────────────────────────────────────
     const textStyle = {
-        maxWidth: '800px',
+        maxWidth: '720px',
         width: '100%',
         textAlign: 'center',
-        fontSize: 'clamp(0.7rem, 1.5vw, 0.95rem)',
-        color: '#666666',
+        fontSize: 'clamp(0.75rem, 1.5vw, 1rem)',
+        color: '#333',
         fontFamily: 'var(--font-jp)',
-        letterSpacing: '0.1em',
-        padding: '0 20px'
+        letterSpacing: '0.12em',
+        padding: '0 32px',
     };
+    const ln = { margin: 0, paddingBottom: '1.8rem', lineHeight: 2.8 };
 
-    const lineStyle = { margin: 0, paddingBottom: '3rem', lineHeight: 4.0 };
-
-    const texts = [
+    const sections = [
         {
-            y: text1Y,
-            lines: [
-                'この大学はその心の階層を、7つの建物で表現しています。',
-                '「心の視点を引き上げる」ための"学び"の場と空間が各建物で繰り広げられています。',
-                '自由自在に行ったり来たりを楽しみながら',
-                '素直にあなた自身の感じるままに─'
-            ]
+            veilY: veil0Y,
+            items: [
+                {
+                    y: t0Y,
+                    node: (
+                        <div style={textStyle}>
+                            <p style={ln}>この大学はその心の階層を、7つの建物で表現しています。</p>
+                            <p style={ln}>「心の視点を引き上げる」ための"学び"の場と空間が各建物で繰り広げられています。</p>
+                            <p style={ln}>自由自在に行ったり来たりを楽しみながら</p>
+                            <p style={{ ...ln, paddingBottom: 0 }}>素直にあなた自身の感じるままに─</p>
+                        </div>
+                    ),
+                },
+                {
+                    y: t1Y,
+                    node: (
+                        <div style={textStyle}>
+                            <p style={{ ...ln, fontWeight: 'bold', color: '#222' }}>「誰かのために貢献したい」</p>
+                            <p style={ln}>そう思う人々が世界に溢れることー</p>
+                            <p style={ln}>マインド大学は、「学び」を学ぶ"場と空間"を創り出しています。</p>
+                            <p style={ln}>学び続けるプロセスは多くの人にとって、勇気や希望となります。</p>
+                            <p style={{ ...ln, paddingBottom: 0 }}>訪れる人の潜在的な心の力を引き出し、未来の希望を創り出す人財を育成していきます。</p>
+                        </div>
+                    ),
+                },
+            ],
         },
         {
-            y: text2Y,
-            lines: [
-                '「誰かのために貢献したい」',
-                'そう思う人々が世界に溢れることー',
-                'マインド大学は、「学び」を学ぶ"場と空間"を創り出しています。',
-                '学び続けるプロセスは多くの人にとって、勇気や希望となります。',
-                '自らの"心の力"を最大限に発揮できる、',
-                '「マインドの法則」をベースとした、',
-                '「本質的な」学びの"場"を通して、',
-                '訪れる人の潜在的な心の力を引き出し',
-                '未来の希望を創り出す人財を育成していきます。'
-            ]
+            veilY: veil1Y,
+            items: [
+                {
+                    y: t2Y,
+                    node: (
+                        <div style={textStyle}>
+                            <p style={{ ...ln, fontWeight: 'bold', color: '#222' }}>人はすでに何かを持っている</p>
+                            <p style={ln}>人は、生まれ持った何かを持っています。</p>
+                            <p style={ln}>それはまだ言葉になっていない可能性</p>
+                            <p style={ln}>まだ形になっていない方向</p>
+                            <p style={{ ...ln, paddingBottom: 0 }}>人の心の奥には、その人らしい可能性がすでに存在しています。</p>
+                        </div>
+                    ),
+                },
+            ],
         },
         {
-            y: text3Y,
-            lines: [
-                '大学で学べる事',
-                '人はすでに何かを持っている',
-                '人は、生まれ持った何かを持っています。',
-                'それはまだ言葉になっていない可能性',
-                'まだ形になっていない方向',
-                'まだ気づいていない力です。',
-                '人の心の奥には、',
-                'その人らしい可能性がすでに存在しています。'
-            ]
+            veilY: veil2Y,
+            items: [
+                {
+                    y: t3Y,
+                    node: (
+                        <div style={textStyle}>
+                            <p style={{ ...ln, fontWeight: 'bold', color: '#222' }}>その人らしさが現れるとき</p>
+                            <p style={ln}>人は自分らしさと繋がるとき自然に動き始めます。</p>
+                            <p style={ln}>努力して変わるのではなく、気づいたら変わっていたという形で変化が起こります。</p>
+                            <p style={{ ...ln, paddingBottom: 0 }}>それは外から与えられた変化ではなく、内側から生まれる変化だからです。</p>
+                        </div>
+                    ),
+                },
+            ],
         },
-        {
-            y: text4Y,
-            lines: [
-                'その人らしさが現れるとき',
-                '人は自分らしさと繋がるとき',
-                '自然に動き始めます。',
-                '努力して変わるのではなく',
-                '気づいたら変わっていたという形で変化が起こります。',
-                'それは外から与えられた変化ではなく',
-                '内側から生まれる変化だからです。'
-            ]
-        }
     ];
 
     return (
-        <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
-            {/* 背景画像 */}
-            <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100vh', overflow: 'hidden', zIndex: 0 }}>
-                {bgImages.map((img, idx) => (
-                    <motion.div key={idx} style={{
-                        position: 'absolute', inset: 0,
-                        backgroundImage: `url(${img})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center',
-                        opacity: opacities[idx],
-                    }} />
+        <div style={{ background: '#000', minHeight: '700vh', position: 'relative' }}>
+
+            {/* ── 背景レイヤー ── */}
+            <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
+                {[bg0Y, bg1Y, bg2Y].map((bgY, i) => (
+                    <motion.div
+                        key={i}
+                        style={{
+                            position: 'absolute', inset: 0,
+                            backgroundImage: `url(${[imgPath1, imgPath2, imgPath3][i]})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            y: bgY,
+                        }}
+                    />
                 ))}
             </div>
 
-            {/* 靄画像: スクロールでスライドイン（レイヤーより早い） */}
-            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 5, pointerEvents: 'none' }}>
-                <motion.div style={{ position: 'absolute', inset: 0, y: mistY, maskImage: MASK, WebkitMaskImage: MASK }}>
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${overlayMist2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                    <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${overlayMist2})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-                </motion.div>
-            </div>
 
-            {/* Layer 1 */}
-            <motion.div style={{
-                position: 'fixed', inset: 0,
-                background: 'rgba(255, 255, 255, 0.5)',
-                pointerEvents: 'none',
-                y: layer1Y,
-                zIndex: 10,
-                maskImage: MASK,
-                WebkitMaskImage: MASK,
-            }} />
-
-            {/* Layer 2 + テキスト */}
-            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 11, pointerEvents: 'none' }}>
-                <motion.div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'rgba(255, 255, 255, 0.45)',
-                    y: layer2Y,
-                    maskImage: MASK,
-                    WebkitMaskImage: MASK,
-                }}>
-                    {texts.map((item, idx) => (
-                        <motion.div key={idx} style={{
-                            position: 'absolute', left: 0, right: 0,
-                            display: 'flex', justifyContent: 'center',
-                            y: item.y
-                        }}>
-                            <div style={textStyle}>
-                                {item.lines.map((line, lIdx) => (
-                                    <p key={lIdx} style={lineStyle}>{line}</p>
-                                ))}
-                            </div>
-                        </motion.div>
+            {/* ── opening image: 下からスライドイン、背景と一緒に退場（2枚重ね） ── */}
+            {[open0Y, open1Y, open2Y].map((y, i) => (
+                <motion.div
+                    key={i}
+                    style={{
+                        position: 'fixed', inset: 0, zIndex: 3,
+                        pointerEvents: 'none',
+                        y,
+                    }}
+                >
+                    {[0, 1].map(j => (
+                        <div key={j} style={{
+                            position: 'absolute', inset: 0,
+                            backgroundImage: `url(${introOpening})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                        }} />
                     ))}
                 </motion.div>
-            </div>
+            ))}
 
-            {/* Layer 3 */}
-            <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 12, pointerEvents: 'none' }}>
-                <motion.div style={{
-                    position: 'absolute', inset: 0,
-                    background: 'rgba(255, 255, 255, 0.8)',
-                    y: layer3Y,
-                    maskImage: MASK,
-                    WebkitMaskImage: MASK,
-                }} />
-            </div>
+            {/* ── 全体に常時1枚の白レイヤー（背景・画像の上、テキスト・ボタンの下） ── */}
+            <div style={{
+                position: 'fixed', inset: 0, zIndex: 6,
+                background: 'rgba(255,255,255,0.35)',
+                pointerEvents: 'none',
+            }} />
 
-            {/* スクロール量維持用スペーサー */}
-            <div style={{ position: 'relative', zIndex: 20, paddingTop: '400vh', paddingBottom: '40vh' }}>
-                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
-                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
-                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
-                <div style={{ minHeight: '240vh', marginBottom: '200vh' }} />
+            {/* ── 白幕 + テキスト ── */}
+            {sections.map((section, si) => (
+                <div
+                    key={si}
+                    style={{
+                        position: 'fixed', inset: 0,
+                        zIndex: 10 + si,
+                        overflow: 'hidden',
+                        pointerEvents: 'none',
+                    }}
+                >
+                    <motion.div
+                        style={{
+                            position: 'absolute', inset: 0,
+                            background: 'rgba(255,255,255,0.52)',
+                            y: section.veilY,
+                            maskImage: MASK,
+                            WebkitMaskImage: MASK,
+                        }}
+                    >
+                        {section.items.map((item, ii) => (
+                            <motion.div
+                                key={ii}
+                                style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    y: item.y,
+                                }}
+                            >
+                                {item.node}
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                </div>
+            ))}
 
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '40vh' }}>
+            {/* ── 大学ルームに入るボタン（最後に表示） ── */}
+            {buttonVisible && (
+                <div style={{
+                    position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                    display: 'flex', justifyContent: 'center', zIndex: 30,
+                }}>
                     <motion.button
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5 }}
                         whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
                         whileTap={{ scale: 0.95 }}
                         onClick={onEnter}
@@ -223,16 +241,14 @@ export const IntroSequence = ({ onEnter }) => {
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'center',
                             gap: '12px',
                             backdropFilter: 'blur(10px)',
-                            transition: 'box-shadow 0.3s ease'
                         }}
                     >
                         大学ルームに入る <ArrowRight />
                     </motion.button>
                 </div>
-            </div>
+            )}
         </div>
     );
 };

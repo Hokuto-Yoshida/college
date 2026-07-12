@@ -4,7 +4,8 @@
       "Bash(Copy-Item *)",
       "WebFetch(domain:kurusplace.com)",
       "PowerShell(Copy-Item *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(npx vite *)"
     ]
   }
 }
