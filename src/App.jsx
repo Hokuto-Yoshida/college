@@ -391,7 +391,7 @@ function App() {
                     }}
                     transition={{
                       opacity: { duration: 0.8 },
-                      x: { duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
                     }}
                     style={{
                       position: 'fixed', top: 0, left: 0,
@@ -411,7 +411,7 @@ function App() {
                     }}
                     transition={{
                       opacity: { duration: 0.8 },
-                      x: { duration: 0.9, ease: [0.25, 0.46, 0.45, 0.94] },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
                     }}
                     style={{
                       position: 'fixed', top: 0, right: 0,
