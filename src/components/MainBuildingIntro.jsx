@@ -234,7 +234,7 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                     transition={{ duration: 0.4, ease: 'easeOut' }}
                     style={{
                         position: 'fixed', top: 0, right: 0, bottom: 0,
-                        width: '380px', zIndex: 100,
+                        width: 'min(500px, 90vw)', zIndex: 100,
                         background: 'rgba(255,255,255,0.08)',
                         borderLeft: '1px solid rgba(255,255,255,0.2)',
                         backdropFilter: 'blur(24px)',

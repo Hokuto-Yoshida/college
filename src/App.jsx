@@ -53,6 +53,7 @@ function App() {
   const [showMainIntro, setShowMainIntro] = useState(false);
   const [showFloorIntro, setShowFloorIntro] = useState(false);
   const [curtainPhase, setCurtainPhase] = useState('idle'); // 'idle' | 'split' | 'open'
+  const [showFloorElevator, setShowFloorElevator] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -86,6 +87,7 @@ function App() {
 
   useEffect(() => {
     if (currentFloorId !== '6F') setCurtainPhase('idle');
+    setShowFloorElevator(false);
   }, [currentFloorId]);
 
   const handleCurtainOpen = () => {
@@ -99,6 +101,8 @@ function App() {
   const floor6RevealScale = useTransform(floor6Progress, [0.7, 1.0], [1, 4]);
   const floor6CurtainOpacity = useTransform(floor6Progress, [0.88, 1.0], [0, 1]);
   const floor6NavOpacity = useTransform(floor6Progress, [0, 0.4], [1, 0]);
+  // 見えている間だけクリック可能（透明時はクリックを透過）
+  const floor6NavPointer = useTransform(floor6Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -604,20 +608,73 @@ function App() {
               </AnimatePresence>
             </div>
 
-            {/* Right Column: Navigation (Desktop Sticky) */}
-            <motion.div className="desktop-nav" style={{ position: 'sticky', top: '80px', display: 'none', opacity: currentFloorId === '6F' ? floor6NavOpacity : 1, pointerEvents: currentFloorId === '6F' ? 'none' : 'auto' }}>
-              <div className="glass-panel" style={{ borderRadius: '0 0 16px 16px', padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <SpiralNav compact floors={activeFloors} onSelectFloor={(id) => {
-                  const targetIndex = activeFloors.findIndex(f => f.id === id);
-                  const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
-                  setTransitionTargetFloor(id);
-                  performTransition(direction, () => {
-                    setCurrentFloorId(id);
-                    setShowFloorIntro(true);
-                  });
-                }} />
-              </div>
-            </motion.div>
+            {/* Right Column: エレベーター（Desktop） */}
+            <div className="desktop-nav" style={{ display: 'none' }}>
+              {/* エレベーターに入るボタン */}
+              {!showFloorElevator && (
+                <motion.div
+                  key={`elev-btn-${currentFloorId ?? 'entrance'}`}
+                  style={{
+                    position: 'fixed', bottom: '6vh', left: 0, right: 0,
+                    display: 'flex', justifyContent: 'center', zIndex: 120,
+                    opacity: currentFloorId === '6F' ? floor6NavOpacity : 1,
+                    pointerEvents: currentFloorId === '6F' ? floor6NavPointer : 'auto',
+                  }}>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowFloorElevator(true)}
+                    style={{
+                      padding: '14px 44px',
+                      borderRadius: '40px',
+                      background: 'rgba(255,255,255,0.15)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.4)',
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(8px)',
+                      letterSpacing: '0.15em',
+                      fontFamily: 'var(--font-jp)',
+                    }}
+                  >
+                    エレベーターに入る
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* エレベーターパネル（右からスライドイン） */}
+              <AnimatePresence>
+                {showFloorElevator && (
+                  <motion.div
+                    initial={{ x: '100%' }}
+                    animate={{ x: '0%' }}
+                    exit={{ x: '100%' }}
+                    transition={{ duration: 0.4, ease: 'easeOut' }}
+                    style={{
+                      position: 'fixed', top: 0, right: 0, bottom: 0,
+                      width: 'min(500px, 90vw)', zIndex: 150,
+                      background: 'rgba(255,255,255,0.08)',
+                      borderLeft: '1px solid rgba(255,255,255,0.2)',
+                      backdropFilter: 'blur(24px)',
+                      WebkitBackdropFilter: 'blur(24px)',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
+                      setShowFloorElevator(false);
+                      const targetIndex = activeFloors.findIndex(f => f.id === id);
+                      const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
+                      setTransitionTargetFloor(id);
+                      performTransition(direction, () => {
+                        setCurrentFloorId(id);
+                        setShowFloorIntro(true);
+                      });
+                    }} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             <style>{`
           @media (min-width: 900px) {

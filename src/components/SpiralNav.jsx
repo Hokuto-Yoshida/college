@@ -62,11 +62,11 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                             height: rowH,
                             display: 'grid',
                             gridTemplateColumns: compact
-                                ? `30px ${thumbS} 1fr`
-                                : `36px ${thumbS} 1fr`,
+                                ? `30px ${thumbS} 76px 1fr`
+                                : `48px ${thumbS} 112px minmax(0, 1fr)`,
                             alignItems: 'center',
                             gap: compact ? '8px' : '12px',
-                            backgroundColor: 'rgba(255,255,255,0.55)',
+                            backgroundColor: 'rgba(255,255,255,0.18)',
                             backdropFilter: 'blur(6px)',
                             WebkitBackdropFilter: 'blur(6px)',
                             border: 'none',
@@ -80,7 +80,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                     >
                         {/* 階番号 */}
                         <div style={{
-                            fontSize: compact ? '0.72rem' : '1rem',
+                            fontSize: compact ? '0.85rem' : '1.35rem',
                             fontWeight: '700',
                             color: '#333',
                             fontFamily: 'var(--font-en)',
@@ -109,34 +109,60 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                             )}
                         </div>
 
-                        {/* テキスト */}
+                        {/* プロセス + 視点 */}
                         <div style={{ overflow: 'hidden', minWidth: 0 }}>
                             <div style={{
-                                fontSize: compact ? '0.62rem' : '0.8rem',
-                                color: '#555',
-                                fontFamily: 'var(--font-jp)',
-                                lineHeight: 1.4,
+                                display: 'flex',
+                                alignItems: 'baseline',
+                                gap: '6px',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                letterSpacing: '0.04em',
                                 marginBottom: '3px',
                             }}>
-                                プロセス{proc.num}　{proc.viewpoint}
+                                <span style={{
+                                    fontSize: compact ? '0.62rem' : '0.8rem',
+                                    color: '#555',
+                                    fontFamily: 'var(--font-jp)',
+                                    letterSpacing: '0.04em',
+                                }}>
+                                    プロセス
+                                </span>
+                                <span style={{
+                                    fontSize: compact ? '1rem' : '1.5rem',
+                                    fontWeight: '700',
+                                    color: '#1d4ed8',
+                                    fontFamily: 'var(--font-en)',
+                                    lineHeight: 1,
+                                }}>
+                                    {proc.num}
+                                </span>
                             </div>
                             <div style={{
-                                fontSize: compact ? '0.78rem' : '1.05rem',
-                                fontWeight: '700',
-                                color: '#333',
+                                fontSize: compact ? '0.62rem' : '0.85rem',
+                                color: '#555',
                                 fontFamily: 'var(--font-jp)',
-                                lineHeight: 1.2,
+                                letterSpacing: '0.04em',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
-                                letterSpacing: '0.06em',
                             }}>
-                                {proc.action}
+                                {proc.viewpoint}
                             </div>
+                        </div>
+
+                        {/* アクション（右側） */}
+                        <div style={{
+                            fontSize: compact ? '0.78rem' : '1.25rem',
+                            fontWeight: '700',
+                            color: '#333',
+                            fontFamily: 'var(--font-jp)',
+                            lineHeight: 1.3,
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            letterSpacing: '0.06em',
+                        }}>
+                            {proc.action}
                         </div>
                     </motion.button>
                 );
