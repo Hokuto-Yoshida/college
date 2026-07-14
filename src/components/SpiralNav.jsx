@@ -66,11 +66,11 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                                 : `36px ${thumbS} 1fr`,
                             alignItems: 'center',
                             gap: compact ? '8px' : '12px',
-                            backgroundColor: 'rgba(255,255,255,0.07)',
+                            backgroundColor: 'rgba(255,255,255,0.55)',
                             backdropFilter: 'blur(6px)',
                             WebkitBackdropFilter: 'blur(6px)',
                             border: 'none',
-                            borderBottom: '1px solid rgba(255,255,255,0.07)',
+                            borderBottom: '1px solid rgba(255,255,255,0.25)',
                             padding: compact ? '0 10px 0 8px' : '0 14px 0 10px',
                             cursor: 'pointer',
                             textAlign: 'left',
@@ -80,14 +80,13 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                     >
                         {/* 階番号 */}
                         <div style={{
-                            fontSize: compact ? '0.65rem' : '0.82rem',
+                            fontSize: compact ? '0.72rem' : '1rem',
                             fontWeight: '700',
-                            color: '#fff',
+                            color: '#333',
                             fontFamily: 'var(--font-en)',
                             textAlign: 'center',
                             lineHeight: 1,
                             letterSpacing: '0.03em',
-                            textShadow: `0 0 10px ${floor.color}80`,
                         }}>
                             {floor.id}
                         </div>
@@ -113,22 +112,22 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                         {/* テキスト */}
                         <div style={{ overflow: 'hidden', minWidth: 0 }}>
                             <div style={{
-                                fontSize: compact ? '0.56rem' : '0.68rem',
-                                color: 'rgba(255,255,255,0.52)',
+                                fontSize: compact ? '0.62rem' : '0.8rem',
+                                color: '#555',
                                 fontFamily: 'var(--font-jp)',
                                 lineHeight: 1.4,
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
                                 letterSpacing: '0.04em',
-                                marginBottom: '2px',
+                                marginBottom: '3px',
                             }}>
                                 プロセス{proc.num}　{proc.viewpoint}
                             </div>
                             <div style={{
-                                fontSize: compact ? '0.68rem' : '0.88rem',
-                                fontWeight: '600',
-                                color: 'rgba(255,255,255,0.92)',
+                                fontSize: compact ? '0.78rem' : '1.05rem',
+                                fontWeight: '700',
+                                color: '#333',
                                 fontFamily: 'var(--font-jp)',
                                 lineHeight: 1.2,
                                 whiteSpace: 'nowrap',

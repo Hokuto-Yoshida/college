@@ -171,13 +171,6 @@ export const IntroSequence = ({ onEnter }) => {
                 </motion.div>
             ))}
 
-            {/* ── 全体に常時1枚の白レイヤー（背景・画像の上、テキスト・ボタンの下） ── */}
-            <div style={{
-                position: 'fixed', inset: 0, zIndex: 6,
-                background: 'rgba(255,255,255,0.35)',
-                pointerEvents: 'none',
-            }} />
-
             {/* ── 白幕 + テキスト ── */}
             {sections.map((section, si) => (
                 <div
