@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import imgPath1 from '../assets/intro_new_1.png';
@@ -11,15 +11,41 @@ import introOpening from '../assets/intro_opening.png';
 const MASK = 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)';
 
 export const IntroSequence = ({ onEnter }) => {
-    const { scrollYProgress } = useScroll();
+    // useScroll()内部のscrollYProgressと、マウント判定に使うscroll値がズレて
+    // 「マウントはされているのにopacityは0のまま」というズレが起きていたため、
+    // 両方を同じ手動計算のprogress値から駆動する（ズレようがない構成にする）
+    const scrollYProgress = useMotionValue(0);
 
     // スクロール終盤でボタン表示（scrollイベント直読みで確実に）
     const [buttonVisible, setButtonVisible] = useState(false);
+
+    // 各背景/画像/白幕レイヤーを、自分のサイクルが終わったら完全にDOMから外す（opacityだけに頼らず確実に消す）
+    const [bg0On, setBg0On] = useState(true);
+    const [bg1On, setBg1On] = useState(false);
+    const [bg2On, setBg2On] = useState(false);
+    const [open0On, setOpen0On] = useState(true);
+    const [open1On, setOpen1On] = useState(false);
+    const [open2On, setOpen2On] = useState(false);
+    const [veil0On, setVeil0On] = useState(true);
+    const [veil1On, setVeil1On] = useState(false);
+    const [veil2On, setVeil2On] = useState(false);
+
     useEffect(() => {
         const onScroll = () => {
             const max = document.documentElement.scrollHeight - window.innerHeight;
             const progress = max > 0 ? window.scrollY / max : 0;
+            scrollYProgress.set(progress);
             setButtonVisible(progress >= 0.93);
+
+            setBg0On(progress < 0.42);
+            setBg1On(progress >= 0.30 && progress < 0.75);
+            setBg2On(progress >= 0.63);
+            setOpen0On(progress < 0.42);
+            setOpen1On(progress >= 0.38 && progress < 0.75);
+            setOpen2On(progress >= 0.71);
+            setVeil0On(progress < 0.33);
+            setVeil1On(progress >= 0.44 && progress < 0.65);
+            setVeil2On(progress >= 0.77 && progress < 0.95);
         };
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
@@ -29,20 +55,34 @@ export const IntroSequence = ({ onEnter }) => {
     // ── 3サイクル均等設計 ─────────────────────────────────────────
     // 各サイクル: 背景だけ → 画像挿入 → レイヤー＋テキスト → レイヤー消す → 背景と一緒に画像退場
     // bg0: 0-0.33, bg1: 0.33-0.66, bg2: 0.66-1.00 (トランジション 0.06)
-    // 100% にすることでトランジション中点で bg どうしがぴったり接する（黒なし）
-    const bg0Y = useTransform(scrollYProgress, [0, 0.33, 0.39], ['0%', '0%', '-100%']);
-    const bg1Y = useTransform(scrollYProgress, [0.33, 0.39, 0.66, 0.72], ['100%', '0%', '0%', '-100%']);
-    const bg2Y = useTransform(scrollYProgress, [0.66, 0.72], ['100%', '0%']);
+    // 背景同士は同じ位置に重ねたままopacityでじわっとクロスフェード（6階の背景切り替えと同じ方式）
+    const bg0Opacity = useTransform(scrollYProgress, [0, 0.33, 0.39], [1, 1, 0]);
+    const bg1Opacity = useTransform(scrollYProgress, [0.33, 0.39, 0.66, 0.72], [0, 1, 1, 0]);
+    const bg2Opacity = useTransform(scrollYProgress, [0.66, 0.72], [0, 1]);
 
-    // ── opening image: 下からスライドイン、退場は背景と同時 ──────
-    const open0Y = useTransform(scrollYProgress, [0.04, 0.09, 0.33, 0.39], ['100%', '0%', '0%', '-100%']);
-    const open1Y = useTransform(scrollYProgress, [0.41, 0.46, 0.66, 0.72], ['100%', '0%', '0%', '-100%']);
+    // ── opening image: 下からスライドイン、退場は背景クロスフェードに合わせてぼんやりフェードアウト ──
+    // （スライドで退場すると境界線が目立つため、背景が変わるタイミングと同じ範囲でopacity+blurのみで消す）
+    const open0Y = useTransform(scrollYProgress, [0.04, 0.09], ['100%', '0%']);
+    const open1Y = useTransform(scrollYProgress, [0.41, 0.46], ['100%', '0%']);
     const open2Y = useTransform(scrollYProgress, [0.74, 0.79], ['100%', '0%']);
+
+    const open0Opacity = useTransform(scrollYProgress, [0.33, 0.39], [1, 0]);
+    const open1Opacity = useTransform(scrollYProgress, [0.66, 0.72], [1, 0]);
+    const open0Blur = useTransform(scrollYProgress, [0.33, 0.39], ['blur(0px)', 'blur(16px)']);
+    const open1Blur = useTransform(scrollYProgress, [0.66, 0.72], ['blur(0px)', 'blur(16px)']);
 
     // ── 白幕: 画像の後にスライドイン ─────────────────────────────
     const veil0Y = useTransform(scrollYProgress, [0.11, 0.14, 0.27, 0.31], ['100%', '0%', '0%', '-100%']);
     const veil1Y = useTransform(scrollYProgress, [0.46, 0.49, 0.59, 0.63], ['100%', '0%', '0%', '-100%']);
     const veil2Y = useTransform(scrollYProgress, [0.79, 0.82, 0.89, 0.93], ['100%', '0%', '0%', '-100%']);
+
+    // ── 白幕（靄）: 退場時にボヤっとフェード＋ぼかしながら消える（背景クロスフェードに合わせる試験実装） ──
+    const veil0Opacity = useTransform(scrollYProgress, [0.27, 0.31], [1, 0]);
+    const veil1Opacity = useTransform(scrollYProgress, [0.59, 0.63], [1, 0]);
+    const veil2Opacity = useTransform(scrollYProgress, [0.89, 0.93], [1, 0]);
+    const veil0Blur = useTransform(scrollYProgress, [0.27, 0.31], ['blur(0px)', 'blur(16px)']);
+    const veil1Blur = useTransform(scrollYProgress, [0.59, 0.63], ['blur(0px)', 'blur(16px)']);
+    const veil2Blur = useTransform(scrollYProgress, [0.89, 0.93], ['blur(0px)', 'blur(16px)']);
 
     // ── テキスト: 各白幕内でスクロール ───────────────────────────
     // 白幕1: 2テキスト
@@ -69,6 +109,9 @@ export const IntroSequence = ({ onEnter }) => {
     const sections = [
         {
             veilY: veil0Y,
+            veilOpacity: veil0Opacity,
+            veilBlur: veil0Blur,
+            on: veil0On,
             items: [
                 {
                     y: t0Y,
@@ -97,6 +140,9 @@ export const IntroSequence = ({ onEnter }) => {
         },
         {
             veilY: veil1Y,
+            veilOpacity: veil1Opacity,
+            veilBlur: veil1Blur,
+            on: veil1On,
             items: [
                 {
                     y: t2Y,
@@ -114,6 +160,9 @@ export const IntroSequence = ({ onEnter }) => {
         },
         {
             veilY: veil2Y,
+            veilOpacity: veil2Opacity,
+            veilBlur: veil2Blur,
+            on: veil2On,
             items: [
                 {
                     y: t3Y,
@@ -135,7 +184,11 @@ export const IntroSequence = ({ onEnter }) => {
 
             {/* ── 背景レイヤー ── */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
-                {[bg0Y, bg1Y, bg2Y].map((bgY, i) => (
+                {[
+                    { opacity: bg0Opacity, on: bg0On },
+                    { opacity: bg1Opacity, on: bg1On },
+                    { opacity: bg2Opacity, on: bg2On },
+                ].map((bg, i) => bg.on && (
                     <motion.div
                         key={i}
                         style={{
@@ -143,21 +196,27 @@ export const IntroSequence = ({ onEnter }) => {
                             backgroundImage: `url(${[imgPath1, imgPath2, imgPath3][i]})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
-                            y: bgY,
+                            opacity: bg.opacity,
                         }}
                     />
                 ))}
             </div>
 
 
-            {/* ── opening image: 下からスライドイン、背景と一緒に退場（2枚重ね） ── */}
-            {[open0Y, open1Y, open2Y].map((y, i) => (
+            {/* ── opening image: 下からスライドイン、退場は背景クロスフェードに合わせてぼんやりフェードアウト（2枚重ね） ── */}
+            {[
+                { y: open0Y, opacity: open0Opacity, blur: open0Blur, on: open0On },
+                { y: open1Y, opacity: open1Opacity, blur: open1Blur, on: open1On },
+                { y: open2Y, on: open2On },
+            ].map((layer, i) => layer.on && (
                 <motion.div
                     key={i}
                     style={{
                         position: 'fixed', inset: 0, zIndex: 3,
                         pointerEvents: 'none',
-                        y,
+                        y: layer.y,
+                        opacity: layer.opacity,
+                        filter: layer.blur,
                     }}
                 >
                     {[0, 1].map(j => (
@@ -172,7 +231,7 @@ export const IntroSequence = ({ onEnter }) => {
             ))}
 
             {/* ── 白幕 + テキスト ── */}
-            {sections.map((section, si) => (
+            {sections.map((section, si) => section.on && (
                 <div
                     key={si}
                     style={{
@@ -187,6 +246,8 @@ export const IntroSequence = ({ onEnter }) => {
                             position: 'absolute', inset: 0,
                             background: 'rgba(255,255,255,0.52)',
                             y: section.veilY,
+                            opacity: section.veilOpacity,
+                            filter: section.veilBlur,
                             maskImage: MASK,
                             WebkitMaskImage: MASK,
                         }}

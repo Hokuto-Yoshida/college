@@ -13,6 +13,7 @@ import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
 import imgCinema from '../assets/cinema_room.png';
 import imgClassroom from '../assets/virtual_classroom.png';
 import lectureBg from '../assets/lecture_bg2.png';
+import lectureBg7F from '../assets/lecture_bg_7f.png';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -266,13 +267,14 @@ const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
     const scale = useTransform(scrollYProgress, [0, 1], [1, 1.4]);
     const buttonOpacity = useTransform(scrollYProgress, [0.8, 1], [0, 1]);
     const buttonPointerEvents = useTransform(scrollYProgress, [0.8, 1], ['none', 'auto']);
+    const introBg = lecture?.floorId === '7F' ? lectureBg7F : lectureBg;
 
     return (
         <div style={{ position: 'relative', marginTop: '20px', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden' }}>
             <motion.div
                 style={{
                     position: 'absolute', inset: 0,
-                    backgroundImage: `url(${lectureBg})`,
+                    backgroundImage: `url(${introBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                     scale: scale,
@@ -541,7 +543,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                                 onClick={() => handleLectureSelect(l)}
                                 style={{
                                     height: '300px',
-                                    backgroundImage: `url(${lectureBg})`,
+                                    backgroundImage: `url(${l.floorId === '7F' ? lectureBg7F : lectureBg})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
                                     border: '1px solid rgba(255,255,255,0.2)',

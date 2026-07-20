@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, useMotionValue, useTransform } from 'framer-motion';
 import { SpiralNav } from './SpiralNav';
 
 import imgPath1 from '../assets/intro_bg_1.png';
@@ -12,34 +12,89 @@ import introOpening from '../assets/intro_opening.png';
 const MASK = 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)';
 
 export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
-    const { scrollYProgress } = useScroll();
+    // useScroll()内部のscrollYProgressとマウント判定用のscroll値がズレると
+    // 「マウントはされているのにopacityは0のまま」になるため、両方を同じ手動計算の
+    // progress値から駆動する（イントロ画面と同じ方式）
+    const scrollYProgress = useMotionValue(0);
     const [showElevator, setShowElevator] = useState(false);
     const [buttonVisible, setButtonVisible] = useState(false);
 
-    useMotionValueEvent(scrollYProgress, 'change', (v) => {
-        setButtonVisible(v >= 0.97);
-    });
+    // 各背景/画像/白幕レイヤーを、自分のサイクルが終わったら完全にDOMから外す（opacityだけに頼らず確実に消す）
+    const [bg0On, setBg0On] = useState(true);
+    const [bg1On, setBg1On] = useState(false);
+    const [bg2On, setBg2On] = useState(false);
+    const [bg3On, setBg3On] = useState(false);
+    const [open0On, setOpen0On] = useState(true);
+    const [open1On, setOpen1On] = useState(false);
+    const [open2On, setOpen2On] = useState(false);
+    const [open3On, setOpen3On] = useState(false);
+    const [veil0On, setVeil0On] = useState(true);
+    const [veil1On, setVeil1On] = useState(false);
+    const [veil2On, setVeil2On] = useState(false);
+    const [veil3On, setVeil3On] = useState(false);
+
+    useEffect(() => {
+        const onScroll = () => {
+            const max = document.documentElement.scrollHeight - window.innerHeight;
+            const progress = max > 0 ? window.scrollY / max : 0;
+            scrollYProgress.set(progress);
+            setButtonVisible(progress >= 0.97);
+
+            setBg0On(progress < 0.33);
+            setBg1On(progress >= 0.23 && progress < 0.58);
+            setBg2On(progress >= 0.48 && progress < 0.83);
+            setBg3On(progress >= 0.73);
+            setOpen0On(progress < 0.33);
+            setOpen1On(progress >= 0.30 && progress < 0.58);
+            setOpen2On(progress >= 0.55 && progress < 0.83);
+            setOpen3On(progress >= 0.80);
+            setVeil0On(progress < 0.24);
+            setVeil1On(progress >= 0.35 && progress < 0.50);
+            setVeil2On(progress >= 0.60 && progress < 0.75);
+            setVeil3On(progress >= 0.85 && progress < 0.99);
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
 
     // ── 4サイクル均等設計 ─────────────────────────────────────────
     // 各サイクル: 背景だけ → 画像挿入 → レイヤー＋テキスト → レイヤー消す → 背景と一緒に画像退場
     // bg0: 0-0.25, bg1: 0.25-0.50, bg2: 0.50-0.75, bg3: 0.75-1.00 (トランジション 0.06)
-    // 100% にすることでトランジション中点で bg どうしがぴったり接する（黒なし）
-    const bg0Y = useTransform(scrollYProgress, [0, 0.25, 0.31], ['0%', '0%', '-100%']);
-    const bg1Y = useTransform(scrollYProgress, [0.25, 0.31, 0.50, 0.56], ['100%', '0%', '0%', '-100%']);
-    const bg2Y = useTransform(scrollYProgress, [0.50, 0.56, 0.75, 0.81], ['100%', '0%', '0%', '-100%']);
-    const bg3Y = useTransform(scrollYProgress, [0.75, 0.81], ['100%', '0%']);
+    // 背景同士は同じ位置に重ねたままopacityでじわっとクロスフェード
+    const bg0Opacity = useTransform(scrollYProgress, [0, 0.25, 0.31], [1, 1, 0]);
+    const bg1Opacity = useTransform(scrollYProgress, [0.25, 0.31, 0.50, 0.56], [0, 1, 1, 0]);
+    const bg2Opacity = useTransform(scrollYProgress, [0.50, 0.56, 0.75, 0.81], [0, 1, 1, 0]);
+    const bg3Opacity = useTransform(scrollYProgress, [0.75, 0.81], [0, 1]);
 
-    // ── opening image: 下からスライドイン、退場は背景と同時 ──────
-    const open0Y = useTransform(scrollYProgress, [0.03, 0.07, 0.25, 0.31], ['100%', '0%', '0%', '-100%']);
-    const open1Y = useTransform(scrollYProgress, [0.32, 0.36, 0.50, 0.56], ['100%', '0%', '0%', '-100%']);
-    const open2Y = useTransform(scrollYProgress, [0.57, 0.61, 0.75, 0.81], ['100%', '0%', '0%', '-100%']);
+    // ── opening image: 下からスライドイン、退場は背景クロスフェードに合わせてぼんやりフェードアウト ──
+    const open0Y = useTransform(scrollYProgress, [0.03, 0.07], ['100%', '0%']);
+    const open1Y = useTransform(scrollYProgress, [0.32, 0.36], ['100%', '0%']);
+    const open2Y = useTransform(scrollYProgress, [0.57, 0.61], ['100%', '0%']);
     const open3Y = useTransform(scrollYProgress, [0.82, 0.86], ['100%', '0%']);
+
+    const open0Opacity = useTransform(scrollYProgress, [0.25, 0.31], [1, 0]);
+    const open1Opacity = useTransform(scrollYProgress, [0.50, 0.56], [1, 0]);
+    const open2Opacity = useTransform(scrollYProgress, [0.75, 0.81], [1, 0]);
+    const open0Blur = useTransform(scrollYProgress, [0.25, 0.31], ['blur(0px)', 'blur(16px)']);
+    const open1Blur = useTransform(scrollYProgress, [0.50, 0.56], ['blur(0px)', 'blur(16px)']);
+    const open2Blur = useTransform(scrollYProgress, [0.75, 0.81], ['blur(0px)', 'blur(16px)']);
 
     // ── 白幕: 画像の後にスライドイン ─────────────────────────────
     const veil0Y = useTransform(scrollYProgress, [0.08, 0.11, 0.19, 0.22], ['100%', '0%', '0%', '-100%']);
     const veil1Y = useTransform(scrollYProgress, [0.37, 0.40, 0.45, 0.48], ['100%', '0%', '0%', '-100%']);
     const veil2Y = useTransform(scrollYProgress, [0.62, 0.65, 0.70, 0.73], ['100%', '0%', '0%', '-100%']);
     const veil3Y = useTransform(scrollYProgress, [0.87, 0.90, 0.94, 0.97], ['100%', '0%', '0%', '-100%']);
+
+    // ── 白幕（靄）: 退場時にボヤっとフェード＋ぼかしながら消える ──
+    const veil0Opacity = useTransform(scrollYProgress, [0.19, 0.22], [1, 0]);
+    const veil1Opacity = useTransform(scrollYProgress, [0.45, 0.48], [1, 0]);
+    const veil2Opacity = useTransform(scrollYProgress, [0.70, 0.73], [1, 0]);
+    const veil3Opacity = useTransform(scrollYProgress, [0.94, 0.97], [1, 0]);
+    const veil0Blur = useTransform(scrollYProgress, [0.19, 0.22], ['blur(0px)', 'blur(16px)']);
+    const veil1Blur = useTransform(scrollYProgress, [0.45, 0.48], ['blur(0px)', 'blur(16px)']);
+    const veil2Blur = useTransform(scrollYProgress, [0.70, 0.73], ['blur(0px)', 'blur(16px)']);
+    const veil3Blur = useTransform(scrollYProgress, [0.94, 0.97], ['blur(0px)', 'blur(16px)']);
 
     // ── テキスト: 各白幕内でスクロール ───────────────────────────
     const t0Y = useTransform(scrollYProgress, [0.11, 0.13, 0.17, 0.19], ['60vh', '0vh', '0vh', '-60vh']);
@@ -63,6 +118,9 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
     const sections = [
         {
             veilY: veil0Y,
+            veilOpacity: veil0Opacity,
+            veilBlur: veil0Blur,
+            on: veil0On,
             items: [{
                 y: t0Y,
                 node: (
@@ -76,6 +134,9 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
         },
         {
             veilY: veil1Y,
+            veilOpacity: veil1Opacity,
+            veilBlur: veil1Blur,
+            on: veil1On,
             items: [{
                 y: t1Y,
                 node: (
@@ -89,6 +150,9 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
         },
         {
             veilY: veil2Y,
+            veilOpacity: veil2Opacity,
+            veilBlur: veil2Blur,
+            on: veil2On,
             items: [{
                 y: t2Y,
                 node: (
@@ -102,6 +166,9 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
         },
         {
             veilY: veil3Y,
+            veilOpacity: veil3Opacity,
+            veilBlur: veil3Blur,
+            on: veil3On,
             items: [{
                 y: t3Y,
                 node: (
@@ -120,7 +187,12 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
 
             {/* ── 背景レイヤー ── */}
             <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden' }}>
-                {[bg0Y, bg1Y, bg2Y, bg3Y].map((bgY, i) => (
+                {[
+                    { opacity: bg0Opacity, on: bg0On },
+                    { opacity: bg1Opacity, on: bg1On },
+                    { opacity: bg2Opacity, on: bg2On },
+                    { opacity: bg3Opacity, on: bg3On },
+                ].map((bg, i) => bg.on && (
                     <motion.div
                         key={i}
                         style={{
@@ -128,20 +200,27 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                             backgroundImage: `url(${[imgPath1, imgPath2, imgPath3, imgPath4][i]})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
-                            y: bgY,
+                            opacity: bg.opacity,
                         }}
                     />
                 ))}
             </div>
 
-            {/* ── opening image: 下からスライドイン、背景と一緒に退場（2枚重ね） ── */}
-            {[open0Y, open1Y, open2Y, open3Y].map((y, i) => (
+            {/* ── opening image: 下からスライドイン、退場は背景クロスフェードに合わせてぼんやりフェードアウト（2枚重ね） ── */}
+            {[
+                { y: open0Y, opacity: open0Opacity, blur: open0Blur, on: open0On },
+                { y: open1Y, opacity: open1Opacity, blur: open1Blur, on: open1On },
+                { y: open2Y, opacity: open2Opacity, blur: open2Blur, on: open2On },
+                { y: open3Y, on: open3On },
+            ].map((layer, i) => layer.on && (
                 <motion.div
                     key={i}
                     style={{
                         position: 'fixed', inset: 0, zIndex: 3,
                         pointerEvents: 'none',
-                        y,
+                        y: layer.y,
+                        opacity: layer.opacity,
+                        filter: layer.blur,
                     }}
                 >
                     {[0, 1].map(j => (
@@ -156,7 +235,7 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
             ))}
 
             {/* ── 白幕 + テキスト ── */}
-            {sections.map((section, si) => (
+            {sections.map((section, si) => section.on && (
                 <div
                     key={si}
                     style={{
@@ -171,6 +250,8 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                             position: 'absolute', inset: 0,
                             background: 'rgba(255,255,255,0.52)',
                             y: section.veilY,
+                            opacity: section.veilOpacity,
+                            filter: section.veilBlur,
                             maskImage: MASK,
                             WebkitMaskImage: MASK,
                         }}

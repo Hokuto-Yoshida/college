@@ -267,9 +267,9 @@ function App() {
           }}
           floors={activeFloors}
           onSelectFloor={(floorId) => {
-            setShowMainIntro(false);
-            window.scrollTo(0, 0);
-            performTransition('door', () => {
+            setTransitionTargetFloor(floorId);
+            performTransition('stairs-up', () => {
+              setShowMainIntro(false);
               setCurrentFloorId(floorId);
               setShowFloorIntro(true);
             });
