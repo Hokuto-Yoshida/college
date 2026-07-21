@@ -110,7 +110,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                         </div>
 
                         {/* プロセス + 視点 */}
-                        <div style={{ overflow: 'hidden', minWidth: 0 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', overflow: 'hidden', minWidth: 0 }}>
                             <div style={{
                                 display: 'flex',
                                 alignItems: 'baseline',
@@ -121,7 +121,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                             }}>
                                 <span style={{
                                     fontSize: compact ? '0.62rem' : '0.8rem',
-                                    color: '#555',
+                                    color: '#1d4ed8',
                                     fontFamily: 'var(--font-jp)',
                                     letterSpacing: '0.04em',
                                 }}>
@@ -145,6 +145,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
+                                textAlign: 'center',
                             }}>
                                 {proc.viewpoint}
                             </div>
