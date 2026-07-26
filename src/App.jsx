@@ -11,6 +11,10 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { IntroSequence } from './components/IntroSequence';
 import { MainBuildingIntro } from './components/MainBuildingIntro';
 import { FloorIntro } from './components/FloorIntro';
+import { Floor4Intro } from './components/Floor4Intro';
+import { Floor5Intro } from './components/Floor5Intro';
+import { Floor6Intro } from './components/Floor6Intro';
+import { Floor7Intro } from './components/Floor7Intro';
 import { useLectures } from './hooks/useLectures';
 
 // Assets
@@ -53,6 +57,7 @@ function App() {
   const [showMainIntro, setShowMainIntro] = useState(false);
   const [showFloorIntro, setShowFloorIntro] = useState(false);
   const [curtainPhase, setCurtainPhase] = useState('idle'); // 'idle' | 'split' | 'open'
+  const [sixFRoomEntered, setSixFRoomEntered] = useState(false);
   const [showFloorElevator, setShowFloorElevator] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
@@ -86,7 +91,10 @@ function App() {
   }, [currentFloorId, showFloorIntro]);
 
   useEffect(() => {
-    if (currentFloorId !== '6F') setCurtainPhase('idle');
+    if (currentFloorId !== '6F') {
+      setCurtainPhase('idle');
+      setSixFRoomEntered(false);
+    }
     setShowFloorElevator(false);
   }, [currentFloorId]);
 
@@ -275,6 +283,34 @@ function App() {
             });
           }}
         />
+      ) : showFloorIntro && activeFloor && activeFloor.id === '7F' ? (
+        <Floor7Intro
+          onEnter={() => {
+            setShowFloorIntro(false);
+            window.scrollTo(0, 0);
+          }}
+        />
+      ) : showFloorIntro && activeFloor && activeFloor.id === '6F' ? (
+        <Floor6Intro
+          onEnter={() => {
+            setShowFloorIntro(false);
+            window.scrollTo(0, 0);
+          }}
+        />
+      ) : showFloorIntro && activeFloor && activeFloor.id === '5F' ? (
+        <Floor5Intro
+          onEnter={() => {
+            setShowFloorIntro(false);
+            window.scrollTo(0, 0);
+          }}
+        />
+      ) : showFloorIntro && activeFloor && activeFloor.id === '4F' ? (
+        <Floor4Intro
+          onEnter={() => {
+            setShowFloorIntro(false);
+            window.scrollTo(0, 0);
+          }}
+        />
       ) : showFloorIntro && activeFloor ? (
         <FloorIntro
           floor={activeFloor}
@@ -379,12 +415,12 @@ function App() {
               {/* Phase 1-3: 幕フェードイン → 黒 → 開く */}
               {curtainPhase !== 'idle' && (
                 <>
-                  {/* 幕の下の黒背景 */}
+                  {/* 幕の下の黒背景（部屋に入ったらフェードアウトして中身を見せる） */}
                   <motion.div
                     initial={{ opacity: 0 }}
-                    animate={{ opacity: curtainPhase === 'darken' || curtainPhase === 'open' ? 1 : 0 }}
-                    transition={{ duration: 0.5 }}
-                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29 }}
+                    animate={{ opacity: sixFRoomEntered ? 0 : (curtainPhase === 'darken' || curtainPhase === 'open' ? 1 : 0) }}
+                    transition={{ duration: sixFRoomEntered ? 0.8 : 0.5 }}
+                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29, pointerEvents: sixFRoomEntered ? 'none' : 'auto' }}
                   />
                   {/* 左幕 */}
                   <motion.div
@@ -427,6 +463,41 @@ function App() {
                     }}
                   />
                 </>
+              )}
+
+              {/* Phase 3: 幕が開いた後、部屋に入るボタン */}
+              {curtainPhase === 'open' && !sixFRoomEntered && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: 2.2 }}
+                  style={{
+                    position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                    display: 'flex', justifyContent: 'center', zIndex: 31,
+                  }}
+                >
+                  <motion.button
+                    style={{
+                      padding: '16px 48px',
+                      borderRadius: '40px',
+                      background: 'rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.35)',
+                      fontSize: '1.1rem',
+                      fontWeight: 'bold',
+                      fontFamily: 'var(--font-jp)',
+                      letterSpacing: '0.1em',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(10px)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                    }}
+                    whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setSixFRoomEntered(true)}
+                  >
+                    部屋に入る
+                  </motion.button>
+                </motion.div>
               )}
             </>
           )}
@@ -586,21 +657,10 @@ function App() {
                       <span style={{ fontSize: '3rem', fontWeight: 'bold', color: activeFloor.color, lineHeight: 1 }}>
                         {activeFloor.id}
                       </span>
-                      <div style={{ height: '40px', width: '1px', background: 'var(--glass-border)' }}></div>
-                      <span style={{ fontSize: '1.2rem', letterSpacing: '0.1em', opacity: 0.8 }}>
-                        {activeFloor.domain}領域
-                      </span>
                     </div>
 
-                    <h2 style={{ fontSize: '2.5rem', marginBottom: '16px' }}>
-                      {activeFloor.title}
-                    </h2>
-                    <p style={{ fontSize: '1.4rem', color: activeFloor.color, marginBottom: '24px', fontFamily: 'var(--font-en)' }}>
-                      {activeFloor.subtitle}
-                    </p>
-
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} />}
 
 
                   </motion.div>

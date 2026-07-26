@@ -118,13 +118,13 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                             >
                                 {['1F', '2F', '3F', '4F', '5F', '6F', '7F'].includes(String(targetFloorId)) ? (
                                     <>
-                                        <div style={{ color: 'white', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'white', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             人は、「何を見るか」によって人生が変わります。<br />
                                             そしてそれは、視界ではなく心の視点の高さによって決まります。<br />
                                             マインド大学が扱うのは、知識でも、スキルでもありません。<br />
                                             私たちが扱うのは心の視点そのものです。
                                         </div>
-                                        <div style={{ color: 'white', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'white', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             人間の目が上にあるように、人は本来、より高い視点から世界を見ることができます。<br />
                                             その視点を取り戻すための最もベーシックなマインドセットが『マインドの法則』です。<br />
                                             私たちはこの法則を基盤に、人の心の成長を体系化した<br />
@@ -133,7 +133,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
 
                                         {/* Principles 1-7 Dynamic Rendering */}
                                         {String(targetFloorId) === '1F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第1原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>心の視点が現実を決める</div>
                                                 人の現実は出来事によって決まるのではありません。<br />
@@ -142,7 +142,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '2F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第2原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>問いが可能性を開く</div>
                                                 答えは思考を終わらせます。<br />
@@ -152,7 +152,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '3F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第3原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>潜在意識が未来を生み出す</div>
                                                 人の可能性の大部分は顕在意識ではなく<br />
@@ -162,7 +162,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '4F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第4原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>心には成長のプロセスがある</div>
                                                 人の意識は段階的に成長します。<br />
@@ -171,7 +171,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '5F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第5原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>場と関係が意識を変える</div>
                                                 人の意識は環境によって大きく変わります。<br />
@@ -181,7 +181,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '6F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第6原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>時間の質が未来を変える</div>
                                                 時間は単なる時計の流れではありません。<br />
@@ -191,7 +191,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '7F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第7原理</div>
                                                 <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>心の進化は世界を変える</div>
                                                 一人の心の変化は個人にとどまりません。<br />
@@ -210,7 +210,7 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             マインドプロセスデザインで思考を整える。
                                         </div>
 
-                                        <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 1.8, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             この階層では、その瞬間のマインドに応じたワークが即興で生まれます。<br />
                                             答えを見つけるのではなく、向き合うことで階層が引き上がります。
                                         </div>

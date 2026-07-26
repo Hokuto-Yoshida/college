@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
-import imgHallway from '../assets/floor_bg.png'; // 7F intro背景（切り替わらない固定背景）
+import imgBg from '../assets/floor_bg.png'; // 5F intro背景（切り替わらない固定背景）
 import introOpening from '../assets/intro_opening.png'; // イントロと同じ画像。一度だけ出してそのまま残す
 
 // 上下の端をぼかすマスク（イントロ/本館導入と同じ）
@@ -33,14 +33,14 @@ const sectionStyle = {
     marginBottom: '35vh',
 };
 
-export const Floor7Intro = ({ onEnter }) => {
+export const Floor5Intro = ({ onEnter }) => {
     return (
         <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
             {/* Fixed Background（切り替わらない固定背景） */}
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0 }}>
                 <div style={{
                     position: 'absolute', inset: 0,
-                    backgroundImage: `url(${imgHallway})`,
+                    backgroundImage: `url(${imgBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }} />
@@ -86,8 +86,8 @@ export const Floor7Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={lineStyle}>「自分」を超え、世界と響き合う。</p>
-                            <p style={lineStyle}>——潜在意識の最深部で、<br />真の「自分軸」が完成する。</p>
+                            <p style={lineStyle}>「私」から「私たち」へ。</p>
+                            <p style={lineStyle}>——人とのつながりが、<br />新たな可能性を生み出す。</p>
                         </div>
                     </div>
                 </div>
@@ -96,8 +96,8 @@ export const Floor7Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={lineStyle}>思考やエゴをすべて削ぎ落としたとき、<br />心に現れるのは「空っぽ」な自分ではありません。</p>
-                            <p style={lineStyle}>そこにあるのは、宇宙のように無限に広がる、<br />あなたの潜在能力そのものです。</p>
+                            <p style={lineStyle}>本当の成長とは、<br />自分だけが変わることではありません。</p>
+                            <p style={lineStyle}>自分の変化が周囲へ伝わり、<br />人と人との間に新しい価値が生まれること。</p>
                         </div>
                     </div>
                 </div>
@@ -106,8 +106,7 @@ export const Floor7Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={lineStyle}>目の前の執着（重力）から自由になり、<br />広い視座で未来を見渡すとき、</p>
-                            <p style={lineStyle}>「私」という小さな枠組みは消え、<br />社会や地球と分かちがたくつながる。</p>
+                            <p style={lineStyle}>その瞬間から、あなたは「成果を出す人」ではなく、<br />人を輝かせる存在へと変わります。</p>
                         </div>
                     </div>
                 </div>
@@ -116,10 +115,10 @@ export const Floor7Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={{ ...lineStyle, fontWeight: 'bold', fontSize: '1.2em' }}>マインドプロセス7：自己超越（Self-Transcendence）</p>
+                            <p style={{ ...lineStyle, fontWeight: 'bold', fontSize: '1.2em' }}>マインドプロセス5：共創（Co-Creation）</p>
                             <br />
-                            <p style={lineStyle}>ひとつの企業が繁栄し、世界が潤い、地球が持続していく。</p>
-                            <p style={lineStyle}>すべてが調和する「共生の未来」を、ここから描き出しましょう。</p>
+                            <p style={lineStyle}>一人では見ることのできない景色も、<br />心と心が響き合うことで、</p>
+                            <p style={lineStyle}>新しい未来が創造されます。</p>
                         </div>
                     </div>
                 </div>
@@ -128,8 +127,8 @@ export const Floor7Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-7)' }}>7F</p>
-                            <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>地球を動かす</p>
+                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-5)' }}>5F</p>
+                            <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>社会を動かす</p>
                         </div>
                     </div>
                 </div>
@@ -156,7 +155,7 @@ export const Floor7Intro = ({ onEnter }) => {
                             backdropFilter: 'blur(10px)',
                         }}
                     >
-                        7階のフロアへ進む <ArrowRight />
+                        5階のフロアへ進む <ArrowRight />
                     </motion.button>
                 </div>
             </div>

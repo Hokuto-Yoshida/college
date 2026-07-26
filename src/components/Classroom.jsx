@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
-import { Send, User, BookOpen, PenTool, LayoutGrid, ChevronRight, ExternalLink, PlayCircle, ArrowLeft } from 'lucide-react';
+import { Send, User, BookOpen, PenTool, ChevronRight, ExternalLink, PlayCircle, ArrowLeft } from 'lucide-react';
 
 import { ResponseModal } from './ResponseModal';
 import { CinemaModal } from './CinemaModal';
@@ -116,7 +116,7 @@ const BookTransitionOverlay = ({ resource }) => {
                         zIndex: 10
                     }}
                 >
-                    {/* Back Cover (Pages) */}
+                    {/* Back Cover (Pages) — 開いたページの中身として、実際のワークショップ内容を表示 */}
                     <div style={{
                         position: 'absolute', top: 0, bottom: 0, left: 0, width: '100%',
                         background: '#f8f9fa',
@@ -124,11 +124,24 @@ const BookTransitionOverlay = ({ resource }) => {
                         borderRadius: '4px 12px 12px 4px',
                         boxShadow: '10px 10px 30px rgba(0,0,0,0.5)',
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                        padding: '20px'
+                        padding: '24px',
+                        overflow: 'hidden'
                     }}>
-                        <div style={{ width: '80%', height: '2px', background: '#e9ecef', marginBottom: '10px' }} />
-                        <div style={{ width: '80%', height: '2px', background: '#e9ecef', marginBottom: '10px' }} />
-                        <div style={{ width: '60%', height: '2px', background: '#e9ecef' }} />
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: [0, 0, 1] }}
+                            transition={{ duration: 2.5, times: [0, 0.45, 0.75] }}
+                            style={{ textAlign: 'center' }}
+                        >
+                            <h4 style={{ margin: '0 0 12px', fontSize: '1.05rem', color: '#1a202c', fontFamily: 'var(--font-jp)' }}>
+                                {resource.title}
+                            </h4>
+                            {resource.description && (
+                                <p style={{ margin: 0, fontSize: '0.8rem', color: '#4a5568', fontFamily: 'var(--font-jp)', lineHeight: 1.8 }}>
+                                    {resource.description}
+                                </p>
+                            )}
+                        </motion.div>
                     </div>
 
                     {/* Front Cover */}
@@ -322,11 +335,70 @@ const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
 };
 
 function Floor6View() {
-    return <div style={{ height: '540vh' }} />;
+    return (
+        <div>
+            {/* 6Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
+            <div style={{
+                padding: '0 4px',
+                marginBottom: '24px',
+                color: 'white',
+                fontFamily: 'var(--font-jp)',
+                lineHeight: 2.0,
+                textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+            }}>
+                <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-6)' }}>
+                    人が育ち、組織が育ち、未来が育つ。
+                </h3>
+                <p style={{ margin: '0 0 16px' }}>
+                    皆さま、ようこそ。<br />
+                    マインドデザイン研究所が体系化した「心の階層」、第6フロアへ。
+                </p>
+                <p style={{ margin: '0 0 20px' }}>
+                    ここまでのプロセスでは、自分自身を整え、周囲へ良い影響を与える力を育んできました。しかし、この「プロセス6」では、その影響力をさらに広げ、"未来へ残す価値"という新たな視点を育てていきます。この講義では、以下の3つのステップで、未来を創造するリーダーシップを身につけます。
+                </p>
+
+                <div style={{ marginBottom: '18px' }}>
+                    <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「成果」ではなく「未来」を設計する</p>
+                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                        成果は、その瞬間で終わります。しかし理念や文化は、人から人へ受け継がれ、時代を超えて生き続けます。目の前の結果だけを追いかけるのではなく、「この選択は未来に何を残すのか。」そんな時間軸で物事を捉えることで、リーダーとしての視座は飛躍的に高まります。
+                    </p>
+                </div>
+
+                <div style={{ marginBottom: '18px' }}>
+                    <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 人を動かすのではなく、人が育つ環境を創る</p>
+                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                        優れたリーダーは、人を管理しません。人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。一人の能力で組織を動かす時代から、一人ひとりの可能性が自然に開花する組織へ。あなた自身が「人を育てる存在」へと進化していきます。
+                    </p>
+                </div>
+
+                <div style={{ marginBottom: '20px' }}>
+                    <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 未来へ受け継がれる価値を創造する</p>
+                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                        人生は、自分一人で完結するものではありません。あなたの想いは、仲間へ。仲間の想いは、組織へ。組織の価値は、社会へ。そして未来へ。
+                    </p>
+                </div>
+
+                <p style={{ margin: '0 0 16px' }}>
+                    プロセス6では、自分の人生を超えて続いていく「価値の循環」を設計し、持続可能な組織と社会を創造するマインドを育てていきます。
+                </p>
+
+                <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
+                    あなたが今日つくる"在り方"が、未来の誰かの希望になる。<br />
+                    組織を育て、人を育て、文化を育てる。
+                </p>
+                <p style={{ margin: 0, fontWeight: 'bold' }}>
+                    その循環を生み出すことこそ、真のリーダーシップです。<br />
+                    未来へと受け継がれる価値を創造する、マインドプロセス6の扉を開きましょう。
+                </p>
+            </div>
+
+            <div style={{ height: '540vh' }} />
+        </div>
+    );
 }
 
-export function Classroom({ currentFloorId, lectures = [] }) {
-    if (currentFloorId === '6F') return <Floor6View />;
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false }) {
+    if (currentFloorId === '6F' && !sixFRoomEntered) return <Floor6View />;
 
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
@@ -343,27 +415,12 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     const [transitioningResource, setTransitioningResource] = useState(null);
     const [transitioningWorkshop, setTransitioningWorkshop] = useState(null);
 
-    const workshopsRef = useRef(null);
-
-    const scrollToWorkshops = () => {
-        if (workshopsRef.current) {
-            // Header height + some padding
-            const offset = 80;
-            const elementPosition = workshopsRef.current.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-            
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: 'smooth'
-            });
-        }
-    };
-
     // Auth removed
     const user = null;
     const [responses, setResponses] = useState([]);
     const [formAnswers, setFormAnswers] = useState({}); // { qId: text }
     const [viewMode, setViewMode] = useState('WALL'); // 'FORM' or 'WALL'
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // 1問ずつ表示
     const [selectedResponse, setSelectedResponse] = useState(null); // For Modal
 
     // Reset selection when floor changes
@@ -443,18 +500,19 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     const handleWorkshopSelect = (w, color) => {
         setTransitioningWorkshop({ ...w, color });
 
-        // After book opens and fills screen, reveal the workshop content
+        // Let the book fully open (and show its content) before handing off to the full-page book view —
+        // matches BookTransitionOverlay's own 2.5s animation so it doesn't get cut off mid-flip
         setTimeout(() => {
             setActiveWorkshop(w);
             setFormAnswers({}); // Reset form
             setViewMode('FORM');
+            setCurrentQuestionIndex(0);
             setTransitioningWorkshop(null);
+        }, 2500);
+    };
 
-            // Scroll down so the workshop is in view
-            setTimeout(() => {
-                window.scrollBy({ top: 400, behavior: 'smooth' });
-            }, 100);
-        }, 2000); // Wait 2s for book animation
+    const handleCloseWorkshop = () => {
+        setActiveWorkshop(null);
     };
 
     const handlSubmit = (e) => {
@@ -526,7 +584,191 @@ export function Classroom({ currentFloorId, lectures = [] }) {
     // --- HALLWAY VIEW ---
     if (!activeLecture) {
         return (
-            <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden', marginTop: '20px' }}>
+            <div style={{ position: 'relative', width: '100%', marginTop: '20px' }}>
+
+                {/* 7Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
+                {currentFloorId === '7F' && (
+                    <div style={{
+                        padding: '0 4px',
+                        marginBottom: '24px',
+                        color: 'white',
+                        fontFamily: 'var(--font-jp)',
+                        lineHeight: 2.0,
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                        <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-7)' }}>
+                            潜在意識を最大化し、地球規模の「価値」を創出する
+                        </h3>
+                        <p style={{ margin: '0 0 16px' }}>
+                            皆さま、ようこそ。<br />
+                            マインドデザイン研究所が体系化した「心の階層」のゴール、第7フロアへ。
+                        </p>
+                        <p style={{ margin: '0 0 16px' }}>
+                            これまでのプロセスでは、自分のマインドを整え、周囲に影響を与える「技術」を磨いてきました。しかし、この最高階層である「プロセス7」では、これまでの常識を一度手放していただきます。
+                        </p>
+                        <p style={{ margin: '0 0 20px' }}>
+                            この講義では、以下の3つのステップで「心の在り方」を書き換えていきます。
+                        </p>
+
+                        <div style={{ marginBottom: '18px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「心の視座」を宇宙の高さまで引き上げる</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                日常の忙しさやストレスという「重力」から離れ、もっとも高い視点から自分を俯瞰（ふかん）してみましょう。時間軸を広げ、宇宙のような大きな視座を持つことで、目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '18px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 究極の自分軸「在（Being）」を体得する</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                「何かをしなければ（Doing）」という執着を捨て、ただ「自分として在る（Being）」ことに集中します。「何もない＝無」の状態は、実はあらゆる可能性が詰まった「満たされている」状態です。言葉や論理を超えた「感じる世界」の感度を高めることで、しなやかで揺るぎない自分軸が完成します。
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「共生」によるサステナブルな繁栄</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                一人のリーダーがこの高い視座に立つことは、社会に計り知れない価値をもたらします。「自分のため」という枠を超え、「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」という循環（共生）を、透明な設計図として描き出します。
+                            </p>
+                        </div>
+
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
+                            あなたの心の変革が、地球の未来を創り出す。
+                        </p>
+                        <p style={{ margin: 0, fontWeight: 'bold' }}>
+                            人類の可能性を解き放つ、究極のメンタルトレーニングを始めましょう。
+                        </p>
+                    </div>
+                )}
+
+                {/* 5Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
+                {currentFloorId === '5F' && (
+                    <div style={{
+                        padding: '0 4px',
+                        marginBottom: '24px',
+                        color: 'white',
+                        fontFamily: 'var(--font-jp)',
+                        lineHeight: 2.0,
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                        <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-5)' }}>
+                            「人との間」に、新しい価値が生まれる。
+                        </h3>
+                        <p style={{ margin: '0 0 16px' }}>
+                            皆さま、ようこそ。<br />
+                            マインドデザイン研究所が体系化した「心の階層」、第5フロアへ。
+                        </p>
+                        <p style={{ margin: '0 0 16px' }}>
+                            ここまでのプロセスでは、自分自身と向き合い、心を整え、揺るぎない自分軸を育ててきました。
+                        </p>
+                        <p style={{ margin: '0 0 16px' }}>
+                            しかし、本当のマインドの力は、一人の中で完結するものではありません。
+                        </p>
+                        <p style={{ margin: '0 0 20px' }}>
+                            この「プロセス5」では、人と人との間に流れるエネルギーに着目し、互いの可能性を引き出し合いながら、新しい価値を共に創り出す力を育んでいきます。この講義では、以下の3つのステップで、「共創する心」を育てていきます。
+                        </p>
+
+                        <div style={{ marginBottom: '18px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 相手を変えるのではなく、相手の可能性を信じる</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                人は、変えられることで成長するのではありません。信じられることで、自ら変わり始めます。相手を評価するのではなく、「この人には、まだ見えていない可能性がある。」そんな視点で人を見ること。その眼差しが、人の潜在能力を引き出していきます。
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '18px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 「競争」から「共創」へ</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                競争は、勝者と敗者を生みます。共創は、全員の価値を高めます。一人で答えを出すのではなく、異なる価値観や経験を重ね合わせることで、一人では辿り着けなかった未来が生まれていきます。人とつながることは、可能性を広げること。共創とは、未来を創る最も大きなエネルギーなのです。
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. チームの力を最大化する</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                本当に強い組織とは、優秀な人が集まる組織ではありません。一人ひとりの違いが尊重され、それぞれの個性が活かされる組織です。互いを認め、互いに高め合い、互いの成長を喜び合う。その循環が生まれたとき、チームは想像を超える力を発揮します。
+                            </p>
+                        </div>
+
+                        <p style={{ margin: '0 0 16px' }}>
+                            あなたの心が変わることで、人との関係が変わる。<br />
+                            人との関係が変わることで、組織が変わる。<br />
+                            組織が変わることで、社会が変わる。<br />
+                            すべての変化は、「人とのつながり」から始まります。
+                        </p>
+
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
+                            共に学び、共に育ち、共に未来を創る。
+                        </p>
+                        <p style={{ margin: 0, fontWeight: 'bold' }}>
+                            マインドプロセス5は、あなたを"共創するリーダー"へと導く、新たな扉です。
+                        </p>
+                    </div>
+                )}
+
+                {/* 4Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
+                {currentFloorId === '4F' && (
+                    <div style={{
+                        padding: '0 4px',
+                        marginBottom: '24px',
+                        color: 'white',
+                        fontFamily: 'var(--font-jp)',
+                        lineHeight: 2.0,
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                        <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-4)' }}>
+                            思考を超えた先に、本当の可能性がある。
+                        </h3>
+                        <p style={{ margin: '0 0 16px' }}>
+                            皆さま、ようこそ。<br />
+                            マインドデザイン研究所が体系化した「心の階層」、第4フロアへ。
+                        </p>
+                        <p style={{ margin: '0 0 16px' }}>
+                            ここまでのプロセスでは、<br />
+                            自分を知り、自分を整え、自分を信じる力を育ててきました。<br />
+                            しかし、その力だけでは、人生の本質的な変化は起こりません。<br />
+                            なぜなら、私たちを制限しているものの多くは、<br />
+                            能力ではなく、「思い込み」という見えない枠組みだからです。
+                        </p>
+                        <p style={{ margin: '0 0 16px' }}>
+                            この「プロセス4」では、これまで無意識に握りしめてきた価値観や固定観念を手放し、潜在意識が本来持っている可能性を解放していきます。
+                        </p>
+                        <p style={{ margin: '0 0 20px' }}>
+                            この講義では、以下の3つのステップで、「自己変容」のプロセスを体感していきます。
+                        </p>
+
+                        <div style={{ marginBottom: '18px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 思考の枠を超える</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                人は、現実を見ているのではありません。自分の思考を通して、現実を解釈しています。「無理だ」「難しい」「自分には向いていない」そのすべては、過去につくられた思考のフィルター。そのフィルターを外した瞬間、世界はまったく違う姿を見せ始めます。
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '18px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 潜在意識とつながる</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                頭で考え続ける限り、変化には限界があります。本当に人生を動かすのは、言葉になる前の感覚。まだ意識していない、心の深い領域です。思考を静め、心で感じる力を取り戻すことで、潜在意識は静かに動き始めます。
+                            </p>
+                        </div>
+
+                        <div style={{ marginBottom: '20px' }}>
+                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「変わる」のではなく、「還る」</p>
+                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                                自己変容とは、新しい自分をつくることではありません。本来持っていた可能性を、思い出すこと。恐れも、執着も、他者から与えられた評価も手放したとき、あなたの中に眠っていた力は、自然に目を覚まします。心の枠が外れた瞬間、人生の枠も外れていく。昨日までの自分では、見えなかった景色。昨日までの自分では、選ばなかった未来。それらが自然に広がり始めます。
+                            </p>
+                        </div>
+
+                        <p style={{ margin: '0 0 16px' }}>
+                            自己変容とは、「努力して変わる」ことではなく、<br />
+                            本来の自分という可能性に、もう一度出会うこと。
+                        </p>
+
+                        <p style={{ margin: 0, fontWeight: 'bold' }}>
+                            マインドプロセス4は、あなたの人生を大きく変える、<br />
+                            心の転換点となるでしょう。
+                        </p>
+                    </div>
+                )}
+
+                <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden' }}>
 
 {/* Doors (Lectures) */}
                 <div style={{ position: 'absolute', inset: 0, zIndex: 5, padding: '100px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignContent: 'center', backgroundColor: 'rgba(0,0,0,0.1)' }}>
@@ -577,6 +819,7 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                             </motion.div>
                         ))
                     )}
+                </div>
                 </div>
             </div>
         );
@@ -747,158 +990,232 @@ export function Classroom({ currentFloorId, lectures = [] }) {
                 })()}
 
                 {/* Workshop Library (Scroll to advance deeper and select workshops) */}
-                <WorkshopLibrary 
-                    workshops={activeLecture.workshops} 
-                    activeWorkshop={activeWorkshop} 
-                    onWorkshopSelect={(w, color) => {
-                        handleWorkshopSelect(w, color);
-                        scrollToWorkshops();
-                    }}
-                    getWorkshopColor={getWorkshopColor} 
+                <WorkshopLibrary
+                    workshops={activeLecture.workshops}
+                    activeWorkshop={activeWorkshop}
+                    onWorkshopSelect={handleWorkshopSelect}
+                    getWorkshopColor={getWorkshopColor}
                 />
             </div>
 
-            <div ref={workshopsRef}>
-            {activeWorkshop ? (
-                <>
-                    {/* 2. Main Area: Tabs */}
-                    <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
-                        <button
-                            onClick={() => setViewMode('FORM')}
-                            style={{
-                                flex: 1, padding: '12px', borderRadius: '12px', cursor: 'pointer',
-                                background: viewMode === 'FORM' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.2)',
-                                border: viewMode === 'FORM' ? '1px solid var(--floor-3)' : '1px solid transparent',
-                                color: 'white'
-                            }}
-                        >
-                            回答する (Input)
-                        </button>
-                        <button
-                            onClick={() => setViewMode('WALL')}
-                            style={{
-                                flex: 1, padding: '12px', borderRadius: '12px', cursor: 'pointer',
-                                background: viewMode === 'WALL' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.2)',
-                                border: viewMode === 'WALL' ? '1px solid var(--floor-4)' : '1px solid transparent',
-                                color: 'white'
-                            }}
-                        >
-                            みんなの回答 (Wall)
-                        </button>
-                    </div>
-
-                    <AnimatePresence mode="wait">
-                        {viewMode === 'FORM' ? (
-                            <motion.div
-                                key="form"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="glass-panel"
-                                style={{ padding: '24px', borderRadius: '24px' }}
+            {/* 本を開いたあとは、部屋から独立した全画面の「本の中」ページとして表示 */}
+            <AnimatePresence>
+                {activeWorkshop && (
+                    <motion.div
+                        key="workshop-page"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 500,
+                            background: '#f8f9fa',
+                            overflowY: 'auto',
+                        }}
+                    >
+                        <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px 100px' }}>
+                            <button
+                                onClick={handleCloseWorkshop}
+                                style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', background: '#ffffff', border: '1px solid #dee2e6', color: '#1a202c', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '24px' }}
                             >
-                                <div style={{ marginBottom: '24px', borderLeft: '4px solid var(--floor-3)', paddingLeft: '16px' }}>
-                                    <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{activeWorkshop.title}</h4>
-                                    <p style={{ margin: '4px 0 0', color: 'var(--text-muted)' }}>{activeWorkshop.description}</p>
-                                </div>
+                                <ArrowLeft size={14} /> 本棚に戻る
+                            </button>
 
-                                <form onSubmit={handlSubmit}>
-                                    <div style={{ marginBottom: '24px' }}>
-                                        <label style={{ display: 'block', fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                                            表示名 (任意)
-                                        </label>
-                                        <input
-                                            type="text"
-                                            placeholder="ニックネーム"
-                                            value={formAnswers.name || ''}
-                                            onChange={e => setFormAnswers({ ...formAnswers, name: e.target.value })}
-                                            style={{
-                                                width: '100%', padding: '12px', borderRadius: '12px',
-                                                background: 'rgba(0,0,0,0.5)',
-                                                border: '1px solid var(--glass-border)',
-                                                color: 'white',
-                                                cursor: 'text'
-                                            }}
-                                        />
-                                    </div>
+                            {/* Tabs */}
+                            <div style={{ display: 'flex', gap: '4px', marginBottom: '20px' }}>
+                                <button
+                                    onClick={() => setViewMode('FORM')}
+                                    style={{
+                                        flex: 1, padding: '12px', borderRadius: '8px', cursor: 'pointer',
+                                        background: viewMode === 'FORM' ? '#ffffff' : 'transparent',
+                                        border: viewMode === 'FORM' ? '1px solid var(--floor-3)' : '1px solid transparent',
+                                        color: viewMode === 'FORM' ? '#1a202c' : '#718096',
+                                        fontWeight: viewMode === 'FORM' ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    回答する (Input)
+                                </button>
+                                <button
+                                    onClick={() => setViewMode('WALL')}
+                                    style={{
+                                        flex: 1, padding: '12px', borderRadius: '8px', cursor: 'pointer',
+                                        background: viewMode === 'WALL' ? '#ffffff' : 'transparent',
+                                        border: viewMode === 'WALL' ? '1px solid var(--floor-4)' : '1px solid transparent',
+                                        color: viewMode === 'WALL' ? '#1a202c' : '#718096',
+                                        fontWeight: viewMode === 'WALL' ? 'bold' : 'normal'
+                                    }}
+                                >
+                                    みんなの回答 (Wall)
+                                </button>
+                            </div>
 
-                                    {activeWorkshop.questions.map((q, idx) => (
-                                        <div key={q.id} style={{ marginBottom: '32px' }}>
-                                            <label style={{ display: 'block', marginBottom: '12px', fontWeight: '500', lineHeight: 1.5 }}>
-                                                <span style={{ color: 'var(--floor-3)', marginRight: '8px' }}>Q{idx + 1}.</span>
-                                                {q.text}
-                                            </label>
-                                            <textarea
-                                                rows={3}
-                                                placeholder="ここに入力..."
-                                                value={formAnswers[q.id] || ''}
-                                                onChange={e => setFormAnswers({ ...formAnswers, [q.id]: e.target.value })}
-                                                style={{ width: '100%', padding: '16px', borderRadius: '16px', background: 'rgba(0,0,0,0.5)', border: '1px solid var(--glass-border)', color: 'white', fontFamily: 'inherit', resize: 'vertical' }}
-                                            />
+                            <AnimatePresence mode="wait">
+                                {viewMode === 'FORM' ? (
+                                    <motion.div
+                                        key="form"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                    >
+                                        <div style={{ marginBottom: '24px', borderLeft: '4px solid var(--floor-3)', paddingLeft: '16px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#1a202c', fontFamily: 'var(--font-jp)' }}>{activeWorkshop.title}</h4>
+                                            <p style={{ margin: '4px 0 0', color: '#4a5568' }}>{activeWorkshop.description}</p>
                                         </div>
-                                    ))}
 
-                                    <div style={{ textAlign: 'center' }}>
-                                        <button type="submit" className="glass-panel" style={{ padding: '14px 40px', borderRadius: '30px', background: 'var(--floor-3)', color: '#000', fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer', border: 'none' }}>
-                                            回答を提出して共有
-                                        </button>
-                                        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '12px' }}>
-                                            ※提出された回答は、同じ授業を受けている他の参加者にも公開されます。
-                                        </p>
-                                    </div>
-                                </form>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="wall"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                            >
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-                                    {activeResponses.length === 0 ? (
-                                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>
-                                            まだ回答がありません。<br />「回答する」タブから最初の気づきを投稿しましょう。
-                                        </div>
-                                    ) : (
-                                        activeResponses.map(r => (
-                                            <div
-                                                key={r.id}
-                                                onClick={() => setSelectedResponse(r)}
-                                                className="glass-panel"
-                                                style={{ padding: '20px', borderRadius: '20px', cursor: 'pointer', transition: 'transform 0.2s', borderTop: '4px solid var(--floor-4)' }}
-                                            >
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                                    <User size={16} color="var(--text-muted)" />
-                                                    <span style={{ fontWeight: 'bold' }}>{r.name}</span>
-                                                </div>
-                                                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                                                    {new Date(r.timestamp).toLocaleString('ja-JP')}
-                                                </p>
-                                                <div style={{ fontSize: '0.85rem', background: 'rgba(255,255,255,0.05)', padding: '10px', borderRadius: '10px' }}>
-                                                    <div style={{ marginBottom: '4px', opacity: 0.7 }}>回答の一部:</div>
-                                                    <div style={{ fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                        "{Object.values(r.answers)[1] || Object.values(r.answers)[0] || '...'}"
-                                                    </div>
-                                                    <div style={{ textAlign: 'right', marginTop: '8px', color: 'var(--floor-4)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
-                                                        全て読む <ChevronRight size={12} />
-                                                    </div>
-                                                </div>
+                                        <form onSubmit={handlSubmit}>
+                                            <div style={{ marginBottom: '24px' }}>
+                                                <label style={{ display: 'block', fontSize: '0.9rem', color: '#4a5568', marginBottom: '8px' }}>
+                                                    表示名 (任意)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="ニックネーム"
+                                                    value={formAnswers.name || ''}
+                                                    onChange={e => setFormAnswers({ ...formAnswers, name: e.target.value })}
+                                                    style={{
+                                                        width: '100%', padding: '12px', borderRadius: '8px',
+                                                        background: '#ffffff',
+                                                        border: '1px solid #dee2e6',
+                                                        color: '#1a202c',
+                                                        cursor: 'text'
+                                                    }}
+                                                />
                                             </div>
-                                        ))
-                                    )}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </>
-            ) : (
-                <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-muted)', border: '2px dashed var(--glass-border)', borderRadius: '24px' }}>
-                    <LayoutGrid size={48} style={{ opacity: 0.3, marginBottom: '16px' }} />
-                    <p>受講するワークショップを選択してください</p>
-                </div>
-            )}
-            </div>
+
+                                            {(() => {
+                                                const questions = activeWorkshop.questions;
+                                                const q = questions[currentQuestionIndex];
+                                                const isFirst = currentQuestionIndex === 0;
+                                                const isLast = currentQuestionIndex === questions.length - 1;
+                                                const isAnswered = (formAnswers[q.id] || '').trim().length > 0;
+
+                                                return (
+                                                    <>
+                                                        {/* 進捗 */}
+                                                        <div style={{ fontSize: '0.8rem', color: '#718096', marginBottom: '8px' }}>
+                                                            Q{currentQuestionIndex + 1} / {questions.length}
+                                                        </div>
+                                                        <div style={{ height: '4px', borderRadius: '2px', background: '#e2e8f0', marginBottom: '28px', overflow: 'hidden' }}>
+                                                            <div style={{ height: '100%', width: `${((currentQuestionIndex + 1) / questions.length) * 100}%`, background: 'var(--floor-3)', transition: 'width 0.3s ease' }} />
+                                                        </div>
+
+                                                        {/* 1問ずつ表示 */}
+                                                        <AnimatePresence mode="wait">
+                                                            <motion.div
+                                                                key={q.id}
+                                                                initial={{ opacity: 0, x: 20 }}
+                                                                animate={{ opacity: 1, x: 0 }}
+                                                                exit={{ opacity: 0, x: -20 }}
+                                                                transition={{ duration: 0.3 }}
+                                                                style={{ marginBottom: '32px' }}
+                                                            >
+                                                                <label style={{ display: 'block', marginBottom: '12px', fontWeight: '500', lineHeight: 1.5, color: '#1a202c' }}>
+                                                                    <span style={{ color: 'var(--floor-3)', marginRight: '8px' }}>Q{currentQuestionIndex + 1}.</span>
+                                                                    {q.text}
+                                                                </label>
+                                                                <textarea
+                                                                    rows={4}
+                                                                    placeholder="ここに入力..."
+                                                                    value={formAnswers[q.id] || ''}
+                                                                    onChange={e => setFormAnswers({ ...formAnswers, [q.id]: e.target.value })}
+                                                                    style={{ width: '100%', padding: '16px', borderRadius: '8px', background: '#ffffff', border: '1px solid #dee2e6', color: '#1a202c', fontFamily: 'inherit', resize: 'vertical' }}
+                                                                    autoFocus
+                                                                />
+                                                            </motion.div>
+                                                        </AnimatePresence>
+
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setCurrentQuestionIndex(i => Math.max(0, i - 1))}
+                                                                disabled={isFirst}
+                                                                style={{ padding: '12px 24px', borderRadius: '30px', background: 'transparent', border: '1px solid #cbd5e0', color: isFirst ? '#cbd5e0' : '#4a5568', cursor: isFirst ? 'default' : 'pointer', fontSize: '0.9rem' }}
+                                                            >
+                                                                ← 前の質問
+                                                            </button>
+
+                                                            {isLast ? (
+                                                                <button
+                                                                    type="submit"
+                                                                    disabled={!isAnswered}
+                                                                    style={{ padding: '14px 40px', borderRadius: '30px', background: isAnswered ? 'var(--floor-3)' : '#e2e8f0', color: isAnswered ? '#000' : '#a0aec0', fontWeight: 'bold', fontSize: '1rem', cursor: isAnswered ? 'pointer' : 'default', border: 'none' }}
+                                                                >
+                                                                    回答を提出して共有
+                                                                </button>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => isAnswered && setCurrentQuestionIndex(i => Math.min(questions.length - 1, i + 1))}
+                                                                    disabled={!isAnswered}
+                                                                    style={{ padding: '14px 40px', borderRadius: '30px', background: isAnswered ? 'var(--floor-3)' : '#e2e8f0', color: isAnswered ? '#000' : '#a0aec0', fontWeight: 'bold', fontSize: '1rem', cursor: isAnswered ? 'pointer' : 'default', border: 'none' }}
+                                                                >
+                                                                    次へ →
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {!isAnswered && (
+                                                            <p style={{ fontSize: '0.8rem', color: '#a0aec0', marginTop: '12px', textAlign: 'center' }}>
+                                                                回答を入力すると次に進めます
+                                                            </p>
+                                                        )}
+
+                                                        {isLast && isAnswered && (
+                                                            <p style={{ fontSize: '0.8rem', color: '#718096', marginTop: '12px', textAlign: 'center' }}>
+                                                                ※提出された回答は、同じ授業を受けている他の参加者にも公開されます。
+                                                            </p>
+                                                        )}
+                                                    </>
+                                                );
+                                            })()}
+                                        </form>
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        key="wall"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                    >
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
+                                            {activeResponses.length === 0 ? (
+                                                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#718096' }}>
+                                                    まだ回答がありません。<br />「回答する」タブから最初の気づきを投稿しましょう。
+                                                </div>
+                                            ) : (
+                                                activeResponses.map(r => (
+                                                    <div
+                                                        key={r.id}
+                                                        onClick={() => setSelectedResponse(r)}
+                                                        style={{ padding: '20px', borderRadius: '12px', cursor: 'pointer', transition: 'transform 0.2s', background: '#ffffff', border: '1px solid #dee2e6', borderTop: '4px solid var(--floor-4)' }}
+                                                    >
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                                            <User size={16} color="#718096" />
+                                                            <span style={{ fontWeight: 'bold', color: '#1a202c' }}>{r.name}</span>
+                                                        </div>
+                                                        <p style={{ fontSize: '0.9rem', color: '#718096', marginBottom: '16px' }}>
+                                                            {new Date(r.timestamp).toLocaleString('ja-JP')}
+                                                        </p>
+                                                        <div style={{ fontSize: '0.85rem', background: '#f8f9fa', border: '1px solid #edf2f7', padding: '10px', borderRadius: '8px', color: '#1a202c' }}>
+                                                            <div style={{ marginBottom: '4px', opacity: 0.7 }}>回答の一部:</div>
+                                                            <div style={{ fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                "{Object.values(r.answers)[1] || Object.values(r.answers)[0] || '...'}"
+                                                            </div>
+                                                            <div style={{ textAlign: 'right', marginTop: '8px', color: 'var(--floor-4)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                                                全て読む <ChevronRight size={12} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            )}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Modal for Details */}
             <ResponseModal
