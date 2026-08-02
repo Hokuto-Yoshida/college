@@ -335,71 +335,16 @@ const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
 };
 
 function Floor6View() {
-    return (
-        <div>
-            {/* 6Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
-            <div style={{
-                padding: '0 4px',
-                marginBottom: '24px',
-                color: 'white',
-                fontFamily: 'var(--font-jp)',
-                lineHeight: 2.0,
-                textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-            }}>
-                <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-6)' }}>
-                    人が育ち、組織が育ち、未来が育つ。
-                </h3>
-                <p style={{ margin: '0 0 16px' }}>
-                    皆さま、ようこそ。<br />
-                    マインドデザイン研究所が体系化した「心の階層」、第6フロアへ。
-                </p>
-                <p style={{ margin: '0 0 20px' }}>
-                    ここまでのプロセスでは、自分自身を整え、周囲へ良い影響を与える力を育んできました。しかし、この「プロセス6」では、その影響力をさらに広げ、"未来へ残す価値"という新たな視点を育てていきます。この講義では、以下の3つのステップで、未来を創造するリーダーシップを身につけます。
-                </p>
-
-                <div style={{ marginBottom: '18px' }}>
-                    <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「成果」ではなく「未来」を設計する</p>
-                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                        成果は、その瞬間で終わります。しかし理念や文化は、人から人へ受け継がれ、時代を超えて生き続けます。目の前の結果だけを追いかけるのではなく、「この選択は未来に何を残すのか。」そんな時間軸で物事を捉えることで、リーダーとしての視座は飛躍的に高まります。
-                    </p>
-                </div>
-
-                <div style={{ marginBottom: '18px' }}>
-                    <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 人を動かすのではなく、人が育つ環境を創る</p>
-                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                        優れたリーダーは、人を管理しません。人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。一人の能力で組織を動かす時代から、一人ひとりの可能性が自然に開花する組織へ。あなた自身が「人を育てる存在」へと進化していきます。
-                    </p>
-                </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                    <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 未来へ受け継がれる価値を創造する</p>
-                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                        人生は、自分一人で完結するものではありません。あなたの想いは、仲間へ。仲間の想いは、組織へ。組織の価値は、社会へ。そして未来へ。
-                    </p>
-                </div>
-
-                <p style={{ margin: '0 0 16px' }}>
-                    プロセス6では、自分の人生を超えて続いていく「価値の循環」を設計し、持続可能な組織と社会を創造するマインドを育てていきます。
-                </p>
-
-                <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
-                    あなたが今日つくる"在り方"が、未来の誰かの希望になる。<br />
-                    組織を育て、人を育て、文化を育てる。
-                </p>
-                <p style={{ margin: 0, fontWeight: 'bold' }}>
-                    その循環を生み出すことこそ、真のリーダーシップです。<br />
-                    未来へと受け継がれる価値を創造する、マインドプロセス6の扉を開きましょう。
-                </p>
-            </div>
-
-            <div style={{ height: '540vh' }} />
-        </div>
-    );
+    // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
+    return <div style={{ height: '540vh' }} />;
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false }) {
-    if (currentFloorId === '6F' && !sixFRoomEntered) return <Floor6View />;
+function Floor7Placeholder() {
+    // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
+    return <div style={{ height: '540vh' }} />;
+}
 
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -460,6 +405,10 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
         }
     }, [lectures, activeLecture, activeWorkshop]);
 
+    // フックはすべて呼び終えているので、ここでフロア別のプレースホルダーに早期returnして良い
+    // （hooksの呼び出し順が毎レンダー同じになるよう、早期returnはhooksの後に置く）
+    if (currentFloorId === '6F' && !sixFRoomEntered) return <Floor6View />;
+    if (currentFloorId === '7F' && !sevenFRoomEntered) return <Floor7Placeholder />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
@@ -585,60 +534,6 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (!activeLecture) {
         return (
             <div style={{ position: 'relative', width: '100%', marginTop: '20px' }}>
-
-                {/* 7Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
-                {currentFloorId === '7F' && (
-                    <div style={{
-                        padding: '0 4px',
-                        marginBottom: '24px',
-                        color: 'white',
-                        fontFamily: 'var(--font-jp)',
-                        lineHeight: 2.0,
-                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                    }}>
-                        <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-7)' }}>
-                            潜在意識を最大化し、地球規模の「価値」を創出する
-                        </h3>
-                        <p style={{ margin: '0 0 16px' }}>
-                            皆さま、ようこそ。<br />
-                            マインドデザイン研究所が体系化した「心の階層」のゴール、第7フロアへ。
-                        </p>
-                        <p style={{ margin: '0 0 16px' }}>
-                            これまでのプロセスでは、自分のマインドを整え、周囲に影響を与える「技術」を磨いてきました。しかし、この最高階層である「プロセス7」では、これまでの常識を一度手放していただきます。
-                        </p>
-                        <p style={{ margin: '0 0 20px' }}>
-                            この講義では、以下の3つのステップで「心の在り方」を書き換えていきます。
-                        </p>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「心の視座」を宇宙の高さまで引き上げる</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                日常の忙しさやストレスという「重力」から離れ、もっとも高い視点から自分を俯瞰（ふかん）してみましょう。時間軸を広げ、宇宙のような大きな視座を持つことで、目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。
-                            </p>
-                        </div>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 究極の自分軸「在（Being）」を体得する</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                「何かをしなければ（Doing）」という執着を捨て、ただ「自分として在る（Being）」ことに集中します。「何もない＝無」の状態は、実はあらゆる可能性が詰まった「満たされている」状態です。言葉や論理を超えた「感じる世界」の感度を高めることで、しなやかで揺るぎない自分軸が完成します。
-                            </p>
-                        </div>
-
-                        <div style={{ marginBottom: '20px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「共生」によるサステナブルな繁栄</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                一人のリーダーがこの高い視座に立つことは、社会に計り知れない価値をもたらします。「自分のため」という枠を超え、「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」という循環（共生）を、透明な設計図として描き出します。
-                            </p>
-                        </div>
-
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
-                            あなたの心の変革が、地球の未来を創り出す。
-                        </p>
-                        <p style={{ margin: 0, fontWeight: 'bold' }}>
-                            人類の可能性を解き放つ、究極のメンタルトレーニングを始めましょう。
-                        </p>
-                    </div>
-                )}
 
                 {/* 5Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
                 {currentFloorId === '5F' && (

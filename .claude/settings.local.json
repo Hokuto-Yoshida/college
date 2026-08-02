@@ -6,7 +6,9 @@
       "PowerShell(Copy-Item *)",
       "Bash(git *)",
       "Bash(npx vite *)",
-      "Skill(claude-in-chrome)"
+      "Skill(claude-in-chrome)",
+      "Bash(node -e ' *)",
+      "Bash(npx eslint *)"
     ]
   }
 }

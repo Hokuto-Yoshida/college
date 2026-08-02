@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { lectures as seedLectures } from '../data/lectures';
 
-const STORAGE_KEY = 'mind_univ_lectures_v2'; // Bumped version to v2 to enforce new schema with links
+const STORAGE_KEY = 'mind_univ_lectures_v3'; // Bumped version to v3 to drop the retired 7F lecture from saved browser state
 
 export function useLectures() {
     const [lectures, setLectures] = useState([]);

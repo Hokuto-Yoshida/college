@@ -37,6 +37,11 @@ import imgFloorBg6F from './assets/floor_bg.png'; // 6F背景
 import imgFloor6Reveal from './assets/floor_6f_reveal.png'; // 6F reveal背景
 import imgCurtainLeft from './assets/floor_curtain_left.png';
 import imgCurtainRight from './assets/floor_curtain_right.png';
+import imgFloor7Reveal from './assets/floor_7f_reveal.png'; // 7F reveal背景
+import imgDoor7Left from './assets/floor7_door_left.png'; // 7F 本棚ドア（左）
+import imgDoor7Right from './assets/floor7_door_right.png'; // 7F 本棚ドア（右）
+import imgFloor6Room from './assets/floor_6f_room.png'; // 6F 部屋に入ったあとの背景
+import imgFloor7Room from './assets/floor_7f_room.png'; // 7F 部屋に入ったあとの背景
 import lobbyMain from './assets/lobby_main.png';
 import lobbyAnnex from './assets/lobby_annex.png';
 
@@ -58,6 +63,8 @@ function App() {
   const [showFloorIntro, setShowFloorIntro] = useState(false);
   const [curtainPhase, setCurtainPhase] = useState('idle'); // 'idle' | 'split' | 'open'
   const [sixFRoomEntered, setSixFRoomEntered] = useState(false);
+  const [doorPhase7, setDoorPhase7] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
+  const [sevenFRoomEntered, setSevenFRoomEntered] = useState(false);
   const [showFloorElevator, setShowFloorElevator] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
@@ -73,11 +80,15 @@ function App() {
   // Data Hook
   const { lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop } = useLectures();
 
-  // 6F crossfade: 6F に入った瞬間に 0 リセットし、スクロールで追跡
+  // 6F crossfade: 6F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
   const floor6Progress = useMotionValue(0);
   useEffect(() => {
     if (currentFloorId !== '6F' || showFloorIntro) {
       floor6Progress.set(0);
+      return;
+    }
+    if (sixFRoomEntered) {
+      floor6Progress.set(1);
       return;
     }
     floor6Progress.set(0);
@@ -88,13 +99,43 @@ function App() {
     window.addEventListener('scroll', update, { passive: true });
     update();
     return () => window.removeEventListener('scroll', update);
-  }, [currentFloorId, showFloorIntro]);
+  }, [currentFloorId, showFloorIntro, sixFRoomEntered]);
 
+  // 7F crossfade: 7F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
+  const floor7Progress = useMotionValue(0);
   useEffect(() => {
-    if (currentFloorId !== '6F') {
+    if (currentFloorId !== '7F' || showFloorIntro) {
+      floor7Progress.set(0);
+      return;
+    }
+    if (sevenFRoomEntered) {
+      floor7Progress.set(1);
+      return;
+    }
+    floor7Progress.set(0);
+    const update = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      floor7Progress.set(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, showFloorIntro, sevenFRoomEntered]);
+
+  // showFloorIntro が再度 true になった（＝その階へ改めて入り直した）タイミングで、
+  // 幕/扉の状態を確実に初期化する（同じ階を選び直した場合は currentFloorId が変化しないため）
+  useEffect(() => {
+    if (currentFloorId !== '6F' || showFloorIntro) {
       setCurtainPhase('idle');
       setSixFRoomEntered(false);
     }
+    if (currentFloorId !== '7F' || showFloorIntro) {
+      setDoorPhase7('idle');
+      setSevenFRoomEntered(false);
+    }
+  }, [currentFloorId, showFloorIntro]);
+
+  useEffect(() => {
     setShowFloorElevator(false);
   }, [currentFloorId]);
 
@@ -104,13 +145,26 @@ function App() {
     setTimeout(() => setCurtainPhase('open'),   1500); // 幕を開く
   };
 
+  const handleDoor7Open = () => {
+    setDoorPhase7('split');              // 扉フェードイン
+    setTimeout(() => setDoorPhase7('darken'), 950);   // 扉の下を黒に
+    setTimeout(() => setDoorPhase7('open'),   1500);  // 扉を開く
+  };
+
   const floor6BaseOpacity = useTransform(floor6Progress, [0.3, 0.7], [0.6, 0]);
   const floor6RevealOpacity = useTransform(floor6Progress, [0.3, 0.7], [0, 0.6]);
   const floor6RevealScale = useTransform(floor6Progress, [0.7, 1.0], [1, 4]);
   const floor6CurtainOpacity = useTransform(floor6Progress, [0.88, 1.0], [0, 1]);
   const floor6NavOpacity = useTransform(floor6Progress, [0, 0.4], [1, 0]);
+
+  const floor7BaseOpacity = useTransform(floor7Progress, [0.3, 0.7], [0.6, 0]);
+  const floor7RevealOpacity = useTransform(floor7Progress, [0.3, 0.7], [0, 0.6]);
+  const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 2.6]);
+  const floor7DoorButtonOpacity = useTransform(floor7Progress, [0.88, 1.0], [0, 1]);
+  const floor7NavOpacity = useTransform(floor7Progress, [0, 0.4], [1, 0]);
   // 見えている間だけクリック可能（透明時はクリックを透過）
   const floor6NavPointer = useTransform(floor6Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
+  const floor7NavPointer = useTransform(floor7Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -327,8 +381,25 @@ function App() {
         <>
           {/* Dynamic Background */}
           <div style={{ position: 'fixed', inset: 0, zIndex: -1, transition: 'all 1s ease' }}>
-            {/* 6F crossfade: floor_bg2 → floor_6f_reveal */}
-            {currentFloorId === '6F' ? (
+            {/* 部屋に入ったあとは専用の背景に切り替え */}
+            {currentFloorId === '6F' && sixFRoomEntered ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${imgFloor6Room})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.6,
+              }} />
+            ) : currentFloorId === '7F' && sevenFRoomEntered ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${imgFloor7Room})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.6,
+              }} />
+            ) : currentFloorId === '6F' ? (
+              /* 6F crossfade: floor_bg2 → floor_6f_reveal */
               <>
                 <motion.div style={{
                   position: 'absolute', inset: 0,
@@ -345,6 +416,26 @@ function App() {
                   opacity: floor6RevealOpacity,
                   scale: floor6RevealScale,
                   transformOrigin: '50% 42%',
+                }} />
+              </>
+            ) : currentFloorId === '7F' ? (
+              /* 7F crossfade: view_roof → floor_7f_reveal */
+              <>
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${viewRoof})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor7BaseOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor7Reveal})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor7RevealOpacity,
+                  scale: floor7RevealScale,
+                  transformOrigin: '50% 90%',
                 }} />
               </>
             ) : (
@@ -369,7 +460,7 @@ function App() {
               backgroundImage: `url(${imgStairsSky})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: currentFloorId === '6F' ? 0 : currentFloorId ? 0.1 : 0.05,
+              opacity: (currentFloorId === '6F' || currentFloorId === '7F') ? 0 : currentFloorId ? 0.1 : 0.05,
               mixBlendMode: 'screen',
               pointerEvents: 'none'
             }} />
@@ -465,39 +556,299 @@ function App() {
                 </>
               )}
 
-              {/* Phase 3: 幕が開いた後、部屋に入るボタン */}
+              {/* Phase 3: 幕が開いた後、部屋に入るボタンの前にフロア紹介文を表示 */}
               {curtainPhase === 'open' && !sixFRoomEntered && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 2.2 }}
-                  style={{
-                    position: 'fixed', bottom: '10vh', left: 0, right: 0,
-                    display: 'flex', justifyContent: 'center', zIndex: 31,
-                  }}
-                >
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      overflowY: 'auto',
+                      display: 'flex', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '700px', width: '100%',
+                      margin: 'auto 0',
+                      color: 'white',
+                      fontFamily: 'var(--font-jp)',
+                      lineHeight: 2.6,
+                      textAlign: 'center',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-6)' }}>
+                        人が育ち、組織が育ち、未来が育つ。
+                      </h3>
+                      <p style={{ margin: '0 0 16px' }}>
+                        皆さま、ようこそ。<br />
+                        マインドデザイン研究所が体系化した「心の階層」、第6フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 20px' }}>
+                        ここまでのプロセスでは、自分自身を整え、周囲へ良い影響を与える力を育んできました。しかし、この「プロセス6」では、その影響力をさらに広げ、"未来へ残す価値"という新たな視点を育てていきます。この講義では、以下の3つのステップで、未来を創造するリーダーシップを身につけます。
+                      </p>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「成果」ではなく「未来」を設計する</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          成果は、その瞬間で終わります。しかし理念や文化は、人から人へ受け継がれ、時代を超えて生き続けます。目の前の結果だけを追いかけるのではなく、「この選択は未来に何を残すのか。」そんな時間軸で物事を捉えることで、リーダーとしての視座は飛躍的に高まります。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 人を動かすのではなく、人が育つ環境を創る</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          優れたリーダーは、人を管理しません。人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。一人の能力で組織を動かす時代から、一人ひとりの可能性が自然に開花する組織へ。あなた自身が「人を育てる存在」へと進化していきます。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '20px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 未来へ受け継がれる価値を創造する</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          人生は、自分一人で完結するものではありません。あなたの想いは、仲間へ。仲間の想いは、組織へ。組織の価値は、社会へ。そして未来へ。
+                        </p>
+                      </div>
+
+                      <p style={{ margin: '0 0 16px' }}>
+                        プロセス6では、自分の人生を超えて続いていく「価値の循環」を設計し、持続可能な組織と社会を創造するマインドを育てていきます。
+                      </p>
+
+                      <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
+                        あなたが今日つくる"在り方"が、未来の誰かの希望になる。<br />
+                        組織を育て、人を育て、文化を育てる。
+                      </p>
+                      <p style={{ margin: 0, fontWeight: 'bold' }}>
+                        その循環を生み出すことこそ、真のリーダーシップです。<br />
+                        未来へと受け継がれる価値を創造する、マインドプロセス6の扉を開きましょう。
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                      display: 'flex', justifyContent: 'center', zIndex: 31,
+                    }}
+                  >
+                    <motion.button
+                      style={{
+                        padding: '16px 48px',
+                        borderRadius: '40px',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'var(--font-jp)',
+                        letterSpacing: '0.1em',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                      }}
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSixFRoomEntered(true)}
+                    >
+                      部屋に入る
+                    </motion.button>
+                  </motion.div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* 7F 本棚ドア演出 */}
+          {currentFloorId === '7F' && (
+            <>
+              {/* Phase 0: ボタンのみ（スクロール底で表示） */}
+              {doorPhase7 === 'idle' && (
+                <motion.div style={{
+                  position: 'fixed', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: floor7DoorButtonOpacity,
+                  zIndex: 16,
+                  pointerEvents: 'none',
+                }}>
                   <motion.button
                     style={{
+                      pointerEvents: 'auto',
                       padding: '16px 48px',
                       borderRadius: '40px',
                       background: 'rgba(255,255,255,0.12)',
                       color: '#fff',
-                      border: '1px solid rgba(255,255,255,0.35)',
+                      border: '1px solid rgba(255,255,255,0.3)',
                       fontSize: '1.1rem',
-                      fontWeight: 'bold',
                       fontFamily: 'var(--font-jp)',
-                      letterSpacing: '0.1em',
+                      letterSpacing: '0.2em',
                       cursor: 'pointer',
-                      backdropFilter: 'blur(10px)',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
                       boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
                     }}
-                    whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setSixFRoomEntered(true)}
+                    whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleDoor7Open}
                   >
-                    部屋に入る
+                    扉を開ける
                   </motion.button>
                 </motion.div>
+              )}
+
+              {/* Phase 1-3: 扉フェードイン → 黒 → 開く */}
+              {doorPhase7 !== 'idle' && (
+                <>
+                  {/* 扉の下の黒背景（部屋に入ったらフェードアウトして中身を見せる） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: sevenFRoomEntered ? 0 : (doorPhase7 === 'darken' || doorPhase7 === 'open' ? 1 : 0) }}
+                    transition={{ duration: sevenFRoomEntered ? 0.8 : 0.5 }}
+                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29, pointerEvents: sevenFRoomEntered ? 'none' : 'auto' }}
+                  />
+                  {/* 左ドア（本棚） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase7 === 'open' ? '-100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, left: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor7Left})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'right center',
+                      zIndex: 30,
+                    }}
+                  />
+                  {/* 右ドア（本棚） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase7 === 'open' ? '100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, right: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor7Right})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'left center',
+                      zIndex: 30,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* Phase 3: 扉が開いた後、部屋に入るボタンの前にフロア紹介文を表示 */}
+              {doorPhase7 === 'open' && !sevenFRoomEntered && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      overflowY: 'auto',
+                      display: 'flex', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '700px', width: '100%',
+                      margin: 'auto 0',
+                      color: 'white',
+                      fontFamily: 'var(--font-jp)',
+                      lineHeight: 2.6,
+                      textAlign: 'center',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-7)' }}>
+                        潜在意識を最大化し、地球規模の「価値」を創出する
+                      </h3>
+                      <p style={{ margin: '0 0 16px' }}>
+                        皆さま、ようこそ。<br />
+                        マインドデザイン研究所が体系化した「心の階層」のゴール、第7フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        これまでのプロセスでは、自分のマインドを整え、周囲に影響を与える「技術」を磨いてきました。しかし、この最高階層である「プロセス7」では、これまでの常識を一度手放していただきます。
+                      </p>
+                      <p style={{ margin: '0 0 20px' }}>
+                        この講義では、以下の3つのステップで「心の在り方」を書き換えていきます。
+                      </p>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「心の視座」を宇宙の高さまで引き上げる</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          日常の忙しさやストレスという「重力」から離れ、もっとも高い視点から自分を俯瞰（ふかん）してみましょう。時間軸を広げ、宇宙のような大きな視座を持つことで、目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 究極の自分軸「在（Being）」を体得する</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          「何かをしなければ（Doing）」という執着を捨て、ただ「自分として在る（Being）」ことに集中します。「何もない＝無」の状態は、実はあらゆる可能性が詰まった「満たされている」状態です。言葉や論理を超えた「感じる世界」の感度を高めることで、しなやかで揺るぎない自分軸が完成します。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '20px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「共生」によるサステナブルな繁栄</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          一人のリーダーがこの高い視座に立つことは、社会に計り知れない価値をもたらします。「自分のため」という枠を超え、「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」という循環（共生）を、透明な設計図として描き出します。
+                        </p>
+                      </div>
+
+                      <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
+                        あなたの心の変革が、地球の未来を創り出す。
+                      </p>
+                      <p style={{ margin: 0, fontWeight: 'bold' }}>
+                        人類の可能性を解き放つ、究極のメンタルトレーニングを始めましょう。
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                      display: 'flex', justifyContent: 'center', zIndex: 31,
+                    }}
+                  >
+                    <motion.button
+                      style={{
+                        padding: '16px 48px',
+                        borderRadius: '40px',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'var(--font-jp)',
+                        letterSpacing: '0.1em',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                      }}
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => setSevenFRoomEntered(true)}
+                    >
+                      部屋に入る
+                    </motion.button>
+                  </motion.div>
+                </>
               )}
             </>
           )}
@@ -660,7 +1011,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} />}
 
 
                   </motion.div>
@@ -670,15 +1021,15 @@ function App() {
 
             {/* Right Column: エレベーター（Desktop） */}
             <div className="desktop-nav" style={{ display: 'none' }}>
-              {/* エレベーターに入るボタン */}
-              {!showFloorElevator && (
+              {/* エレベーターに入るボタン（幕/扉が開いている間は表示しない。部屋に入ったら再表示） */}
+              {!showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (
                 <motion.div
                   key={`elev-btn-${currentFloorId ?? 'entrance'}`}
                   style={{
                     position: 'fixed', bottom: '6vh', left: 0, right: 0,
                     display: 'flex', justifyContent: 'center', zIndex: 120,
-                    opacity: currentFloorId === '6F' ? floor6NavOpacity : 1,
-                    pointerEvents: currentFloorId === '6F' ? floor6NavPointer : 'auto',
+                    opacity: currentFloorId === '6F' ? (sixFRoomEntered ? 1 : floor6NavOpacity) : currentFloorId === '7F' ? (sevenFRoomEntered ? 1 : floor7NavOpacity) : 1,
+                    pointerEvents: currentFloorId === '6F' ? (sixFRoomEntered ? 'auto' : floor6NavPointer) : currentFloorId === '7F' ? (sevenFRoomEntered ? 'auto' : floor7NavPointer) : 'auto',
                   }}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
