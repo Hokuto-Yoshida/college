@@ -41,7 +41,8 @@ import imgFloor7Reveal from './assets/floor_7f_reveal.png'; // 7F reveal背景
 import imgDoor7Left from './assets/floor7_door_left.png'; // 7F 本棚ドア（左）
 import imgDoor7Right from './assets/floor7_door_right.png'; // 7F 本棚ドア（右）
 import imgFloor6Room from './assets/floor_6f_room.png'; // 6F 部屋に入ったあとの背景
-import imgFloor7Room from './assets/floor_7f_room.png'; // 7F 部屋に入ったあとの背景
+import imgFloor7Room from './assets/floor_7f_room.png'; // 7F 部屋に入ったあとの背景（スクロール後）
+import imgFloor7RoomEntry from './assets/floor_7f_room_entry.png'; // 7F 部屋に入った直後の背景（スクロール前）
 import lobbyMain from './assets/lobby_main.png';
 import lobbyAnnex from './assets/lobby_annex.png';
 
@@ -122,6 +123,23 @@ function App() {
     return () => window.removeEventListener('scroll', update);
   }, [currentFloorId, showFloorIntro, sevenFRoomEntered]);
 
+  // 7F 部屋の中: 入った直後の背景から、スクロールでじわっと別の背景へクロスフェード
+  const room7Progress = useMotionValue(0);
+  useEffect(() => {
+    if (currentFloorId !== '7F' || !sevenFRoomEntered) {
+      room7Progress.set(0);
+      return;
+    }
+    room7Progress.set(0);
+    const update = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      room7Progress.set(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, sevenFRoomEntered]);
+
   // showFloorIntro が再度 true になった（＝その階へ改めて入り直した）タイミングで、
   // 幕/扉の状態を確実に初期化する（同じ階を選び直した場合は currentFloorId が変化しないため）
   useEffect(() => {
@@ -162,6 +180,10 @@ function App() {
   const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 2.6]);
   const floor7DoorButtonOpacity = useTransform(floor7Progress, [0.88, 1.0], [0, 1]);
   const floor7NavOpacity = useTransform(floor7Progress, [0, 0.4], [1, 0]);
+
+  const room7EntryOpacity = useTransform(room7Progress, [0.2, 0.85], [0.6, 0]);
+  const room7RevealOpacity = useTransform(room7Progress, [0.2, 0.85], [0, 0.6]);
+  const room7RevealScale = useTransform(room7Progress, [0.2, 0.85], [1, 1.2]);
   // 見えている間だけクリック可能（透明時はクリックを透過）
   const floor6NavPointer = useTransform(floor6Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
   const floor7NavPointer = useTransform(floor7Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
@@ -391,13 +413,25 @@ function App() {
                 opacity: 0.6,
               }} />
             ) : currentFloorId === '7F' && sevenFRoomEntered ? (
-              <div style={{
-                position: 'absolute', inset: 0,
-                backgroundImage: `url(${imgFloor7Room})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                opacity: 0.6,
-              }} />
+              /* 7F 部屋の中: 入った直後の背景 → スクロールでじわっと別の背景へ */
+              <>
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor7RoomEntry})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: room7EntryOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor7Room})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: room7RevealOpacity,
+                  scale: room7RevealScale,
+                  transformOrigin: '50% 50%',
+                }} />
+              </>
             ) : currentFloorId === '6F' ? (
               /* 6F crossfade: floor_bg2 → floor_6f_reveal */
               <>
@@ -651,7 +685,10 @@ function App() {
                       }}
                       whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setSixFRoomEntered(true)}
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        setSixFRoomEntered(true);
+                      }}
                     >
                       部屋に入る
                     </motion.button>
@@ -843,7 +880,10 @@ function App() {
                       }}
                       whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
                       whileTap={{ scale: 0.95 }}
-                      onClick={() => setSevenFRoomEntered(true)}
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        setSevenFRoomEntered(true);
+                      }}
                     >
                       部屋に入る
                     </motion.button>
@@ -1012,6 +1052,11 @@ function App() {
 
                     {/* Enhanced Classroom Component */}
                     {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} />}
+
+                    {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
+                    {currentFloorId === '7F' && sevenFRoomEntered && (
+                      <div style={{ height: '150vh' }} />
+                    )}
 
 
                   </motion.div>
