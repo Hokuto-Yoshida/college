@@ -5,6 +5,7 @@ import { Send, User, BookOpen, PenTool, ChevronRight, ExternalLink, PlayCircle, 
 import { ResponseModal } from './ResponseModal';
 import { CinemaModal } from './CinemaModal';
 import { ClassroomModal } from './ClassroomModal';
+import { PdfFlipBook } from './PdfFlipBook';
 import hallwayBg from '../assets/library_bg.jpg'; // All floors library background
 import floor6Reveal from '../assets/floor_6f_reveal.png';
 import floor6Base from '../assets/floor_bg2.png';
@@ -349,6 +350,26 @@ function Floor7Placeholder() {
     return <div style={{ height: '540vh' }} />;
 }
 
+// 0F: 地下ホールの書庫。長いPDFを本のようにめくって読める。
+function Floor0Library() {
+    return (
+        <div style={{ marginTop: '20px' }}>
+            <div style={{
+                marginBottom: '20px', color: 'white', fontFamily: 'var(--font-jp)',
+                textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+            }}>
+                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
+                    地下書庫
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
+                    ページをめくって読み進めてください
+                </p>
+            </div>
+            <PdfFlipBook pdfUrl="/pdfs/floor0-demo.pdf" title="改行位置サンプル" />
+        </div>
+    );
+}
+
 export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
@@ -415,6 +436,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '6F' && !sixFRoomEntered) return <Floor6View />;
     if (currentFloorId === '7F' && !sevenFRoomEntered) return <Floor7Placeholder />;
     if (currentFloorId === '5F' && !fiveFRoomEntered) return <Floor5View />;
+    if (currentFloorId === '0F') return <Floor0Library />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
