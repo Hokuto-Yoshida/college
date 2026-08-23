@@ -339,12 +339,17 @@ function Floor6View() {
     return <div style={{ height: '540vh' }} />;
 }
 
+function Floor5View() {
+    // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
+    return <div style={{ height: '540vh' }} />;
+}
+
 function Floor7Placeholder() {
     // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
     return <div style={{ height: '540vh' }} />;
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -409,6 +414,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     // （hooksの呼び出し順が毎レンダー同じになるよう、早期returnはhooksの後に置く）
     if (currentFloorId === '6F' && !sixFRoomEntered) return <Floor6View />;
     if (currentFloorId === '7F' && !sevenFRoomEntered) return <Floor7Placeholder />;
+    if (currentFloorId === '5F' && !fiveFRoomEntered) return <Floor5View />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
@@ -534,70 +540,6 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (!activeLecture) {
         return (
             <div style={{ position: 'relative', width: '100%', marginTop: '20px' }}>
-
-                {/* 5Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
-                {currentFloorId === '5F' && (
-                    <div style={{
-                        padding: '0 4px',
-                        marginBottom: '24px',
-                        color: 'white',
-                        fontFamily: 'var(--font-jp)',
-                        lineHeight: 2.0,
-                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                    }}>
-                        <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-5)' }}>
-                            「人との間」に、新しい価値が生まれる。
-                        </h3>
-                        <p style={{ margin: '0 0 16px' }}>
-                            皆さま、ようこそ。<br />
-                            マインドデザイン研究所が体系化した「心の階層」、第5フロアへ。
-                        </p>
-                        <p style={{ margin: '0 0 16px' }}>
-                            ここまでのプロセスでは、自分自身と向き合い、心を整え、揺るぎない自分軸を育ててきました。
-                        </p>
-                        <p style={{ margin: '0 0 16px' }}>
-                            しかし、本当のマインドの力は、一人の中で完結するものではありません。
-                        </p>
-                        <p style={{ margin: '0 0 20px' }}>
-                            この「プロセス5」では、人と人との間に流れるエネルギーに着目し、互いの可能性を引き出し合いながら、新しい価値を共に創り出す力を育んでいきます。この講義では、以下の3つのステップで、「共創する心」を育てていきます。
-                        </p>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 相手を変えるのではなく、相手の可能性を信じる</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                人は、変えられることで成長するのではありません。信じられることで、自ら変わり始めます。相手を評価するのではなく、「この人には、まだ見えていない可能性がある。」そんな視点で人を見ること。その眼差しが、人の潜在能力を引き出していきます。
-                            </p>
-                        </div>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 「競争」から「共創」へ</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                競争は、勝者と敗者を生みます。共創は、全員の価値を高めます。一人で答えを出すのではなく、異なる価値観や経験を重ね合わせることで、一人では辿り着けなかった未来が生まれていきます。人とつながることは、可能性を広げること。共創とは、未来を創る最も大きなエネルギーなのです。
-                            </p>
-                        </div>
-
-                        <div style={{ marginBottom: '20px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. チームの力を最大化する</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                本当に強い組織とは、優秀な人が集まる組織ではありません。一人ひとりの違いが尊重され、それぞれの個性が活かされる組織です。互いを認め、互いに高め合い、互いの成長を喜び合う。その循環が生まれたとき、チームは想像を超える力を発揮します。
-                            </p>
-                        </div>
-
-                        <p style={{ margin: '0 0 16px' }}>
-                            あなたの心が変わることで、人との関係が変わる。<br />
-                            人との関係が変わることで、組織が変わる。<br />
-                            組織が変わることで、社会が変わる。<br />
-                            すべての変化は、「人とのつながり」から始まります。
-                        </p>
-
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
-                            共に学び、共に育ち、共に未来を創る。
-                        </p>
-                        <p style={{ margin: 0, fontWeight: 'bold' }}>
-                            マインドプロセス5は、あなたを"共創するリーダー"へと導く、新たな扉です。
-                        </p>
-                    </div>
-                )}
 
                 {/* 4Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
                 {currentFloorId === '4F' && (

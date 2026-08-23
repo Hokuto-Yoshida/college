@@ -41,6 +41,12 @@ import imgFloor7Reveal from './assets/floor_7f_reveal.png'; // 7F reveal背景
 import imgDoor7Left from './assets/floor7_door_left.png'; // 7F 本棚ドア（左）
 import imgDoor7Right from './assets/floor7_door_right.png'; // 7F 本棚ドア（右）
 import imgFloor6Room from './assets/floor_6f_room.png'; // 6F 部屋に入ったあとの背景
+import imgFloor5Hallway from './assets/floor_5f_hallway.png'; // 5F 到着時の背景
+import imgFloor5RevealMid from './assets/floor_5f_reveal_mid.png'; // 5F クロスフェード2枚目
+import imgFloor5Reveal from './assets/floor_5f_reveal.png'; // 5F クロスフェード最終（扉前）
+import imgDoor5Left from './assets/floor5_door_left.png'; // 5F 扉（左）
+import imgDoor5Right from './assets/floor5_door_right.png'; // 5F 扉（右）
+import imgFloor5Room from './assets/floor_5f_room.png'; // 5F 部屋に入ったあとの背景
 import imgFloor7Room from './assets/floor_7f_room.png'; // 7F 部屋に入ったあとの背景（スクロール後）
 import imgFloor7RoomEntry from './assets/floor_7f_room_entry.png'; // 7F 部屋に入った直後の背景（スクロール前）
 import lobbyMain from './assets/lobby_main.png';
@@ -66,6 +72,8 @@ function App() {
   const [sixFRoomEntered, setSixFRoomEntered] = useState(false);
   const [doorPhase7, setDoorPhase7] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
   const [sevenFRoomEntered, setSevenFRoomEntered] = useState(false);
+  const [doorPhase5, setDoorPhase5] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
+  const [fiveFRoomEntered, setFiveFRoomEntered] = useState(false);
   const [showFloorElevator, setShowFloorElevator] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
@@ -123,6 +131,27 @@ function App() {
     return () => window.removeEventListener('scroll', update);
   }, [currentFloorId, showFloorIntro, sevenFRoomEntered]);
 
+  // 5F crossfade: 5F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
+  const floor5Progress = useMotionValue(0);
+  useEffect(() => {
+    if (currentFloorId !== '5F' || showFloorIntro) {
+      floor5Progress.set(0);
+      return;
+    }
+    if (fiveFRoomEntered) {
+      floor5Progress.set(1);
+      return;
+    }
+    floor5Progress.set(0);
+    const update = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      floor5Progress.set(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, showFloorIntro, fiveFRoomEntered]);
+
   // 7F 部屋の中: 入った直後の背景から、スクロールでじわっと別の背景へクロスフェード
   const room7Progress = useMotionValue(0);
   useEffect(() => {
@@ -151,6 +180,10 @@ function App() {
       setDoorPhase7('idle');
       setSevenFRoomEntered(false);
     }
+    if (currentFloorId !== '5F' || showFloorIntro) {
+      setDoorPhase5('idle');
+      setFiveFRoomEntered(false);
+    }
   }, [currentFloorId, showFloorIntro]);
 
   useEffect(() => {
@@ -169,6 +202,12 @@ function App() {
     setTimeout(() => setDoorPhase7('open'),   1500);  // 扉を開く
   };
 
+  const handleDoor5Open = () => {
+    setDoorPhase5('split');              // 扉フェードイン
+    setTimeout(() => setDoorPhase5('darken'), 950);   // 扉の下を黒に
+    setTimeout(() => setDoorPhase5('open'),   1500);  // 扉を開く
+  };
+
   const floor6BaseOpacity = useTransform(floor6Progress, [0.3, 0.7], [0.6, 0]);
   const floor6RevealOpacity = useTransform(floor6Progress, [0.3, 0.7], [0, 0.6]);
   const floor6RevealScale = useTransform(floor6Progress, [0.7, 1.0], [1, 4]);
@@ -184,9 +223,19 @@ function App() {
   const room7EntryOpacity = useTransform(room7Progress, [0.2, 0.85], [0.6, 0]);
   const room7RevealOpacity = useTransform(room7Progress, [0.2, 0.85], [0, 0.6]);
   const room7RevealScale = useTransform(room7Progress, [0.2, 0.85], [1, 1.2]);
+
+  // 5F: 廊下 → 開いた扉越しの部屋 → 扉前 の3枚を順にクロスフェードし、最後にじわっとズーム
+  const floor5HallwayOpacity = useTransform(floor5Progress, [0, 0.28], [1, 0]);
+  const floor5MidOpacity = useTransform(floor5Progress, [0.18, 0.32, 0.55, 0.68], [0, 1, 1, 0]);
+  const floor5RevealOpacity = useTransform(floor5Progress, [0.58, 0.72], [0, 1]);
+  const floor5RevealScale = useTransform(floor5Progress, [0.72, 1.0], [1, 2.2]);
+  const floor5DoorButtonOpacity = useTransform(floor5Progress, [0.88, 1.0], [0, 1]);
+  const floor5NavOpacity = useTransform(floor5Progress, [0, 0.4], [1, 0]);
+
   // 見えている間だけクリック可能（透明時はクリックを透過）
   const floor6NavPointer = useTransform(floor6Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
   const floor7NavPointer = useTransform(floor7Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
+  const floor5NavPointer = useTransform(floor5Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -412,6 +461,14 @@ function App() {
                 backgroundPosition: 'center',
                 opacity: 0.6,
               }} />
+            ) : currentFloorId === '5F' && fiveFRoomEntered ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${imgFloor5Room})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 1,
+              }} />
             ) : currentFloorId === '7F' && sevenFRoomEntered ? (
               /* 7F 部屋の中: 入った直後の背景 → スクロールでじわっと別の背景へ */
               <>
@@ -472,6 +529,33 @@ function App() {
                   transformOrigin: '50% 90%',
                 }} />
               </>
+            ) : currentFloorId === '5F' ? (
+              /* 5F crossfade: 廊下 → 開いた扉越しの部屋 → 扉前（ズーム） */
+              <>
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor5Hallway})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor5HallwayOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor5RevealMid})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor5MidOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor5Reveal})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor5RevealOpacity,
+                  scale: floor5RevealScale,
+                  transformOrigin: '50% 55%',
+                }} />
+              </>
             ) : (
               <div style={{
                 position: 'absolute', inset: 0,
@@ -487,6 +571,7 @@ function App() {
               position: 'absolute', inset: 0,
               background: activeFloor ? activeFloor.bgCurrent : 'radial-gradient(circle at 50% 50%, rgba(11,16,36,0.5), #0b1024)',
               mixBlendMode: 'overlay',
+              opacity: currentFloorId === '5F' ? 0 : 1,
               transition: 'background 1s ease'
             }} />
             <div style={{
@@ -494,7 +579,7 @@ function App() {
               backgroundImage: `url(${imgStairsSky})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: (currentFloorId === '6F' || currentFloorId === '7F') ? 0 : currentFloorId ? 0.1 : 0.05,
+              opacity: (currentFloorId === '6F' || currentFloorId === '7F' || currentFloorId === '5F') ? 0 : currentFloorId ? 0.1 : 0.05,
               mixBlendMode: 'screen',
               pointerEvents: 'none'
             }} />
@@ -610,42 +695,70 @@ function App() {
                       fontFamily: 'var(--font-jp)',
                       lineHeight: 2.6,
                       textAlign: 'center',
+                      fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-6)' }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-6)' }}>
                         人が育ち、組織が育ち、未来が育つ。
                       </h3>
                       <p style={{ margin: '0 0 16px' }}>
-                        皆さま、ようこそ。<br />
-                        マインドデザイン研究所が体系化した「心の階層」、第6フロアへ。
+                        ようこそ、マインドデザイン研究所が体系化した<br />
+                        「心の階層」、第6フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ここまでのプロセスでは、自分自身を整え、<br />
+                        周囲へ良い影響を与える力を育んできました。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        しかし、この「プロセス6」では、その影響力をさらに広げ、<br />
+                        "未来へ残す価値"という新たな視点を育てていきます。
                       </p>
                       <p style={{ margin: '0 0 20px' }}>
-                        ここまでのプロセスでは、自分自身を整え、周囲へ良い影響を与える力を育んできました。しかし、この「プロセス6」では、その影響力をさらに広げ、"未来へ残す価値"という新たな視点を育てていきます。この講義では、以下の3つのステップで、未来を創造するリーダーシップを身につけます。
+                        この講義では、以下の3つのステップで、<br />
+                        未来を創造するリーダーシップを身につけます。
                       </p>
 
                       <div style={{ marginBottom: '18px' }}>
                         <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「成果」ではなく「未来」を設計する</p>
                         <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          成果は、その瞬間で終わります。しかし理念や文化は、人から人へ受け継がれ、時代を超えて生き続けます。目の前の結果だけを追いかけるのではなく、「この選択は未来に何を残すのか。」そんな時間軸で物事を捉えることで、リーダーとしての視座は飛躍的に高まります。
+                          成果は、その瞬間で終わります。<br />
+                          しかし理念や文化は、人から人へ受け継がれ、<br />
+                          時代を超えて生き続けます。<br />
+                          目の前の結果だけを追いかけるのではなく、<br />
+                          「この選択は未来に何を残すのか。」<br />
+                          そんな時間軸で物事を捉えることで、<br />
+                          リーダーとしての視座は飛躍的に高まります。
                         </p>
                       </div>
 
                       <div style={{ marginBottom: '18px' }}>
                         <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 人を動かすのではなく、人が育つ環境を創る</p>
                         <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          優れたリーダーは、人を管理しません。人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。一人の能力で組織を動かす時代から、一人ひとりの可能性が自然に開花する組織へ。あなた自身が「人を育てる存在」へと進化していきます。
+                          優れたリーダーは、人を管理しません。<br />
+                          人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。<br />
+                          一人の能力で組織を動かす時代から、<br />
+                          一人ひとりの可能性が自然に開花する組織へ。<br />
+                          あなた自身が「人を育てる存在」へと進化していきます。
                         </p>
                       </div>
 
                       <div style={{ marginBottom: '20px' }}>
                         <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 未来へ受け継がれる価値を創造する</p>
                         <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          人生は、自分一人で完結するものではありません。あなたの想いは、仲間へ。仲間の想いは、組織へ。組織の価値は、社会へ。そして未来へ。
+                          人生は、自分一人で完結するものではありません。<br />
+                          あなたの想いは、仲間へ。<br />
+                          仲間の想いは、組織へ。<br />
+                          組織の価値は、社会へ。<br />
+                          そして未来へ。
                         </p>
                       </div>
 
                       <p style={{ margin: '0 0 16px' }}>
-                        プロセス6では、自分の人生を超えて続いていく「価値の循環」を設計し、持続可能な組織と社会を創造するマインドを育てていきます。
+                        プロセス6では、自分の人生を超えて続いていく<br />
+                        「価値の循環」を設計し、<br />
+                        持続可能な組織と社会を創造するマインドを育てていきます。
                       </p>
 
                       <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
@@ -654,7 +767,8 @@ function App() {
                       </p>
                       <p style={{ margin: 0, fontWeight: 'bold' }}>
                         その循環を生み出すことこそ、真のリーダーシップです。<br />
-                        未来へと受け継がれる価値を創造する、マインドプロセス6の扉を開きましょう。
+                        未来へと受け継がれる価値を創造する、<br />
+                        マインドプロセス6の扉を開きましょう。
                       </p>
                     </div>
                   </motion.div>
@@ -808,40 +922,61 @@ function App() {
                       fontFamily: 'var(--font-jp)',
                       lineHeight: 2.6,
                       textAlign: 'center',
+                      fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-7)' }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-7)' }}>
                         潜在意識を最大化し、地球規模の「価値」を創出する
                       </h3>
                       <p style={{ margin: '0 0 16px' }}>
-                        皆さま、ようこそ。<br />
-                        マインドデザイン研究所が体系化した「心の階層」のゴール、第7フロアへ。
+                        ようこそ、マインドデザイン研究所が体系化した<br />
+                        「心の階層」のゴール、第7フロアへ。
                       </p>
                       <p style={{ margin: '0 0 16px' }}>
-                        これまでのプロセスでは、自分のマインドを整え、周囲に影響を与える「技術」を磨いてきました。しかし、この最高階層である「プロセス7」では、これまでの常識を一度手放していただきます。
+                        これまでのプロセスでは、自分のマインドを整え、<br />
+                        周囲に影響を与える「技術」を磨いてきました。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        しかし、この最高階層である「プロセス7」では、<br />
+                        これまでの常識を一度手放していただきます。
                       </p>
                       <p style={{ margin: '0 0 20px' }}>
-                        この講義では、以下の3つのステップで「心の在り方」を書き換えていきます。
+                        この講義では、以下の3つのステップで<br />
+                        「心の在り方」を書き換えていきます。
                       </p>
 
                       <div style={{ marginBottom: '18px' }}>
                         <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「心の視座」を宇宙の高さまで引き上げる</p>
                         <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          日常の忙しさやストレスという「重力」から離れ、もっとも高い視点から自分を俯瞰（ふかん）してみましょう。時間軸を広げ、宇宙のような大きな視座を持つことで、目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。
+                          日常の忙しさやストレスという「重力」から離れ、<br />
+                          もっとも高い視点から自分を俯瞰（ふかん）してみましょう。<br />
+                          時間軸を広げ、宇宙のような大きな視座を持つことで、<br />
+                          目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。
                         </p>
                       </div>
 
                       <div style={{ marginBottom: '18px' }}>
                         <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 究極の自分軸「在（Being）」を体得する</p>
                         <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          「何かをしなければ（Doing）」という執着を捨て、ただ「自分として在る（Being）」ことに集中します。「何もない＝無」の状態は、実はあらゆる可能性が詰まった「満たされている」状態です。言葉や論理を超えた「感じる世界」の感度を高めることで、しなやかで揺るぎない自分軸が完成します。
+                          「何かをしなければ（Doing）」という執着を捨て、<br />
+                          ただ「自分として在る（Being）」ことに集中します。<br />
+                          「何もない＝無」の状態は、実はあらゆる可能性が詰まった<br />
+                          「満たされている」状態です。<br />
+                          言葉や論理を超えた「感じる世界」の感度を高めることで、<br />
+                          しなやかで揺るぎない自分軸が完成します。
                         </p>
                       </div>
 
                       <div style={{ marginBottom: '20px' }}>
                         <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「共生」によるサステナブルな繁栄</p>
                         <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          一人のリーダーがこの高い視座に立つことは、社会に計り知れない価値をもたらします。「自分のため」という枠を超え、「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」という循環（共生）を、透明な設計図として描き出します。
+                          一人のリーダーがこの高い視座に立つことは、<br />
+                          社会に計り知れない価値をもたらします。<br />
+                          「自分のため」という枠を超え、<br />
+                          「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」<br />
+                          という循環（共生）を、透明な設計図として描き出します。
                         </p>
                       </div>
 
@@ -849,7 +984,8 @@ function App() {
                         あなたの心の変革が、地球の未来を創り出す。
                       </p>
                       <p style={{ margin: 0, fontWeight: 'bold' }}>
-                        人類の可能性を解き放つ、究極のメンタルトレーニングを始めましょう。
+                        人類の可能性を解き放つ、<br />
+                        究極のメンタルトレーニングを始めましょう。
                       </p>
                     </div>
                   </motion.div>
@@ -883,6 +1019,214 @@ function App() {
                       onClick={() => {
                         window.scrollTo({ top: 0, behavior: 'instant' });
                         setSevenFRoomEntered(true);
+                      }}
+                    >
+                      部屋に入る
+                    </motion.button>
+                  </motion.div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* 5F 扉演出 */}
+          {currentFloorId === '5F' && (
+            <>
+              {/* Phase 0: ボタンのみ（スクロール底で表示） */}
+              {doorPhase5 === 'idle' && (
+                <motion.div style={{
+                  position: 'fixed', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: floor5DoorButtonOpacity,
+                  zIndex: 16,
+                  pointerEvents: 'none',
+                }}>
+                  <motion.button
+                    style={{
+                      pointerEvents: 'auto',
+                      padding: '16px 48px',
+                      borderRadius: '40px',
+                      background: 'rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      fontSize: '1.1rem',
+                      fontFamily: 'var(--font-jp)',
+                      letterSpacing: '0.2em',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                    }}
+                    whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleDoor5Open}
+                  >
+                    扉を開ける
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* Phase 1-3: 扉フェードイン → 黒 → 開く */}
+              {doorPhase5 !== 'idle' && (
+                <>
+                  {/* 扉の下の黒背景（部屋に入ったらフェードアウトして中身を見せる） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: fiveFRoomEntered ? 0 : (doorPhase5 === 'darken' || doorPhase5 === 'open' ? 1 : 0) }}
+                    transition={{ duration: fiveFRoomEntered ? 0.8 : 0.5 }}
+                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29, pointerEvents: fiveFRoomEntered ? 'none' : 'auto' }}
+                  />
+                  {/* 左扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase5 === 'open' ? '-100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, left: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor5Left})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'right center',
+                      zIndex: 30,
+                    }}
+                  />
+                  {/* 右扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase5 === 'open' ? '100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, right: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor5Right})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'left center',
+                      zIndex: 30,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* Phase 3: 扉が開いた後、部屋に入るボタンの前にフロア紹介文を表示 */}
+              {doorPhase5 === 'open' && !fiveFRoomEntered && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      overflowY: 'auto',
+                      display: 'flex', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '700px', width: '100%',
+                      margin: 'auto 0',
+                      color: 'white',
+                      fontFamily: 'var(--font-jp)',
+                      lineHeight: 2.6,
+                      textAlign: 'center',
+                      fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-5)' }}>
+                        「人との間」に、新しい価値が生まれる。
+                      </h3>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ようこそ、マインドデザイン研究所が体系化した<br />
+                        「心の階層」、第5フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ここまでのプロセスでは、自分自身と向き合い、心を整え、揺るぎない自分軸を育ててきました。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        しかし、本当のマインドの力は、一人の中で完結するものではありません。
+                      </p>
+                      <p style={{ margin: '0 0 20px' }}>
+                        この「プロセス5」では、人と人との間に流れるエネルギーに着目し、互いの可能性を引き出し合いながら、新しい価値を共に創り出す力を育んでいきます。この講義では、以下の3つのステップで、「共創する心」を育てていきます。
+                      </p>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 相手を変えるのではなく、相手の可能性を信じる</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          人は、変えられることで成長するのではありません。信じられることで、自ら変わり始めます。相手を評価するのではなく、「この人には、まだ見えていない可能性がある。」そんな視点で人を見ること。その眼差しが、人の潜在能力を引き出していきます。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 「競争」から「共創」へ</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          競争は、勝者と敗者を生みます。共創は、全員の価値を高めます。一人で答えを出すのではなく、異なる価値観や経験を重ね合わせることで、一人では辿り着けなかった未来が生まれていきます。人とつながることは、可能性を広げること。共創とは、未来を創る最も大きなエネルギーなのです。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '20px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. チームの力を最大化する</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          本当に強い組織とは、優秀な人が集まる組織ではありません。一人ひとりの違いが尊重され、それぞれの個性が活かされる組織です。互いを認め、互いに高め合い、互いの成長を喜び合う。その循環が生まれたとき、チームは想像を超える力を発揮します。
+                        </p>
+                      </div>
+
+                      <p style={{ margin: '0 0 16px' }}>
+                        あなたの心が変わることで、人との関係が変わる。<br />
+                        人との関係が変わることで、組織が変わる。<br />
+                        組織が変わることで、社会が変わる。<br />
+                        すべての変化は、「人とのつながり」から始まります。
+                      </p>
+
+                      <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
+                        共に学び、共に育ち、共に未来を創る。
+                      </p>
+                      <p style={{ margin: 0, fontWeight: 'bold' }}>
+                        マインドプロセス5は、あなたを"共創するリーダー"へと導く、新たな扉です。
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                      display: 'flex', justifyContent: 'center', zIndex: 31,
+                    }}
+                  >
+                    <motion.button
+                      style={{
+                        padding: '16px 48px',
+                        borderRadius: '40px',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'var(--font-jp)',
+                        letterSpacing: '0.1em',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                      }}
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        setFiveFRoomEntered(true);
                       }}
                     >
                       部屋に入る
@@ -1051,7 +1395,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (
@@ -1067,14 +1411,14 @@ function App() {
             {/* Right Column: エレベーター（Desktop） */}
             <div className="desktop-nav" style={{ display: 'none' }}>
               {/* エレベーターに入るボタン（幕/扉が開いている間は表示しない。部屋に入ったら再表示） */}
-              {!showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (
+              {!showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (doorPhase5 === 'idle' || fiveFRoomEntered) && (
                 <motion.div
                   key={`elev-btn-${currentFloorId ?? 'entrance'}`}
                   style={{
                     position: 'fixed', bottom: '6vh', left: 0, right: 0,
                     display: 'flex', justifyContent: 'center', zIndex: 120,
-                    opacity: currentFloorId === '6F' ? (sixFRoomEntered ? 1 : floor6NavOpacity) : currentFloorId === '7F' ? (sevenFRoomEntered ? 1 : floor7NavOpacity) : 1,
-                    pointerEvents: currentFloorId === '6F' ? (sixFRoomEntered ? 'auto' : floor6NavPointer) : currentFloorId === '7F' ? (sevenFRoomEntered ? 'auto' : floor7NavPointer) : 'auto',
+                    opacity: currentFloorId === '6F' ? (sixFRoomEntered ? 1 : floor6NavOpacity) : currentFloorId === '7F' ? (sevenFRoomEntered ? 1 : floor7NavOpacity) : currentFloorId === '5F' ? (fiveFRoomEntered ? 1 : floor5NavOpacity) : 1,
+                    pointerEvents: currentFloorId === '6F' ? (sixFRoomEntered ? 'auto' : floor6NavPointer) : currentFloorId === '7F' ? (sevenFRoomEntered ? 'auto' : floor7NavPointer) : currentFloorId === '5F' ? (fiveFRoomEntered ? 'auto' : floor5NavPointer) : 'auto',
                   }}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}
