@@ -345,6 +345,21 @@ function Floor5View() {
     return <div style={{ height: '540vh' }} />;
 }
 
+function Floor4View() {
+    // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
+    return <div style={{ height: '540vh' }} />;
+}
+
+function Floor3View() {
+    // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
+    return <div style={{ height: '540vh' }} />;
+}
+
+function Floor2View() {
+    // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
+    return <div style={{ height: '540vh' }} />;
+}
+
 function Floor7Placeholder() {
     // 扉が開くまではテキストを出さず、スクロール距離確保用のスペーサーのみ
     return <div style={{ height: '540vh' }} />;
@@ -370,7 +385,7 @@ function Floor0Library() {
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -436,6 +451,9 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '6F' && !sixFRoomEntered) return <Floor6View />;
     if (currentFloorId === '7F' && !sevenFRoomEntered) return <Floor7Placeholder />;
     if (currentFloorId === '5F' && !fiveFRoomEntered) return <Floor5View />;
+    if (currentFloorId === '4F' && !fourFRoomEntered) return <Floor4View />;
+    if (currentFloorId === '3F' && !threeFRoomEntered) return <Floor3View />;
+    if (currentFloorId === '2F' && !twoFRoomEntered) return <Floor2View />;
     if (currentFloorId === '0F') return <Floor0Library />;
 
     const handleLectureSelect = (l) => {
@@ -562,70 +580,6 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (!activeLecture) {
         return (
             <div style={{ position: 'relative', width: '100%', marginTop: '20px' }}>
-
-                {/* 4Fフロア紹介文（このフロアだけ、ルームの上に表示） */}
-                {currentFloorId === '4F' && (
-                    <div style={{
-                        padding: '0 4px',
-                        marginBottom: '24px',
-                        color: 'white',
-                        fontFamily: 'var(--font-jp)',
-                        lineHeight: 2.0,
-                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                    }}>
-                        <h3 style={{ margin: '0 0 20px', fontSize: '1.3rem', fontWeight: 'bold', color: 'var(--floor-4)' }}>
-                            思考を超えた先に、本当の可能性がある。
-                        </h3>
-                        <p style={{ margin: '0 0 16px' }}>
-                            皆さま、ようこそ。<br />
-                            マインドデザイン研究所が体系化した「心の階層」、第4フロアへ。
-                        </p>
-                        <p style={{ margin: '0 0 16px' }}>
-                            ここまでのプロセスでは、<br />
-                            自分を知り、自分を整え、自分を信じる力を育ててきました。<br />
-                            しかし、その力だけでは、人生の本質的な変化は起こりません。<br />
-                            なぜなら、私たちを制限しているものの多くは、<br />
-                            能力ではなく、「思い込み」という見えない枠組みだからです。
-                        </p>
-                        <p style={{ margin: '0 0 16px' }}>
-                            この「プロセス4」では、これまで無意識に握りしめてきた価値観や固定観念を手放し、潜在意識が本来持っている可能性を解放していきます。
-                        </p>
-                        <p style={{ margin: '0 0 20px' }}>
-                            この講義では、以下の3つのステップで、「自己変容」のプロセスを体感していきます。
-                        </p>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 思考の枠を超える</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                人は、現実を見ているのではありません。自分の思考を通して、現実を解釈しています。「無理だ」「難しい」「自分には向いていない」そのすべては、過去につくられた思考のフィルター。そのフィルターを外した瞬間、世界はまったく違う姿を見せ始めます。
-                            </p>
-                        </div>
-
-                        <div style={{ marginBottom: '18px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 潜在意識とつながる</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                頭で考え続ける限り、変化には限界があります。本当に人生を動かすのは、言葉になる前の感覚。まだ意識していない、心の深い領域です。思考を静め、心で感じる力を取り戻すことで、潜在意識は静かに動き始めます。
-                            </p>
-                        </div>
-
-                        <div style={{ marginBottom: '20px' }}>
-                            <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「変わる」のではなく、「還る」</p>
-                            <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                                自己変容とは、新しい自分をつくることではありません。本来持っていた可能性を、思い出すこと。恐れも、執着も、他者から与えられた評価も手放したとき、あなたの中に眠っていた力は、自然に目を覚まします。心の枠が外れた瞬間、人生の枠も外れていく。昨日までの自分では、見えなかった景色。昨日までの自分では、選ばなかった未来。それらが自然に広がり始めます。
-                            </p>
-                        </div>
-
-                        <p style={{ margin: '0 0 16px' }}>
-                            自己変容とは、「努力して変わる」ことではなく、<br />
-                            本来の自分という可能性に、もう一度出会うこと。
-                        </p>
-
-                        <p style={{ margin: 0, fontWeight: 'bold' }}>
-                            マインドプロセス4は、あなたの人生を大きく変える、<br />
-                            心の転換点となるでしょう。
-                        </p>
-                    </div>
-                )}
 
                 <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden' }}>
 

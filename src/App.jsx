@@ -11,6 +11,8 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { IntroSequence } from './components/IntroSequence';
 import { MainBuildingIntro } from './components/MainBuildingIntro';
 import { FloorIntro } from './components/FloorIntro';
+import { Floor2Intro } from './components/Floor2Intro';
+import { Floor3Intro } from './components/Floor3Intro';
 import { Floor4Intro } from './components/Floor4Intro';
 import { Floor5Intro } from './components/Floor5Intro';
 import { Floor6Intro } from './components/Floor6Intro';
@@ -47,6 +49,21 @@ import imgFloor5Reveal from './assets/floor_5f_reveal.png'; // 5F クロスフ�
 import imgDoor5Left from './assets/floor5_door_left.png'; // 5F 扉（左）
 import imgDoor5Right from './assets/floor5_door_right.png'; // 5F 扉（右）
 import imgFloor5Room from './assets/floor_5f_room.png'; // 5F 部屋に入ったあとの背景
+import imgFloor4Hallway from './assets/floor_4f_hallway.png'; // 4F 到着時の背景
+import imgFloor4Reveal from './assets/floor_4f_reveal.png'; // 4F クロスフェード（扉前）
+import imgDoor4Left from './assets/floor4_door_left.png'; // 4F 扉（左）
+import imgDoor4Right from './assets/floor4_door_right.png'; // 4F 扉（右）
+import imgFloor4Room from './assets/floor_4f_room.png'; // 4F 部屋に入ったあとの背景
+import imgFloor3Hallway from './assets/floor_3f_hallway.png'; // 3F 到着時の背景
+import imgFloor3Reveal from './assets/floor_3f_reveal.png'; // 3F クロスフェード（扉前）
+import imgDoor3Left from './assets/floor3_door_left.png'; // 3F 扉（左）
+import imgDoor3Right from './assets/floor3_door_right.png'; // 3F 扉（右）
+import imgFloor3Room from './assets/floor_3f_room.png'; // 3F 部屋に入ったあとの背景
+import imgFloor2Hallway from './assets/floor_2f_hallway.png'; // 2F 到着時の背景
+import imgFloor2Reveal from './assets/floor_2f_reveal.png'; // 2F クロスフェード（扉前）
+import imgDoor2Left from './assets/floor2_door_left.png'; // 2F 扉（左）
+import imgDoor2Right from './assets/floor2_door_right.png'; // 2F 扉（右）
+import imgFloor2Room from './assets/floor_2f_room.png'; // 2F 部屋に入ったあとの背景
 import imgFloor7Room from './assets/floor_7f_room.png'; // 7F 部屋に入ったあとの背景（スクロール後）
 import imgFloor7RoomEntry from './assets/floor_7f_room_entry.png'; // 7F 部屋に入った直後の背景（スクロール前）
 import lobbyMain from './assets/lobby_main.png';
@@ -74,6 +91,12 @@ function App() {
   const [sevenFRoomEntered, setSevenFRoomEntered] = useState(false);
   const [doorPhase5, setDoorPhase5] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
   const [fiveFRoomEntered, setFiveFRoomEntered] = useState(false);
+  const [doorPhase4, setDoorPhase4] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
+  const [fourFRoomEntered, setFourFRoomEntered] = useState(false);
+  const [doorPhase3, setDoorPhase3] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
+  const [threeFRoomEntered, setThreeFRoomEntered] = useState(false);
+  const [doorPhase2, setDoorPhase2] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
+  const [twoFRoomEntered, setTwoFRoomEntered] = useState(false);
   const [showFloorElevator, setShowFloorElevator] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(null); // Start at Map (null)
   const [currentFloorId, setCurrentFloorId] = useState(null); // null = Hero View
@@ -152,6 +175,69 @@ function App() {
     return () => window.removeEventListener('scroll', update);
   }, [currentFloorId, showFloorIntro, fiveFRoomEntered]);
 
+  // 4F crossfade: 4F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
+  const floor4Progress = useMotionValue(0);
+  useEffect(() => {
+    if (currentFloorId !== '4F' || showFloorIntro) {
+      floor4Progress.set(0);
+      return;
+    }
+    if (fourFRoomEntered) {
+      floor4Progress.set(1);
+      return;
+    }
+    floor4Progress.set(0);
+    const update = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      floor4Progress.set(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, showFloorIntro, fourFRoomEntered]);
+
+  // 3F crossfade: 3F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
+  const floor3Progress = useMotionValue(0);
+  useEffect(() => {
+    if (currentFloorId !== '3F' || showFloorIntro) {
+      floor3Progress.set(0);
+      return;
+    }
+    if (threeFRoomEntered) {
+      floor3Progress.set(1);
+      return;
+    }
+    floor3Progress.set(0);
+    const update = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      floor3Progress.set(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, showFloorIntro, threeFRoomEntered]);
+
+  // 2F crossfade: 2F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
+  const floor2Progress = useMotionValue(0);
+  useEffect(() => {
+    if (currentFloorId !== '2F' || showFloorIntro) {
+      floor2Progress.set(0);
+      return;
+    }
+    if (twoFRoomEntered) {
+      floor2Progress.set(1);
+      return;
+    }
+    floor2Progress.set(0);
+    const update = () => {
+      const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
+      floor2Progress.set(Math.min(1, Math.max(0, window.scrollY / max)));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, showFloorIntro, twoFRoomEntered]);
+
   // 7F 部屋の中: 入った直後の背景から、スクロールでじわっと別の背景へクロスフェード
   const room7Progress = useMotionValue(0);
   useEffect(() => {
@@ -184,6 +270,18 @@ function App() {
       setDoorPhase5('idle');
       setFiveFRoomEntered(false);
     }
+    if (currentFloorId !== '4F' || showFloorIntro) {
+      setDoorPhase4('idle');
+      setFourFRoomEntered(false);
+    }
+    if (currentFloorId !== '3F' || showFloorIntro) {
+      setDoorPhase3('idle');
+      setThreeFRoomEntered(false);
+    }
+    if (currentFloorId !== '2F' || showFloorIntro) {
+      setDoorPhase2('idle');
+      setTwoFRoomEntered(false);
+    }
   }, [currentFloorId, showFloorIntro]);
 
   useEffect(() => {
@@ -206,6 +304,24 @@ function App() {
     setDoorPhase5('split');              // 扉フェードイン
     setTimeout(() => setDoorPhase5('darken'), 950);   // 扉の下を黒に
     setTimeout(() => setDoorPhase5('open'),   1500);  // 扉を開く
+  };
+
+  const handleDoor4Open = () => {
+    setDoorPhase4('split');              // 扉フェードイン
+    setTimeout(() => setDoorPhase4('darken'), 950);   // 扉の下を黒に
+    setTimeout(() => setDoorPhase4('open'),   1500);  // 扉を開く
+  };
+
+  const handleDoor3Open = () => {
+    setDoorPhase3('split');              // 扉フェードイン
+    setTimeout(() => setDoorPhase3('darken'), 950);   // 扉の下を黒に
+    setTimeout(() => setDoorPhase3('open'),   1500);  // 扉を開く
+  };
+
+  const handleDoor2Open = () => {
+    setDoorPhase2('split');              // 扉フェードイン
+    setTimeout(() => setDoorPhase2('darken'), 950);   // 扉の下を黒に
+    setTimeout(() => setDoorPhase2('open'),   1500);  // 扉を開く
   };
 
   const floor6BaseOpacity = useTransform(floor6Progress, [0.3, 0.7], [0.6, 0]);
@@ -232,10 +348,34 @@ function App() {
   const floor5DoorButtonOpacity = useTransform(floor5Progress, [0.88, 1.0], [0, 1]);
   const floor5NavOpacity = useTransform(floor5Progress, [0, 0.4], [1, 0]);
 
+  // 4F: 廊下 → 扉前（ズーム）の2枚をクロスフェード
+  const floor4BaseOpacity = useTransform(floor4Progress, [0.3, 0.7], [0.6, 0]);
+  const floor4RevealOpacity = useTransform(floor4Progress, [0.3, 0.7], [0, 0.6]);
+  const floor4RevealScale = useTransform(floor4Progress, [0.7, 1.0], [1, 2.4]);
+  const floor4DoorButtonOpacity = useTransform(floor4Progress, [0.88, 1.0], [0, 1]);
+  const floor4NavOpacity = useTransform(floor4Progress, [0, 0.4], [1, 0]);
+
+  // 3F: 廊下 → 扉前（ズーム）の2枚をクロスフェード
+  const floor3BaseOpacity = useTransform(floor3Progress, [0.3, 0.7], [0.6, 0]);
+  const floor3RevealOpacity = useTransform(floor3Progress, [0.3, 0.7], [0, 0.6]);
+  const floor3RevealScale = useTransform(floor3Progress, [0.7, 1.0], [1, 2.4]);
+  const floor3DoorButtonOpacity = useTransform(floor3Progress, [0.88, 1.0], [0, 1]);
+  const floor3NavOpacity = useTransform(floor3Progress, [0, 0.4], [1, 0]);
+
+  // 2F: 廊下 → フロア前（ズーム）の2枚をクロスフェード
+  const floor2BaseOpacity = useTransform(floor2Progress, [0.3, 0.7], [0.6, 0]);
+  const floor2RevealOpacity = useTransform(floor2Progress, [0.3, 0.7], [0, 0.6]);
+  const floor2RevealScale = useTransform(floor2Progress, [0.7, 1.0], [1, 2.4]);
+  const floor2DoorButtonOpacity = useTransform(floor2Progress, [0.88, 1.0], [0, 1]);
+  const floor2NavOpacity = useTransform(floor2Progress, [0, 0.4], [1, 0]);
+
   // 見えている間だけクリック可能（透明時はクリックを透過）
   const floor6NavPointer = useTransform(floor6Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
   const floor7NavPointer = useTransform(floor7Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
   const floor5NavPointer = useTransform(floor5Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
+  const floor4NavPointer = useTransform(floor4Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
+  const floor3NavPointer = useTransform(floor3Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
+  const floor2NavPointer = useTransform(floor2Progress, (p) => (p < 0.3 ? 'auto' : 'none'));
 
   useEffect(() => {
     const timer = setTimeout(() => setLoading(false), 1000);
@@ -436,6 +576,20 @@ function App() {
             window.scrollTo(0, 0);
           }}
         />
+      ) : showFloorIntro && activeFloor && activeFloor.id === '3F' ? (
+        <Floor3Intro
+          onEnter={() => {
+            setShowFloorIntro(false);
+            window.scrollTo(0, 0);
+          }}
+        />
+      ) : showFloorIntro && activeFloor && activeFloor.id === '2F' ? (
+        <Floor2Intro
+          onEnter={() => {
+            setShowFloorIntro(false);
+            window.scrollTo(0, 0);
+          }}
+        />
       ) : showFloorIntro && activeFloor ? (
         <FloorIntro
           floor={activeFloor}
@@ -468,6 +622,30 @@ function App() {
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
                 opacity: 1,
+              }} />
+            ) : currentFloorId === '4F' && fourFRoomEntered ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${imgFloor4Room})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.6,
+              }} />
+            ) : currentFloorId === '3F' && threeFRoomEntered ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${imgFloor3Room})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.6,
+              }} />
+            ) : currentFloorId === '2F' && twoFRoomEntered ? (
+              <div style={{
+                position: 'absolute', inset: 0,
+                backgroundImage: `url(${imgFloor2Room})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                opacity: 0.6,
               }} />
             ) : currentFloorId === '7F' && sevenFRoomEntered ? (
               /* 7F 部屋の中: 入った直後の背景 → スクロールでじわっと別の背景へ */
@@ -556,6 +734,66 @@ function App() {
                   transformOrigin: '50% 55%',
                 }} />
               </>
+            ) : currentFloorId === '4F' ? (
+              /* 4F crossfade: 廊下 → 扉前（ズーム） */
+              <>
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor4Hallway})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor4BaseOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor4Reveal})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor4RevealOpacity,
+                  scale: floor4RevealScale,
+                  transformOrigin: '50% 40%',
+                }} />
+              </>
+            ) : currentFloorId === '3F' ? (
+              /* 3F crossfade: 廊下 → 扉前（ズーム） */
+              <>
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor3Hallway})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor3BaseOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor3Reveal})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor3RevealOpacity,
+                  scale: floor3RevealScale,
+                  transformOrigin: '50% 40%',
+                }} />
+              </>
+            ) : currentFloorId === '2F' ? (
+              /* 2F crossfade: 廊下 → フロア前（ズーム） */
+              <>
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor2Hallway})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor2BaseOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor2Reveal})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor2RevealOpacity,
+                  scale: floor2RevealScale,
+                  transformOrigin: '50% 40%',
+                }} />
+              </>
             ) : (
               <div style={{
                 position: 'absolute', inset: 0,
@@ -571,7 +809,7 @@ function App() {
               position: 'absolute', inset: 0,
               background: activeFloor ? activeFloor.bgCurrent : 'radial-gradient(circle at 50% 50%, rgba(11,16,36,0.5), #0b1024)',
               mixBlendMode: 'overlay',
-              opacity: currentFloorId === '5F' ? 0 : 1,
+              opacity: (currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F') ? 0 : 1,
               transition: 'background 1s ease'
             }} />
             <div style={{
@@ -579,7 +817,7 @@ function App() {
               backgroundImage: `url(${imgStairsSky})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: (currentFloorId === '6F' || currentFloorId === '7F' || currentFloorId === '5F') ? 0 : currentFloorId ? 0.1 : 0.05,
+              opacity: (currentFloorId === '6F' || currentFloorId === '7F' || currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F') ? 0 : currentFloorId ? 0.1 : 0.05,
               mixBlendMode: 'screen',
               pointerEvents: 'none'
             }} />
@@ -1237,6 +1475,580 @@ function App() {
             </>
           )}
 
+          {/* 4F 扉演出 */}
+          {currentFloorId === '4F' && (
+            <>
+              {/* Phase 0: ボタンのみ（スクロール底で表示） */}
+              {doorPhase4 === 'idle' && (
+                <motion.div style={{
+                  position: 'fixed', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: floor4DoorButtonOpacity,
+                  zIndex: 16,
+                  pointerEvents: 'none',
+                }}>
+                  <motion.button
+                    style={{
+                      pointerEvents: 'auto',
+                      padding: '16px 48px',
+                      borderRadius: '40px',
+                      background: 'rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      fontSize: '1.1rem',
+                      fontFamily: 'var(--font-jp)',
+                      letterSpacing: '0.2em',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                    }}
+                    whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleDoor4Open}
+                  >
+                    扉を開ける
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* Phase 1-3: 扉フェードイン → 黒 → 開く */}
+              {doorPhase4 !== 'idle' && (
+                <>
+                  {/* 扉の下の黒背景（部屋に入ったらフェードアウトして中身を見せる） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: fourFRoomEntered ? 0 : (doorPhase4 === 'darken' || doorPhase4 === 'open' ? 1 : 0) }}
+                    transition={{ duration: fourFRoomEntered ? 0.8 : 0.5 }}
+                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29, pointerEvents: fourFRoomEntered ? 'none' : 'auto' }}
+                  />
+                  {/* 左扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase4 === 'open' ? '-100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, left: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor4Left})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'right center',
+                      zIndex: 30,
+                    }}
+                  />
+                  {/* 右扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase4 === 'open' ? '100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, right: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor4Right})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'left center',
+                      zIndex: 30,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* Phase 3: 扉が開いた後、部屋に入るボタンの前にフロア紹介文を表示 */}
+              {doorPhase4 === 'open' && !fourFRoomEntered && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      overflowY: 'auto',
+                      display: 'flex', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '700px', width: '100%',
+                      margin: 'auto 0',
+                      color: 'white',
+                      fontFamily: 'var(--font-jp)',
+                      lineHeight: 2.6,
+                      textAlign: 'center',
+                      fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-4)' }}>
+                        思考を超えた先に、本当の可能性がある。
+                      </h3>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ようこそ、マインドデザイン研究所が体系化した<br />
+                        「心の階層」、第4フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ここまでのプロセスでは、<br />
+                        自分を知り、自分を整え、自分を信じる力を育ててきました。<br />
+                        しかし、その力だけでは、人生の本質的な変化は起こりません。<br />
+                        なぜなら、私たちを制限しているものの多くは、<br />
+                        能力ではなく、「思い込み」という見えない枠組みだからです。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        この「プロセス4」では、これまで無意識に握りしめてきた価値観や固定観念を手放し、潜在意識が本来持っている可能性を解放していきます。
+                      </p>
+                      <p style={{ margin: '0 0 20px' }}>
+                        この講義では、以下の3つのステップで、「自己変容」のプロセスを体感していきます。
+                      </p>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 思考の枠を超える</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          人は、現実を見ているのではありません。自分の思考を通して、現実を解釈しています。「無理だ」「難しい」「自分には向いていない」そのすべては、過去につくられた思考のフィルター。そのフィルターを外した瞬間、世界はまったく違う姿を見せ始めます。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '18px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 潜在意識とつながる</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          頭で考え続ける限り、変化には限界があります。本当に人生を動かすのは、言葉になる前の感覚。まだ意識していない、心の深い領域です。思考を静め、心で感じる力を取り戻すことで、潜在意識は静かに動き始めます。
+                        </p>
+                      </div>
+
+                      <div style={{ marginBottom: '20px' }}>
+                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「変わる」のではなく、「還る」</p>
+                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                          自己変容とは、新しい自分をつくることではありません。本来持っていた可能性を、思い出すこと。恐れも、執着も、他者から与えられた評価も手放したとき、あなたの中に眠っていた力は、自然に目を覚まします。心の枠が外れた瞬間、人生の枠も外れていく。昨日までの自分では、見えなかった景色。昨日までの自分では、選ばなかった未来。それらが自然に広がり始めます。
+                        </p>
+                      </div>
+
+                      <p style={{ margin: '0 0 16px' }}>
+                        自己変容とは、「努力して変わる」ことではなく、<br />
+                        本来の自分という可能性に、もう一度出会うこと。
+                      </p>
+
+                      <p style={{ margin: 0, fontWeight: 'bold' }}>
+                        マインドプロセス4は、あなたの人生を大きく変える、<br />
+                        心の転換点となるでしょう。
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                      display: 'flex', justifyContent: 'center', zIndex: 31,
+                    }}
+                  >
+                    <motion.button
+                      style={{
+                        padding: '16px 48px',
+                        borderRadius: '40px',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'var(--font-jp)',
+                        letterSpacing: '0.1em',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                      }}
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        setFourFRoomEntered(true);
+                      }}
+                    >
+                      部屋に入る
+                    </motion.button>
+                  </motion.div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* 3F 扉演出 */}
+          {currentFloorId === '3F' && (
+            <>
+              {/* Phase 0: ボタンのみ（スクロール底で表示） */}
+              {doorPhase3 === 'idle' && (
+                <motion.div style={{
+                  position: 'fixed', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: floor3DoorButtonOpacity,
+                  zIndex: 16,
+                  pointerEvents: 'none',
+                }}>
+                  <motion.button
+                    style={{
+                      pointerEvents: 'auto',
+                      padding: '16px 48px',
+                      borderRadius: '40px',
+                      background: 'rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      fontSize: '1.1rem',
+                      fontFamily: 'var(--font-jp)',
+                      letterSpacing: '0.2em',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                    }}
+                    whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleDoor3Open}
+                  >
+                    扉を開ける
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* Phase 1-3: 扉フェードイン → 黒 → 開く */}
+              {doorPhase3 !== 'idle' && (
+                <>
+                  {/* 扉の下の黒背景（部屋に入ったらフェードアウトして中身を見せる） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: threeFRoomEntered ? 0 : (doorPhase3 === 'darken' || doorPhase3 === 'open' ? 1 : 0) }}
+                    transition={{ duration: threeFRoomEntered ? 0.8 : 0.5 }}
+                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29, pointerEvents: threeFRoomEntered ? 'none' : 'auto' }}
+                  />
+                  {/* 左扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase3 === 'open' ? '-100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, left: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor3Left})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'right center',
+                      zIndex: 30,
+                    }}
+                  />
+                  {/* 右扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase3 === 'open' ? '100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, right: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor3Right})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'left center',
+                      zIndex: 30,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* Phase 3: 扉が開いた後、部屋に入るボタンの前にフロア紹介文を表示 */}
+              {doorPhase3 === 'open' && !threeFRoomEntered && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      overflowY: 'auto',
+                      display: 'flex', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '700px', width: '100%',
+                      margin: 'auto 0',
+                      color: 'white',
+                      fontFamily: 'var(--font-jp)',
+                      lineHeight: 2.6,
+                      textAlign: 'center',
+                      fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-3)' }}>
+                        心の軸が整うと、人生はぶれなくなる。
+                      </h3>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ようこそ、マインドデザイン研究所が体系化した<br />
+                        「心の階層」、第3フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ここまでのプロセスでは、自分自身を知り、心を整え、<br />
+                        感情や思考との向き合い方を学んできました。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        しかし、それだけでは、人生の選択に迷いは残ります。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        「どうすればいいのか。」<br />
+                        ではなく、「私は、どう在りたいのか。」<br />
+                        その問いに答えられる心を育てること。<br />
+                        それが、この「プロセス3」の目的です。
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        この講義では、以下の3つのステップで、<br />
+                        「揺るぎない自分軸」を育てていきます。
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                      display: 'flex', justifyContent: 'center', zIndex: 31,
+                    }}
+                  >
+                    <motion.button
+                      style={{
+                        padding: '16px 48px',
+                        borderRadius: '40px',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'var(--font-jp)',
+                        letterSpacing: '0.1em',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                      }}
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        setThreeFRoomEntered(true);
+                      }}
+                    >
+                      部屋に入る
+                    </motion.button>
+                  </motion.div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* 2F 扉演出 */}
+          {currentFloorId === '2F' && (
+            <>
+              {/* Phase 0: ボタンのみ（スクロール底で表示） */}
+              {doorPhase2 === 'idle' && (
+                <motion.div style={{
+                  position: 'fixed', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  opacity: floor2DoorButtonOpacity,
+                  zIndex: 16,
+                  pointerEvents: 'none',
+                }}>
+                  <motion.button
+                    style={{
+                      pointerEvents: 'auto',
+                      padding: '16px 48px',
+                      borderRadius: '40px',
+                      background: 'rgba(255,255,255,0.12)',
+                      color: '#fff',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      fontSize: '1.1rem',
+                      fontFamily: 'var(--font-jp)',
+                      letterSpacing: '0.2em',
+                      cursor: 'pointer',
+                      backdropFilter: 'blur(16px)',
+                      WebkitBackdropFilter: 'blur(16px)',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                    }}
+                    whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.2)' }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={handleDoor2Open}
+                  >
+                    扉を開ける
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* Phase 1-3: 扉フェードイン → 黒 → 開く */}
+              {doorPhase2 !== 'idle' && (
+                <>
+                  {/* 扉の下の黒背景（部屋に入ったらフェードアウトして中身を見せる） */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: twoFRoomEntered ? 0 : (doorPhase2 === 'darken' || doorPhase2 === 'open' ? 1 : 0) }}
+                    transition={{ duration: twoFRoomEntered ? 0.8 : 0.5 }}
+                    style={{ position: 'fixed', inset: 0, background: '#000', zIndex: 29, pointerEvents: twoFRoomEntered ? 'none' : 'auto' }}
+                  />
+                  {/* 左扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase2 === 'open' ? '-100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, left: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor2Left})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'right center',
+                      zIndex: 30,
+                    }}
+                  />
+                  {/* 右扉 */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: 1,
+                      x: doorPhase2 === 'open' ? '100%' : '0%',
+                    }}
+                    transition={{
+                      opacity: { duration: 0.8 },
+                      x: { duration: 2.2, ease: [0.33, 0.0, 0.2, 1.0] },
+                    }}
+                    style={{
+                      position: 'fixed', top: 0, right: 0,
+                      width: '50vw', height: '100vh',
+                      backgroundImage: `url(${imgDoor2Right})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'left center',
+                      zIndex: 30,
+                    }}
+                  />
+                </>
+              )}
+
+              {/* Phase 3: 扉が開いた後、部屋に入るボタンの前にフロア紹介文を表示 */}
+              {doorPhase2 === 'open' && !twoFRoomEntered && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      overflowY: 'auto',
+                      display: 'flex', justifyContent: 'center',
+                    }}
+                  >
+                    <div style={{
+                      maxWidth: '700px', width: '100%',
+                      margin: 'auto 0',
+                      color: 'white',
+                      fontFamily: 'var(--font-jp)',
+                      lineHeight: 2.6,
+                      textAlign: 'center',
+                      fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'break-word',
+                      textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                    }}>
+                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-2)' }}>
+                        心が整うと、人生は穏やかに動き始める。
+                      </h3>
+                      <p style={{ margin: '0 0 16px' }}>
+                        ようこそ、マインドデザイン研究所が体系化した<br />
+                        「心の階層」、第2フロアへ。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        第1フロアでは、自分自身を知ることから始めました。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        しかし、知ることと、受け入れることは違います。<br />
+                        自分の弱さ。<br />
+                        迷い。<br />
+                        感情の揺れ。<br />
+                        思い通りにならない自分。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        そのすべてを否定していては、心はいつまでも緊張したままです。
+                      </p>
+                      <p style={{ margin: '0 0 16px' }}>
+                        この「プロセス2」では、心と対立するのではなく、<br />
+                        心と調和することを学んでいきます。
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        この講義では、以下の3つのステップで、<br />
+                        「整った心」を育んでいきます。
+                      </p>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 2.2 }}
+                    style={{
+                      position: 'fixed', bottom: '10vh', left: 0, right: 0,
+                      display: 'flex', justifyContent: 'center', zIndex: 31,
+                    }}
+                  >
+                    <motion.button
+                      style={{
+                        padding: '16px 48px',
+                        borderRadius: '40px',
+                        background: 'rgba(255,255,255,0.12)',
+                        color: '#fff',
+                        border: '1px solid rgba(255,255,255,0.35)',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        fontFamily: 'var(--font-jp)',
+                        letterSpacing: '0.1em',
+                        cursor: 'pointer',
+                        backdropFilter: 'blur(10px)',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.2)',
+                      }}
+                      whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        window.scrollTo({ top: 0, behavior: 'instant' });
+                        setTwoFRoomEntered(true);
+                      }}
+                    >
+                      部屋に入る
+                    </motion.button>
+                  </motion.div>
+                </>
+              )}
+            </>
+          )}
+
           <header style={{ position: 'fixed', top: 0, left: 0, right: 0, padding: '20px', zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
             <div />
 
@@ -1395,7 +2207,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (
@@ -1411,14 +2223,14 @@ function App() {
             {/* Right Column: エレベーター（Desktop） */}
             <div className="desktop-nav" style={{ display: 'none' }}>
               {/* エレベーターに入るボタン（幕/扉が開いている間は表示しない。部屋に入ったら再表示） */}
-              {!showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (doorPhase5 === 'idle' || fiveFRoomEntered) && (
+              {!showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (doorPhase5 === 'idle' || fiveFRoomEntered) && (doorPhase4 === 'idle' || fourFRoomEntered) && (doorPhase3 === 'idle' || threeFRoomEntered) && (doorPhase2 === 'idle' || twoFRoomEntered) && (
                 <motion.div
                   key={`elev-btn-${currentFloorId ?? 'entrance'}`}
                   style={{
                     position: 'fixed', bottom: '6vh', left: 0, right: 0,
                     display: 'flex', justifyContent: 'center', zIndex: 120,
-                    opacity: currentFloorId === '6F' ? (sixFRoomEntered ? 1 : floor6NavOpacity) : currentFloorId === '7F' ? (sevenFRoomEntered ? 1 : floor7NavOpacity) : currentFloorId === '5F' ? (fiveFRoomEntered ? 1 : floor5NavOpacity) : 1,
-                    pointerEvents: currentFloorId === '6F' ? (sixFRoomEntered ? 'auto' : floor6NavPointer) : currentFloorId === '7F' ? (sevenFRoomEntered ? 'auto' : floor7NavPointer) : currentFloorId === '5F' ? (fiveFRoomEntered ? 'auto' : floor5NavPointer) : 'auto',
+                    opacity: currentFloorId === '6F' ? (sixFRoomEntered ? 1 : floor6NavOpacity) : currentFloorId === '7F' ? (sevenFRoomEntered ? 1 : floor7NavOpacity) : currentFloorId === '5F' ? (fiveFRoomEntered ? 1 : floor5NavOpacity) : currentFloorId === '4F' ? (fourFRoomEntered ? 1 : floor4NavOpacity) : currentFloorId === '3F' ? (threeFRoomEntered ? 1 : floor3NavOpacity) : currentFloorId === '2F' ? (twoFRoomEntered ? 1 : floor2NavOpacity) : 1,
+                    pointerEvents: currentFloorId === '6F' ? (sixFRoomEntered ? 'auto' : floor6NavPointer) : currentFloorId === '7F' ? (sevenFRoomEntered ? 'auto' : floor7NavPointer) : currentFloorId === '5F' ? (fiveFRoomEntered ? 'auto' : floor5NavPointer) : currentFloorId === '4F' ? (fourFRoomEntered ? 'auto' : floor4NavPointer) : currentFloorId === '3F' ? (threeFRoomEntered ? 'auto' : floor3NavPointer) : currentFloorId === '2F' ? (twoFRoomEntered ? 'auto' : floor2NavPointer) : 'auto',
                   }}>
                   <motion.button
                     whileHover={{ scale: 1.05 }}

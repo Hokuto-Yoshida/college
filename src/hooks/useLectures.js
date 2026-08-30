@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { lectures as seedLectures } from '../data/lectures';
 
-const STORAGE_KEY = 'mind_univ_lectures_v4'; // Bumped version to v4 to drop the retired 5F lecture (思考のリフレーミング) from saved browser state
+const STORAGE_KEY = 'mind_univ_lectures_v5'; // Bumped version to v5 to drop the retired 3F lecture (感情のスペクトル解析) from saved browser state
 
 export function useLectures() {
     const [lectures, setLectures] = useState([]);
