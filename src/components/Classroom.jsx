@@ -366,7 +366,30 @@ function Floor7Placeholder() {
 }
 
 // 0F: 地下ホールの書庫。長いPDFを本のようにめくって読める。
-function Floor0Library({ pdfUrl, pdfTitle }) {
+function Floor0Library({ books = [] }) {
+    const [activeBook, setActiveBook] = useState(null);
+
+    // 表示中の本がリストから消えた（削除された）場合は本棚に戻す
+    useEffect(() => {
+        if (activeBook && !books.some(b => b.id === activeBook.id)) {
+            setActiveBook(null);
+        }
+    }, [books, activeBook]);
+
+    if (activeBook) {
+        return (
+            <div style={{ marginTop: '20px' }}>
+                <button
+                    onClick={() => setActiveBook(null)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', background: 'var(--glass-surface)', border: '1px solid var(--glass-border)', color: 'white', cursor: 'pointer', fontSize: '0.8rem', marginBottom: '12px' }}
+                >
+                    <ArrowLeft size={14} /> 本棚に戻る
+                </button>
+                <PdfFlipBook pdfUrl={activeBook.pdfUrl} title={activeBook.title} />
+            </div>
+        );
+    }
+
     return (
         <div style={{ marginTop: '20px' }}>
             <div style={{
@@ -377,15 +400,45 @@ function Floor0Library({ pdfUrl, pdfTitle }) {
                     地下書庫
                 </h3>
                 <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
-                    ページをめくって読み進めてください
+                    読みたい本を選んでください
                 </p>
             </div>
-            <PdfFlipBook pdfUrl={pdfUrl} title={pdfTitle} />
+            <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '28px',
+                padding: '10px 4px 40px',
+            }}>
+                {books.map((b) => (
+                    <motion.button
+                        key={b.id}
+                        onClick={() => setActiveBook(b)}
+                        whileHover={{ scale: 1.05, y: -6 }}
+                        whileTap={{ scale: 0.96 }}
+                        style={{
+                            aspectRatio: '3 / 4',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(212,175,55,0.4)',
+                            background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                            boxShadow: '0 10px 24px rgba(0,0,0,0.5)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            gap: '12px', padding: '16px', cursor: 'pointer', position: 'relative',
+                        }}
+                    >
+                        <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
+                        <BookOpen size={28} color="#d4af37" />
+                        <span style={{
+                            color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
+                            fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                        }}>
+                            {b.title}
+                        </span>
+                    </motion.button>
+                ))}
+            </div>
         </div>
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0PdfUrl, floor0PdfTitle }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [] }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -454,7 +507,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '4F' && !fourFRoomEntered) return <Floor4View />;
     if (currentFloorId === '3F' && !threeFRoomEntered) return <Floor3View />;
     if (currentFloorId === '2F' && !twoFRoomEntered) return <Floor2View />;
-    if (currentFloorId === '0F') return <Floor0Library pdfUrl={floor0PdfUrl} pdfTitle={floor0PdfTitle} />;
+    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);

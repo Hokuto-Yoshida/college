@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, RotateCcw } from 'lucide-react';
+import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen } from 'lucide-react';
 import { buildings } from '../data/buildings';
 
-export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Pdf, onClose }) {
+export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Books, onClose }) {
     const [selectedBuildingId, setSelectedBuildingId] = useState('main');
     const [selectedFloorId, setSelectedFloorId] = useState('1F');
     const [editingLecture, setEditingLecture] = useState(null); // Lecture object to edit
@@ -203,7 +203,7 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
                     />
                 ) : (selectedBuildingId === 'main' && selectedFloorId === '0F') ? (
                     // 0F: 講座ではなく「本（PDF）」の管理パネル
-                    <Floor0PdfPanel floor0Pdf={floor0Pdf} />
+                    <Floor0BooksPanel floor0Books={floor0Books} />
                 ) : (
                     // List View
                     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -254,13 +254,15 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
 
 // --- Sub Components ---
 
-// 0F: PDFをアップロードして「本」として表示させるための管理パネル
-function Floor0PdfPanel({ floor0Pdf }) {
-    const { pdfName, bookTitle, isDefault, uploadPdf, resetPdf } = floor0Pdf || {};
+// 0F: PDFをアップロードして「本棚」に本を並べるための管理パネル
+function Floor0BooksPanel({ floor0Books }) {
+    const { rawBooks = [], uploadBook, deleteBook } = floor0Books || {};
     const [selectedFile, setSelectedFile] = useState(null);
     const [titleInput, setTitleInput] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [message, setMessage] = useState('');
+    const [deletingId, setDeletingId] = useState(null);
+    const [fileInputKey, setFileInputKey] = useState(0);
 
     const handleFileChange = (e) => {
         const file = e.target.files && e.target.files[0];
@@ -281,10 +283,11 @@ function Floor0PdfPanel({ floor0Pdf }) {
         setIsUploading(true);
         setMessage('');
         try {
-            await uploadPdf(selectedFile, titleInput);
-            setMessage('アップロードしました。0階に反映されます。');
+            await uploadBook(selectedFile, titleInput);
+            setMessage('アップロードしました。0階の本棚に追加されます。');
             setSelectedFile(null);
             setTitleInput('');
+            setFileInputKey((k) => k + 1); // ファイル入力欄の表示をリセット
         } catch (e) {
             console.error(e);
             setMessage('アップロードに失敗しました');
@@ -293,48 +296,64 @@ function Floor0PdfPanel({ floor0Pdf }) {
         }
     };
 
-    const handleReset = async () => {
-        if (!window.confirm('デフォルトのサンプルPDFに戻しますか？')) return;
-        await resetPdf();
-        setMessage('デフォルトのPDFに戻しました。');
+    const handleDelete = async (book) => {
+        if (!window.confirm(`「${book.title}」を削除しますか？`)) return;
+        setDeletingId(book.id);
+        try {
+            await deleteBook(book.id);
+        } catch (e) {
+            console.error(e);
+            setMessage('削除に失敗しました');
+        } finally {
+            setDeletingId(null);
+        }
     };
 
     return (
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
             <div style={{ marginBottom: '32px' }}>
                 <h2 style={{ margin: 0, fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <BookOpen size={28} /> 0階の本（PDF）
+                    <BookOpen size={28} /> 0階の本棚（PDF）
                 </h2>
                 <p style={{ color: '#888', marginTop: '8px' }}>
-                    ここでアップロードしたPDFが、0階でページをめくる「本」として表示されます。
+                    ここでアップロードしたPDFが、0階の本棚に本として並びます。複数冊を登録できます。
                 </p>
             </div>
 
             <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px' }}>
-                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px' }}>現在の状態</div>
-                {isDefault ? (
-                    <div style={{ color: '#ccc' }}>デフォルトのサンプルPDFを使用中です</div>
+                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '12px' }}>
+                    登録済みの本（{rawBooks.length}冊）
+                </div>
+                {rawBooks.length === 0 ? (
+                    <div style={{ color: '#ccc' }}>まだ本が登録されていません。現在はデフォルトのサンプルPDFが1冊表示されています。</div>
                 ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                        <div>
-                            <div style={{ color: 'white', fontWeight: 'bold' }}>{bookTitle}</div>
-                            <div style={{ color: '#888', fontSize: '0.85rem' }}>{pdfName}</div>
-                        </div>
-                        <button
-                            type="button"
-                            onClick={handleReset}
-                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.08)', color: '#ccc', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-                        >
-                            <RotateCcw size={14} /> デフォルトに戻す
-                        </button>
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                        {rawBooks.map((b) => (
+                            <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', gap: '12px' }}>
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</div>
+                                    <div style={{ color: '#888', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => handleDelete(b)}
+                                    disabled={deletingId === b.id}
+                                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '8px', background: 'rgba(255,107,107,0.1)', color: '#ff6b6b', border: 'none', cursor: deletingId === b.id ? 'default' : 'pointer', fontSize: '0.85rem' }}
+                                >
+                                    <Trash2 size={14} /> {deletingId === b.id ? '削除中…' : '削除'}
+                                </button>
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
 
             <div className="glass-panel" style={{ padding: '32px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <h4 style={{ margin: '0 0 20px', color: '#ccc' }}>本を追加する</h4>
                 <div style={{ marginBottom: '20px' }}>
                     <label style={{ display: 'block', marginBottom: '8px', color: '#888' }}>PDFファイル</label>
                     <input
+                        key={fileInputKey}
                         type="file"
                         accept="application/pdf,.pdf"
                         onChange={handleFileChange}
@@ -369,7 +388,7 @@ function Floor0PdfPanel({ floor0Pdf }) {
                             border: 'none', fontWeight: 'bold', cursor: isUploading ? 'default' : 'pointer'
                         }}
                     >
-                        <Upload size={18} /> {isUploading ? 'アップロード中…' : 'アップロード'}
+                        <Upload size={18} /> {isUploading ? 'アップロード中…' : '本を追加'}
                     </button>
                     {message && <span style={{ fontSize: '0.85rem', color: '#9ae6b4' }}>{message}</span>}
                 </div>

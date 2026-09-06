@@ -18,7 +18,7 @@ import { Floor5Intro } from './components/Floor5Intro';
 import { Floor6Intro } from './components/Floor6Intro';
 import { Floor7Intro } from './components/Floor7Intro';
 import { useLectures } from './hooks/useLectures';
-import { useFloor0Pdf } from './hooks/useFloor0Pdf';
+import { useFloor0Books } from './hooks/useFloor0Books';
 
 // Assets
 import imgExterior from './assets/exterior.png';
@@ -112,7 +112,7 @@ function App() {
 
   // Data Hook
   const { lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop } = useLectures();
-  const floor0Pdf = useFloor0Pdf();
+  const floor0Books = useFloor0Books();
 
   // 6F crossfade: 6F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
   const floor6Progress = useMotionValue(0);
@@ -529,7 +529,7 @@ function App() {
           addWorkshop={addWorkshop}
           updateWorkshop={updateWorkshop}
           deleteWorkshop={deleteWorkshop}
-          floor0Pdf={floor0Pdf}
+          floor0Books={floor0Books}
           onClose={() => setIsAdminMode(false)}
         />
       )}
@@ -2210,7 +2210,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0PdfUrl={floor0Pdf.pdfUrl} floor0PdfTitle={floor0Pdf.bookTitle} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (
