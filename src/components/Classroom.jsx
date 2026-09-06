@@ -366,7 +366,7 @@ function Floor7Placeholder() {
 }
 
 // 0F: 地下ホールの書庫。長いPDFを本のようにめくって読める。
-function Floor0Library() {
+function Floor0Library({ pdfUrl, pdfTitle }) {
     return (
         <div style={{ marginTop: '20px' }}>
             <div style={{
@@ -380,12 +380,12 @@ function Floor0Library() {
                     ページをめくって読み進めてください
                 </p>
             </div>
-            <PdfFlipBook pdfUrl="/pdfs/floor0-demo.pdf" title="改行位置サンプル" />
+            <PdfFlipBook pdfUrl={pdfUrl} title={pdfTitle} />
         </div>
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0PdfUrl, floor0PdfTitle }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -454,7 +454,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '4F' && !fourFRoomEntered) return <Floor4View />;
     if (currentFloorId === '3F' && !threeFRoomEntered) return <Floor3View />;
     if (currentFloorId === '2F' && !twoFRoomEntered) return <Floor2View />;
-    if (currentFloorId === '0F') return <Floor0Library />;
+    if (currentFloorId === '0F') return <Floor0Library pdfUrl={floor0PdfUrl} pdfTitle={floor0PdfTitle} />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);

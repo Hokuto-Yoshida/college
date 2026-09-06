@@ -18,6 +18,7 @@ import { Floor5Intro } from './components/Floor5Intro';
 import { Floor6Intro } from './components/Floor6Intro';
 import { Floor7Intro } from './components/Floor7Intro';
 import { useLectures } from './hooks/useLectures';
+import { useFloor0Pdf } from './hooks/useFloor0Pdf';
 
 // Assets
 import imgExterior from './assets/exterior.png';
@@ -111,6 +112,7 @@ function App() {
 
   // Data Hook
   const { lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop } = useLectures();
+  const floor0Pdf = useFloor0Pdf();
 
   // 6F crossfade: 6F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
   const floor6Progress = useMotionValue(0);
@@ -349,22 +351,22 @@ function App() {
   const floor5NavOpacity = useTransform(floor5Progress, [0, 0.4], [1, 0]);
 
   // 4F: 廊下 → 扉前（ズーム）の2枚をクロスフェード
-  const floor4BaseOpacity = useTransform(floor4Progress, [0.3, 0.7], [0.6, 0]);
-  const floor4RevealOpacity = useTransform(floor4Progress, [0.3, 0.7], [0, 0.6]);
+  const floor4BaseOpacity = useTransform(floor4Progress, [0.3, 0.7], [1, 0]);
+  const floor4RevealOpacity = useTransform(floor4Progress, [0.3, 0.7], [0, 1]);
   const floor4RevealScale = useTransform(floor4Progress, [0.7, 1.0], [1, 2.4]);
   const floor4DoorButtonOpacity = useTransform(floor4Progress, [0.88, 1.0], [0, 1]);
   const floor4NavOpacity = useTransform(floor4Progress, [0, 0.4], [1, 0]);
 
   // 3F: 廊下 → 扉前（ズーム）の2枚をクロスフェード
-  const floor3BaseOpacity = useTransform(floor3Progress, [0.3, 0.7], [0.6, 0]);
-  const floor3RevealOpacity = useTransform(floor3Progress, [0.3, 0.7], [0, 0.6]);
+  const floor3BaseOpacity = useTransform(floor3Progress, [0.3, 0.7], [1, 0]);
+  const floor3RevealOpacity = useTransform(floor3Progress, [0.3, 0.7], [0, 1]);
   const floor3RevealScale = useTransform(floor3Progress, [0.7, 1.0], [1, 2.4]);
   const floor3DoorButtonOpacity = useTransform(floor3Progress, [0.88, 1.0], [0, 1]);
   const floor3NavOpacity = useTransform(floor3Progress, [0, 0.4], [1, 0]);
 
   // 2F: 廊下 → フロア前（ズーム）の2枚をクロスフェード
-  const floor2BaseOpacity = useTransform(floor2Progress, [0.3, 0.7], [0.6, 0]);
-  const floor2RevealOpacity = useTransform(floor2Progress, [0.3, 0.7], [0, 0.6]);
+  const floor2BaseOpacity = useTransform(floor2Progress, [0.3, 0.7], [1, 0]);
+  const floor2RevealOpacity = useTransform(floor2Progress, [0.3, 0.7], [0, 1]);
   const floor2RevealScale = useTransform(floor2Progress, [0.7, 1.0], [1, 2.4]);
   const floor2DoorButtonOpacity = useTransform(floor2Progress, [0.88, 1.0], [0, 1]);
   const floor2NavOpacity = useTransform(floor2Progress, [0, 0.4], [1, 0]);
@@ -527,6 +529,7 @@ function App() {
           addWorkshop={addWorkshop}
           updateWorkshop={updateWorkshop}
           deleteWorkshop={deleteWorkshop}
+          floor0Pdf={floor0Pdf}
           onClose={() => setIsAdminMode(false)}
         />
       )}
@@ -629,7 +632,7 @@ function App() {
                 backgroundImage: `url(${imgFloor4Room})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                opacity: 0.6,
+                opacity: 1,
               }} />
             ) : currentFloorId === '3F' && threeFRoomEntered ? (
               <div style={{
@@ -637,7 +640,7 @@ function App() {
                 backgroundImage: `url(${imgFloor3Room})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                opacity: 0.6,
+                opacity: 1,
               }} />
             ) : currentFloorId === '2F' && twoFRoomEntered ? (
               <div style={{
@@ -645,7 +648,7 @@ function App() {
                 backgroundImage: `url(${imgFloor2Room})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                opacity: 0.6,
+                opacity: 1,
               }} />
             ) : currentFloorId === '7F' && sevenFRoomEntered ? (
               /* 7F 部屋の中: 入った直後の背景 → スクロールでじわっと別の背景へ */
@@ -2207,7 +2210,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0PdfUrl={floor0Pdf.pdfUrl} floor0PdfTitle={floor0Pdf.bookTitle} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (

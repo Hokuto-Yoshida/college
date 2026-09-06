@@ -1,9 +1,9 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X } from 'lucide-react';
+import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, RotateCcw } from 'lucide-react';
 import { buildings } from '../data/buildings';
 
-export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, onClose }) {
+export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Pdf, onClose }) {
     const [selectedBuildingId, setSelectedBuildingId] = useState('main');
     const [selectedFloorId, setSelectedFloorId] = useState('1F');
     const [editingLecture, setEditingLecture] = useState(null); // Lecture object to edit
@@ -201,6 +201,9 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
                         onSave={handleSaveWorkshop}
                         onCancel={() => setEditingWorkshop(null)}
                     />
+                ) : (selectedBuildingId === 'main' && selectedFloorId === '0F') ? (
+                    // 0F: 講座ではなく「本（PDF）」の管理パネル
+                    <Floor0PdfPanel floor0Pdf={floor0Pdf} />
                 ) : (
                     // List View
                     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -250,6 +253,130 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
 }
 
 // --- Sub Components ---
+
+// 0F: PDFをアップロードして「本」として表示させるための管理パネル
+function Floor0PdfPanel({ floor0Pdf }) {
+    const { pdfName, bookTitle, isDefault, uploadPdf, resetPdf } = floor0Pdf || {};
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [titleInput, setTitleInput] = useState('');
+    const [isUploading, setIsUploading] = useState(false);
+    const [message, setMessage] = useState('');
+
+    const handleFileChange = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+            setMessage('PDFファイルを選択してください');
+            return;
+        }
+        setSelectedFile(file);
+        setMessage('');
+    };
+
+    const handleUpload = async () => {
+        if (!selectedFile) {
+            setMessage('先にPDFファイルを選択してください');
+            return;
+        }
+        setIsUploading(true);
+        setMessage('');
+        try {
+            await uploadPdf(selectedFile, titleInput);
+            setMessage('アップロードしました。0階に反映されます。');
+            setSelectedFile(null);
+            setTitleInput('');
+        } catch (e) {
+            console.error(e);
+            setMessage('アップロードに失敗しました');
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const handleReset = async () => {
+        if (!window.confirm('デフォルトのサンプルPDFに戻しますか？')) return;
+        await resetPdf();
+        setMessage('デフォルトのPDFに戻しました。');
+    };
+
+    return (
+        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <div style={{ marginBottom: '32px' }}>
+                <h2 style={{ margin: 0, fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <BookOpen size={28} /> 0階の本（PDF）
+                </h2>
+                <p style={{ color: '#888', marginTop: '8px' }}>
+                    ここでアップロードしたPDFが、0階でページをめくる「本」として表示されます。
+                </p>
+            </div>
+
+            <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px' }}>
+                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px' }}>現在の状態</div>
+                {isDefault ? (
+                    <div style={{ color: '#ccc' }}>デフォルトのサンプルPDFを使用中です</div>
+                ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                        <div>
+                            <div style={{ color: 'white', fontWeight: 'bold' }}>{bookTitle}</div>
+                            <div style={{ color: '#888', fontSize: '0.85rem' }}>{pdfName}</div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={handleReset}
+                            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', background: 'rgba(255,255,255,0.08)', color: '#ccc', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+                        >
+                            <RotateCcw size={14} /> デフォルトに戻す
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            <div className="glass-panel" style={{ padding: '32px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#888' }}>PDFファイル</label>
+                    <input
+                        type="file"
+                        accept="application/pdf,.pdf"
+                        onChange={handleFileChange}
+                        style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                    />
+                    {selectedFile && (
+                        <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#aaa' }}>
+                            選択中: {selectedFile.name}
+                        </div>
+                    )}
+                </div>
+
+                <div style={{ marginBottom: '24px' }}>
+                    <label style={{ display: 'block', marginBottom: '8px', color: '#888' }}>本のタイトル（表紙に表示・任意）</label>
+                    <input
+                        value={titleInput}
+                        onChange={(e) => setTitleInput(e.target.value)}
+                        placeholder="未入力の場合はファイル名を使用します"
+                        style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                    />
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button
+                        type="button"
+                        onClick={handleUpload}
+                        disabled={isUploading}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: '8px',
+                            padding: '12px 32px', borderRadius: '24px',
+                            background: isUploading ? '#555' : 'var(--floor-4, #4facfe)', color: 'black',
+                            border: 'none', fontWeight: 'bold', cursor: isUploading ? 'default' : 'pointer'
+                        }}
+                    >
+                        <Upload size={18} /> {isUploading ? 'アップロード中…' : 'アップロード'}
+                    </button>
+                    {message && <span style={{ fontSize: '0.85rem', color: '#9ae6b4' }}>{message}</span>}
+                </div>
+            </div>
+        </div>
+    );
+}
 
 function LectureItem({ lecture, onEdit, onAddWorkshop, onEditWorkshop, onDeleteWorkshop }) {
     return (
