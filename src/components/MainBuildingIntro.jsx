@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { X } from 'lucide-react';
 import { SpiralNav } from './SpiralNav';
 
 import imgPath1 from '../assets/intro_bg_1.png';
@@ -320,16 +321,36 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
                         borderLeft: '1px solid rgba(255,255,255,0.2)',
                         backdropFilter: 'blur(24px)',
                         WebkitBackdropFilter: 'blur(24px)',
-                        overflow: 'hidden',
+                        overflow: 'visible',
                     }}
                 >
-                    <SpiralNav
-                        floors={floors}
-                        onSelectFloor={(id) => {
-                            setShowElevator(false);
-                            onSelectFloor && onSelectFloor(id);
-                        }}
-                    />
+                    <div style={{ position: 'relative', height: '100%' }}>
+                        <button
+                            onClick={() => setShowElevator(false)}
+                            style={{
+                                position: 'absolute', top: 0, left: '-40px', zIndex: 2,
+                                width: '40px', height: 'calc(100vh / 9)', borderRadius: 0,
+                                backgroundColor: 'rgba(255,255,255,0.18)',
+                                backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                                border: '1px solid rgba(255,255,255,0.2)', borderRight: 'none',
+                                color: '#333', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                            }}
+                            title="閉じる"
+                        >
+                            <X size={16} />
+                        </button>
+                        <div style={{ height: '100%', overflowY: 'auto' }}>
+                            <SpiralNav
+                                floors={floors}
+                                onSelectFloor={(id) => {
+                                    setShowElevator(false);
+                                    onSelectFloor && onSelectFloor(id);
+                                }}
+                            />
+                        </div>
+                    </div>
                 </motion.div>
             )}
         </div>

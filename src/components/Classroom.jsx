@@ -676,12 +676,8 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                 <div style={{ position: 'relative', width: '100%', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden' }}>
 
 {/* Doors (Lectures) */}
-                <div style={{ position: 'absolute', inset: 0, zIndex: 5, padding: '100px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignContent: 'center', backgroundColor: 'rgba(0,0,0,0.1)' }}>
-                    {floorLectures.length === 0 ? (
-                        <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'black', background: 'rgba(255,255,255,0.7)', padding: '20px', borderRadius: '10px', backdropFilter: 'blur(5px)' }}>
-                            <p style={{ fontSize: '1.2rem', margin: 0 }}>このフロアにはまだ開講中の講座（部屋）がありません</p>
-                        </div>
-                    ) : (
+                <div style={{ position: 'absolute', inset: 0, zIndex: 5, padding: '100px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignContent: 'center' }}>
+                    {floorLectures.length === 0 ? null : (
                         floorLectures.map((l, index) => (
                             <motion.div
                                 key={l.id}

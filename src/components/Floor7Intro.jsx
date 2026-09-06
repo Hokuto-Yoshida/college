@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 
 import imgHallway from '../assets/floor_bg.png'; // 7F intro背景（切り替わらない固定背景）
@@ -34,6 +34,13 @@ const sectionStyle = {
 };
 
 export const Floor7Intro = ({ onEnter }) => {
+    // エントランス（FloorIntro）と同じく、スクロールに合わせて靄が出ては消える
+    const { scrollYProgress } = useScroll();
+    const mistOpacity = useTransform(scrollYProgress,
+        [0, 0.25, 0.5, 0.75, 1.0],
+        [0, 0.5,  1,   0.5,  0]
+    );
+
     return (
         <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
             {/* Fixed Background（切り替わらない固定背景） */}
@@ -51,31 +58,27 @@ export const Floor7Intro = ({ onEnter }) => {
                 }} />
             </div>
 
-            {/* opening image: 一度だけフェードインして、そのまま残る（背景が変わらないので退場させない） */}
+            {/* opening image: 靄と同じく、スクロールに合わせて出ては消える */}
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
                 style={{
                     position: 'fixed', inset: 0, zIndex: 1,
                     pointerEvents: 'none',
                     backgroundImage: `url(${introOpening})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    opacity: mistOpacity,
                 }}
             />
 
-            {/* 靄（白幕）: 一度だけフェードインして、そのまま残る */}
+            {/* 靄（白幕）: エントランスと同じく、スクロールに合わせて出ては消える */}
             <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1.5, delay: 0.3, ease: 'easeOut' }}
                 style={{
                     position: 'fixed', inset: 0, zIndex: 2,
                     pointerEvents: 'none',
                     background: 'rgba(255, 255, 255, 0.3)',
                     maskImage: MASK,
                     WebkitMaskImage: MASK,
+                    opacity: mistOpacity,
                 }}
             />
 

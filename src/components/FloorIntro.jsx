@@ -20,9 +20,10 @@ export const FloorIntro = ({ floor, onEnter }) => {
     const { scrollYProgress } = useScroll();
     const proc = processMap[floor.id] ?? { num: '?', viewpoint: '', action: '' };
 
+    // 他の階（2F〜7F）と同じく、全体で1周だけ（何もない→薄く→濃く→薄く→消える）
     const whiteLayerOpacity = useTransform(scrollYProgress,
-        [0, 0.08, 0.18, 0.26, 0.35, 0.45, 0.54, 0.62, 0.72, 0.81, 1.0],
-        [0, 1,    1,    0,    1,    1,    0,    1,    1,    0,    0  ]
+        [0, 0.25, 0.5, 0.75, 1.0],
+        [0, 0.5,  1,   0.5,  0]
     );
 
     const textStyle = {

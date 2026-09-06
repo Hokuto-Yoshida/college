@@ -336,20 +336,20 @@ function App() {
     setTimeout(() => setDoorPhase2('open'),   1500);  // 扉を開く
   };
 
-  const floor6BaseOpacity = useTransform(floor6Progress, [0.3, 0.7], [0.6, 0]);
-  const floor6RevealOpacity = useTransform(floor6Progress, [0.3, 0.7], [0, 0.6]);
+  const floor6BaseOpacity = useTransform(floor6Progress, [0.3, 0.7], [1, 0]);
+  const floor6RevealOpacity = useTransform(floor6Progress, [0.3, 0.7], [0, 1]);
   const floor6RevealScale = useTransform(floor6Progress, [0.7, 1.0], [1, 4]);
   const floor6CurtainOpacity = useTransform(floor6Progress, [0.88, 1.0], [0, 1]);
   const floor6NavOpacity = useTransform(floor6Progress, [0, 0.4], [1, 0]);
 
-  const floor7BaseOpacity = useTransform(floor7Progress, [0.3, 0.7], [0.6, 0]);
-  const floor7RevealOpacity = useTransform(floor7Progress, [0.3, 0.7], [0, 0.6]);
+  const floor7BaseOpacity = useTransform(floor7Progress, [0.3, 0.7], [1, 0]);
+  const floor7RevealOpacity = useTransform(floor7Progress, [0.3, 0.7], [0, 1]);
   const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 2.6]);
   const floor7DoorButtonOpacity = useTransform(floor7Progress, [0.88, 1.0], [0, 1]);
   const floor7NavOpacity = useTransform(floor7Progress, [0, 0.4], [1, 0]);
 
-  const room7EntryOpacity = useTransform(room7Progress, [0.2, 0.85], [0.6, 0]);
-  const room7RevealOpacity = useTransform(room7Progress, [0.2, 0.85], [0, 0.6]);
+  const room7EntryOpacity = useTransform(room7Progress, [0.2, 0.85], [1, 0]);
+  const room7RevealOpacity = useTransform(room7Progress, [0.2, 0.85], [0, 1]);
   const room7RevealScale = useTransform(room7Progress, [0.2, 0.85], [1, 1.2]);
 
   // 5F: 廊下 → 開いた扉越しの部屋 → 扉前 の3枚を順にクロスフェードし、最後にじわっとズーム
@@ -626,7 +626,7 @@ function App() {
                 backgroundImage: `url(${imgFloor6Room})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                opacity: 0.6,
+                opacity: 1,
               }} />
             ) : currentFloorId === '5F' && fiveFRoomEntered ? (
               <div style={{
@@ -822,7 +822,7 @@ function App() {
               position: 'absolute', inset: 0,
               background: activeFloor ? activeFloor.bgCurrent : 'radial-gradient(circle at 50% 50%, rgba(11,16,36,0.5), #0b1024)',
               mixBlendMode: 'overlay',
-              opacity: (currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F') ? 0 : 1,
+              opacity: (currentFloorId === '7F' || currentFloorId === '6F' || currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F') ? 0 : 1,
               transition: 'background 1s ease'
             }} />
             <div style={{
@@ -2122,19 +2122,40 @@ function App() {
                 style={{
                   position: 'fixed', inset: 0, zIndex: 200,
                   background: 'rgba(5, 10, 20, 0.95)', backdropFilter: 'blur(12px)',
-                  padding: '0', display: 'flex', flexDirection: 'column'
+                  padding: '0', overflowY: 'auto',
                 }}
               >
-                  <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
-                    setMobileMenuOpen(false);
-                    const targetIndex = activeFloors.findIndex(f => f.id === id);
-                    const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
-                    setTransitionTargetFloor(id);
-                    performTransition(direction, () => {
-                      setCurrentFloorId(id);
-                      setShowFloorIntro(true);
-                    });
-                  }} />
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      position: 'absolute', top: 0, left: 0, zIndex: 2,
+                      width: '48px', height: 'calc(100vh / 9)',
+                      background: 'rgba(0,0,0,0.35)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <button
+                        onClick={() => setMobileMenuOpen(false)}
+                        style={{
+                          width: '32px', height: '32px', borderRadius: '50%',
+                          background: 'transparent', border: 'none',
+                          color: 'white', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}
+                        title="閉じる"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                    <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
+                      setMobileMenuOpen(false);
+                      const targetIndex = activeFloors.findIndex(f => f.id === id);
+                      const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
+                      setTransitionTargetFloor(id);
+                      performTransition(direction, () => {
+                        setCurrentFloorId(id);
+                        setShowFloorIntro(true);
+                      });
+                    }} />
+                  </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -2283,19 +2304,39 @@ function App() {
                       borderLeft: '1px solid rgba(255,255,255,0.2)',
                       backdropFilter: 'blur(24px)',
                       WebkitBackdropFilter: 'blur(24px)',
-                      overflow: 'hidden',
+                      overflow: 'visible',
                     }}
                   >
-                    <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
-                      setShowFloorElevator(false);
-                      const targetIndex = activeFloors.findIndex(f => f.id === id);
-                      const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
-                      setTransitionTargetFloor(id);
-                      performTransition(direction, () => {
-                        setCurrentFloorId(id);
-                        setShowFloorIntro(true);
-                      });
-                    }} />
+                    <div style={{ position: 'relative', height: '100%' }}>
+                      <button
+                        onClick={() => setShowFloorElevator(false)}
+                        style={{
+                          position: 'absolute', top: 0, left: '-40px', zIndex: 2,
+                          width: '40px', height: 'calc(100vh / 9)', borderRadius: 0,
+                          backgroundColor: 'rgba(255,255,255,0.18)',
+                          backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
+                          border: '1px solid rgba(255,255,255,0.2)', borderRight: 'none',
+                          color: '#333', cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                        }}
+                        title="閉じる"
+                      >
+                        <X size={16} />
+                      </button>
+                      <div style={{ height: '100%', overflowY: 'auto' }}>
+                        <SpiralNav floors={activeFloors} onSelectFloor={(id) => {
+                          setShowFloorElevator(false);
+                          const targetIndex = activeFloors.findIndex(f => f.id === id);
+                          const direction = targetIndex < effectiveActiveFloorIndex ? 'stairs-up' : 'stairs-down';
+                          setTransitionTargetFloor(id);
+                          performTransition(direction, () => {
+                            setCurrentFloorId(id);
+                            setShowFloorIntro(true);
+                          });
+                        }} />
+                      </div>
+                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
