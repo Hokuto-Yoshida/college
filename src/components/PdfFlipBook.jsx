@@ -145,21 +145,24 @@ export function PdfFlipBook({ pdfUrl, title = '' }) {
     }
 
     return (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: '10px 0 30px' }}>
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '100%', height: '100%',
+        }}>
             <HTMLFlipBook
                 ref={bookRef}
                 width={pageSize.width}
                 height={pageSize.height}
                 size="stretch"
                 minWidth={260}
-                maxWidth={640}
+                maxWidth={1400}
                 minHeight={368}
-                maxHeight={905}
+                maxHeight={1980}
                 showCover
                 maxShadowOpacity={0.5}
                 flippingTime={700}
                 className="pdf-flipbook"
-                style={{ margin: '0 auto' }}
+                style={{ margin: '0 auto', maxHeight: '88vh' }}
             >
                 <CoverPage title={title} />
                 {pages.map((src, idx) => (

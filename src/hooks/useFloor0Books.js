@@ -65,5 +65,5 @@ export function useFloor0Books() {
         }))
         : [DEFAULT_BOOK];
 
-    return { books, rawBooks, loaded, uploadBook, deleteBook };
+    return { books, rawBooks, loaded, uploadBook, deleteBook, refresh };
 }

@@ -114,6 +114,16 @@ function App() {
   const { lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop } = useLectures();
   const floor0Books = useFloor0Books();
 
+  // 0Fに来るたびに最新の本一覧を取り直す（他の人がアップロード/削除していても
+  // リロードなしで反映されるように、滞在中は一定間隔でも再取得する）
+  const refreshFloor0Books = floor0Books.refresh;
+  useEffect(() => {
+    if (currentFloorId !== '0F') return;
+    refreshFloor0Books();
+    const interval = setInterval(refreshFloor0Books, 20000);
+    return () => clearInterval(interval);
+  }, [currentFloorId, refreshFloor0Books]);
+
   // 6F crossfade: 6F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
   const floor6Progress = useMotionValue(0);
   useEffect(() => {
