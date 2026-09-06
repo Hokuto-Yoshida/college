@@ -368,6 +368,7 @@ function Floor7Placeholder() {
 // 0F: 地下ホールの書庫。長いPDFを本のようにめくって読める。
 function Floor0Library({ books = [] }) {
     const [activeBook, setActiveBook] = useState(null);
+    const [transitioningBook, setTransitioningBook] = useState(null);
 
     // 表示中の本がリストから消えた（削除された）場合は本棚に戻す
     useEffect(() => {
@@ -376,65 +377,100 @@ function Floor0Library({ books = [] }) {
         }
     }, [books, activeBook]);
 
-    if (activeBook) {
-        return (
-            <div style={{ marginTop: '20px' }}>
-                <button
-                    onClick={() => setActiveBook(null)}
-                    style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', background: 'var(--glass-surface)', border: '1px solid var(--glass-border)', color: 'white', cursor: 'pointer', fontSize: '0.8rem', marginBottom: '12px' }}
-                >
-                    <ArrowLeft size={14} /> 本棚に戻る
-                </button>
-                <PdfFlipBook pdfUrl={activeBook.pdfUrl} title={activeBook.title} />
-            </div>
-        );
-    }
+    const handleSelectBook = (book) => {
+        setTransitioningBook(book);
+        // 本が開き切る演出(BookTransitionOverlayの2.5秒アニメーション)を見せてから全画面へ切り替える
+        setTimeout(() => {
+            setActiveBook(book);
+            setTransitioningBook(null);
+        }, 2500);
+    };
 
     return (
-        <div style={{ marginTop: '20px' }}>
-            <div style={{
-                marginBottom: '20px', color: 'white', fontFamily: 'var(--font-jp)',
-                textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-            }}>
-                <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
-                    地下書庫
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
-                    読みたい本を選んでください
-                </p>
+        <>
+            <div style={{ marginTop: '20px' }}>
+                <div style={{
+                    marginBottom: '20px', color: 'white', fontFamily: 'var(--font-jp)',
+                    textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                }}>
+                    <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
+                        地下書庫
+                    </h3>
+                    <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
+                        読みたい本を選んでください
+                    </p>
+                </div>
+                <div style={{
+                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '28px',
+                    padding: '10px 4px 40px',
+                }}>
+                    {books.map((b) => (
+                        <motion.button
+                            key={b.id}
+                            onClick={() => handleSelectBook(b)}
+                            whileHover={{ scale: 1.05, y: -6 }}
+                            whileTap={{ scale: 0.96 }}
+                            style={{
+                                aspectRatio: '3 / 4',
+                                borderRadius: '4px',
+                                border: '1px solid rgba(212,175,55,0.4)',
+                                background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                                boxShadow: '0 10px 24px rgba(0,0,0,0.5)',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                gap: '12px', padding: '16px', cursor: 'pointer', position: 'relative',
+                            }}
+                        >
+                            <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
+                            <BookOpen size={28} color="#d4af37" />
+                            <span style={{
+                                color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
+                                fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                            }}>
+                                {b.title}
+                            </span>
+                        </motion.button>
+                    ))}
+                </div>
             </div>
-            <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '28px',
-                padding: '10px 4px 40px',
-            }}>
-                {books.map((b) => (
-                    <motion.button
-                        key={b.id}
-                        onClick={() => setActiveBook(b)}
-                        whileHover={{ scale: 1.05, y: -6 }}
-                        whileTap={{ scale: 0.96 }}
+
+            {/* 本を開く演出（ワークショップの本と同じ3D演出を流用） */}
+            <BookTransitionOverlay resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />
+
+            {/* 全画面での本文表示 */}
+            <AnimatePresence>
+                {activeBook && (
+                    <motion.div
+                        key="floor0-fullscreen-book"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4 }}
                         style={{
-                            aspectRatio: '3 / 4',
-                            borderRadius: '4px',
-                            border: '1px solid rgba(212,175,55,0.4)',
-                            background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
-                            boxShadow: '0 10px 24px rgba(0,0,0,0.5)',
-                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                            gap: '12px', padding: '16px', cursor: 'pointer', position: 'relative',
+                            position: 'fixed', inset: 0, zIndex: 600,
+                            background: 'radial-gradient(circle at 50% 35%, #1a2e22 0%, #05080a 100%)',
+                            overflowY: 'auto',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            padding: '24px 24px 60px',
                         }}
                     >
-                        <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
-                        <BookOpen size={28} color="#d4af37" />
-                        <span style={{
-                            color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
-                            fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
-                        }}>
-                            {b.title}
-                        </span>
-                    </motion.button>
-                ))}
-            </div>
-        </div>
+                        <button
+                            onClick={() => setActiveBook(null)}
+                            style={{
+                                alignSelf: 'flex-start', display: 'flex', alignItems: 'center', gap: '6px',
+                                padding: '10px 20px', borderRadius: '20px', background: 'rgba(255,255,255,0.1)',
+                                border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer',
+                                fontSize: '0.85rem', marginBottom: '20px', flexShrink: 0,
+                            }}
+                        >
+                            <ArrowLeft size={14} /> 本棚に戻る
+                        </button>
+                        <div style={{ flex: 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {activeBook && <PdfFlipBook pdfUrl={activeBook.pdfUrl} title={activeBook.title} />}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </>
     );
 }
 
