@@ -477,7 +477,7 @@ function Floor0Library({ books = [] }) {
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [] }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], room7RevealOpacity }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -492,6 +492,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     // Transition overlay state
     const [transitioningResource, setTransitioningResource] = useState(null);
     const [transitioningWorkshop, setTransitioningWorkshop] = useState(null);
+    const [skipToWorkshopHallway, setSkipToWorkshopHallway] = useState(false); // 7F: 本→本のアニメ→全画面ワークに直行した場合のフラグ
 
     // Auth removed
     const user = null;
@@ -510,6 +511,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
         setViewMode('WALL');
         setCinemaData({ isOpen: false, url: '', title: '' });
         setClassroomModalData({ isOpen: false, url: '', title: '' });
+        setSkipToWorkshopHallway(false);
     }, [currentFloorId]);
 
     // Load responses
@@ -559,8 +561,28 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
         setActiveLecture(null);
         setIsIntroFinished(false);
         setActiveWorkshop(null);
+        setSkipToWorkshopHallway(false);
         window.scrollTo(0, 0);
     }
+
+    // 7F: 本をクリックしたら、講義の導入やAVルームを飛ばして
+    // 「本が開く演出→全画面でワーク」に直接つなげる
+    const handleSevenFBookSelect = (l) => {
+        const w = l.workshops && l.workshops[0];
+        if (!w) return;
+        setActiveLecture(l);
+        setIsIntroFinished(true);
+        setSkipToWorkshopHallway(true);
+        setTransitioningWorkshop({ ...w, color: 'var(--floor-7)' });
+
+        setTimeout(() => {
+            setActiveWorkshop(w);
+            setFormAnswers({});
+            setViewMode('FORM');
+            setCurrentQuestionIndex(0);
+            setTransitioningWorkshop(null);
+        }, 2500);
+    };
 
     // Consistent colors for workshops
     const workshopColors = [
@@ -599,7 +621,12 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     };
 
     const handleCloseWorkshop = () => {
-        setActiveWorkshop(null);
+        if (skipToWorkshopHallway) {
+            // 本から直行した場合は、講義の中間画面ではなくフロアの廊下まで戻す
+            handleBackToHallway();
+        } else {
+            setActiveWorkshop(null);
+        }
     };
 
     const handlSubmit = (e) => {
@@ -679,6 +706,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                 <div style={{ position: 'absolute', inset: 0, zIndex: 5, padding: '100px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', alignContent: 'center' }}>
                     {floorLectures.length === 0 ? null : (
                         floorLectures.map((l, index) => (
+                            l.floorId === '7F' ? null : (
                             <motion.div
                                 key={l.id}
                                 whileHover={{ scale: 1.05, y: -5 }}
@@ -686,7 +714,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                                 onClick={() => handleLectureSelect(l)}
                                 style={{
                                     height: '300px',
-                                    backgroundImage: `url(${l.floorId === '7F' ? lectureBg7F : lectureBg})`,
+                                    backgroundImage: `url(${lectureBg})`,
                                     backgroundSize: 'cover',
                                     backgroundPosition: 'center',
                                     border: '1px solid rgba(255,255,255,0.2)',
@@ -718,10 +746,41 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
 
                                 <style>{`.door-glow:hover { opacity: 1 !important; }`}</style>
                             </motion.div>
+                            )
                         ))
                     )}
                 </div>
                 </div>
+
+                {/* 7F: 2枚目の背景（円卓・演台の間）が表示されている間だけ、本を浮かび上がらせる */}
+                {currentFloorId === '7F' && floorLectures.length > 0 && (
+                    <motion.div
+                        whileHover={{ scale: 1.05, y: -6 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleSevenFBookSelect(floorLectures[0])}
+                        style={{
+                            position: 'fixed', left: '44%', top: '68%', transform: 'translate(-50%, -50%)',
+                            zIndex: 6, opacity: room7RevealOpacity ?? 0,
+                            pointerEvents: room7RevealOpacity ? 'auto' : 'none',
+                            width: '110px', aspectRatio: '3 / 4',
+                            borderRadius: '4px',
+                            border: '1px solid rgba(212,175,55,0.5)',
+                            background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                            boxShadow: '0 14px 30px rgba(0,0,0,0.6)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            gap: '10px', padding: '12px', cursor: 'pointer',
+                        }}
+                    >
+                        <div style={{ position: 'absolute', inset: '7px', border: '1px solid rgba(212,175,55,0.4)' }} />
+                        <BookOpen size={20} color="#d4af37" style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />
+                        <span style={{
+                            color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.7rem',
+                            fontWeight: 'bold', textAlign: 'center', lineHeight: 1.4, wordBreak: 'keep-all',
+                        }}>
+                            {floorLectures[0].title}
+                        </span>
+                    </motion.div>
+                )}
             </div>
         );
     }

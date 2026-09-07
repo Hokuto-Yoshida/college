@@ -348,9 +348,10 @@ function App() {
   const floor7DoorButtonOpacity = useTransform(floor7Progress, [0.88, 1.0], [0, 1]);
   const floor7NavOpacity = useTransform(floor7Progress, [0, 0.4], [1, 0]);
 
-  const room7EntryOpacity = useTransform(room7Progress, [0.2, 0.85], [1, 0]);
-  const room7RevealOpacity = useTransform(room7Progress, [0.2, 0.85], [0, 1]);
-  const room7RevealScale = useTransform(room7Progress, [0.2, 0.85], [1, 1.2]);
+  // 1枚目をズームアップしてから、2枚目に切り替える（0-50%で3倍、50-90%でじんわり切り替え）
+  const room7EntryScale = useTransform(room7Progress, [0, 0.5], [1, 3]);
+  const room7EntryOpacity = useTransform(room7Progress, [0.5, 0.9], [1, 0]);
+  const room7RevealOpacity = useTransform(room7Progress, [0.5, 0.9], [0, 1]);
 
   // 5F: 廊下 → 開いた扉越しの部屋 → 扉前 の3枚を順にクロスフェードし、最後にじわっとズーム
   const floor5HallwayOpacity = useTransform(floor5Progress, [0, 0.28], [1, 0]);
@@ -669,6 +670,8 @@ function App() {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   opacity: room7EntryOpacity,
+                  scale: room7EntryScale,
+                  transformOrigin: '50% 50%',
                 }} />
                 <motion.div style={{
                   position: 'absolute', inset: 0,
@@ -676,8 +679,6 @@ function App() {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   opacity: room7RevealOpacity,
-                  scale: room7RevealScale,
-                  transformOrigin: '50% 50%',
                 }} />
               </>
             ) : currentFloorId === '6F' ? (
@@ -2241,7 +2242,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} room7RevealOpacity={room7RevealOpacity} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (
