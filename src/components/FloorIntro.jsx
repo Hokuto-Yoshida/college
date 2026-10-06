@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { EntranceDoor } from './EntranceDoor';
 
-import imgBg from '../assets/floor_bg.png';
+import imgBg from '../assets/entrance_lobby.png';
 
 const processMap = {
     '7F': { num: 7, viewpoint: '地球視点', action: '地球を動かす' },
@@ -19,6 +19,8 @@ const processMap = {
 export const FloorIntro = ({ floor, onEnter }) => {
     const { scrollYProgress } = useScroll();
     const proc = processMap[floor.id] ?? { num: '?', viewpoint: '', action: '' };
+    // フロア内と同じく、スクロール終盤で背景をアップ
+    const bgScale = useTransform(scrollYProgress, [0.7, 1.0], [1, 2.4]);
 
     // 他の階（2F〜7F）と同じく、全体で1周だけ（何もない→薄く→濃く→薄く→消える）
     const whiteLayerOpacity = useTransform(scrollYProgress,
@@ -55,11 +57,13 @@ export const FloorIntro = ({ floor, onEnter }) => {
         <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
             {/* 背景 */}
             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: '100vh', overflow: 'hidden', zIndex: 0 }}>
-                <div style={{
+                <motion.div style={{
                     position: 'absolute', inset: 0,
                     backgroundImage: `url(${imgBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    scale: bgScale,
+                    transformOrigin: '52% 50%',
                 }} />
                 <div style={{
                     position: 'absolute', inset: 0,
@@ -125,32 +129,9 @@ export const FloorIntro = ({ floor, onEnter }) => {
                         </div>
                     </div>
                 </motion.div>
-
-                {/* 進むボタン */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10vh' }}>
-                    <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={onEnter}
-                        style={{
-                            padding: '16px 48px',
-                            borderRadius: '40px',
-                            background: 'rgba(255,255,255,0.12)',
-                            color: '#fff',
-                            border: '1px solid rgba(255,255,255,0.35)',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            backdropFilter: 'blur(10px)',
-                        }}
-                    >
-                        {floor.id}のフロアへ進む <ArrowRight />
-                    </motion.button>
-                </div>
             </div>
+
+            <EntranceDoor scrollYProgress={scrollYProgress} label={`${floor.id}のフロアへ進む`} onEnter={onEnter} />
         </div>
     );
 };

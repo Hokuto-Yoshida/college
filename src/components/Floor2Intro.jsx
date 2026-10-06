@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { EntranceDoor } from './EntranceDoor';
 
-import imgBg from '../assets/floor_bg.png'; // 2F intro背景（切り替わらない固定背景）
+import imgBg from '../assets/entrance_lobby.png'; // 2F intro背景（切り替わらない固定背景）
 import introOpening from '../assets/intro_opening.png'; // イントロと同じ画像。一度だけ出してそのまま残す
 
 // 上下の端をぼかすマスク（イントロ/本館導入と同じ）
@@ -40,16 +40,20 @@ export const Floor2Intro = ({ onEnter }) => {
         [0, 0.25, 0.5, 0.75, 1.0],
         [0, 0.5,  1,   0.5,  0]
     );
+    // フロア内と同じく、スクロール終盤で背景をアップ
+    const bgScale = useTransform(scrollYProgress, [0.7, 1.0], [1, 2.4]);
 
     return (
         <div style={{ background: '#000', minHeight: '100vh', position: 'relative' }}>
             {/* Fixed Background（切り替わらない固定背景） */}
             <div style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 0 }}>
-                <div style={{
+                <motion.div style={{
                     position: 'absolute', inset: 0,
                     backgroundImage: `url(${imgBg})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
+                    scale: bgScale,
+                    transformOrigin: '52% 50%',
                 }} />
                 {/* 視認性向上のためのグラデーションオーバーレイ */}
                 <div style={{
@@ -136,32 +140,9 @@ export const Floor2Intro = ({ onEnter }) => {
                     </div>
                 </div>
 
-                {/* 進むボタン */}
-                <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10vh' }}>
-                    <motion.button
-                        whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(255,255,255,0.3)' }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={onEnter}
-                        style={{
-                            padding: '16px 48px',
-                            borderRadius: '40px',
-                            background: 'rgba(255,255,255,0.12)',
-                            color: '#fff',
-                            border: '1px solid rgba(255,255,255,0.35)',
-                            fontSize: '1.1rem',
-                            fontWeight: 'bold',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '12px',
-                            backdropFilter: 'blur(10px)',
-                        }}
-                    >
-                        2階のフロアへ進む <ArrowRight />
-                    </motion.button>
-                </div>
             </div>
+
+            <EntranceDoor scrollYProgress={scrollYProgress} label="2階のフロアへ進む" onEnter={onEnter} />
         </div>
     );
 };

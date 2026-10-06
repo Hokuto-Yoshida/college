@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
-import { Layers, Activity, ChevronDown, MapPin, Menu, X, ArrowUpCircle, ArrowDownCircle, Settings, User } from 'lucide-react';
+import { Layers, Activity, ChevronDown, MapPin, X, ArrowUpDown, Building2, ArrowUpCircle, ArrowDownCircle, Settings, User } from 'lucide-react';
 import './index.css';
 import { buildings } from './data/buildings';
 import { CampusMap } from './components/CampusMap';
@@ -40,6 +40,7 @@ import imgFloorBg6F from './assets/floor_bg.png'; // 6F背景
 import imgFloor6Reveal from './assets/floor_6f_reveal.png'; // 6F reveal背景
 import imgCurtainLeft from './assets/floor_curtain_left.png';
 import imgCurtainRight from './assets/floor_curtain_right.png';
+import imgFloor7RevealMid from './assets/floor_7f_reveal_mid.png'; // 7F クロスフェード2枚目
 import imgFloor7Reveal from './assets/floor_7f_reveal.png'; // 7F reveal背景
 import imgDoor7Left from './assets/floor7_door_left.png'; // 7F 本棚ドア（左）
 import imgDoor7Right from './assets/floor7_door_right.png'; // 7F 本棚ドア（右）
@@ -342,9 +343,11 @@ function App() {
   const floor6CurtainOpacity = useTransform(floor6Progress, [0.88, 1.0], [0, 1]);
   const floor6NavOpacity = useTransform(floor6Progress, [0, 0.4], [1, 0]);
 
-  const floor7BaseOpacity = useTransform(floor7Progress, [0.3, 0.7], [1, 0]);
-  const floor7RevealOpacity = useTransform(floor7Progress, [0.3, 0.7], [0, 1]);
-  const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 2.6]);
+  // 7F: 屋上 → 図書館 → 扉前 の3枚を順にクロスフェードし、最後にズーム
+  const floor7BaseOpacity = useTransform(floor7Progress, [0.1, 0.3], [1, 0]);
+  const floor7MidOpacity = useTransform(floor7Progress, [0.1, 0.3, 0.5, 0.7], [0, 1, 1, 0]);
+  const floor7RevealOpacity = useTransform(floor7Progress, [0.5, 0.7], [0, 1]);
+  const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 1.6]);
   const floor7DoorButtonOpacity = useTransform(floor7Progress, [0.88, 1.0], [0, 1]);
   const floor7NavOpacity = useTransform(floor7Progress, [0, 0.4], [1, 0]);
 
@@ -470,6 +473,26 @@ function App() {
       setCurrentFloorId(null);
       setShowMainIntro(false);
     });
+  };
+
+  // 本館フロアガイド（本館エントランスの案内）を開く
+  const handleOpenFloorGuide = () => {
+    performTransition('door', () => {
+      setCurrentBuildingId('main');
+      setCurrentFloorId(null);
+      setShowFloorIntro(false);
+      setShowMainIntro(true);
+      window.scrollTo(0, 0);
+    });
+  };
+
+  // 階層選択（エレベーター）: PCは右からのパネル、モバイルは全画面メニュー
+  const handleOpenElevator = () => {
+    if (window.matchMedia('(min-width: 900px)').matches) {
+      setShowFloorElevator(true);
+    } else {
+      setMobileMenuOpen(true);
+    }
   };
 
   const handleEnterBuilding = (buildingId) => {
@@ -702,7 +725,7 @@ function App() {
                 }} />
               </>
             ) : currentFloorId === '7F' ? (
-              /* 7F crossfade: view_roof → floor_7f_reveal */
+              /* 7F crossfade: view_roof → floor_7f_reveal_mid → floor_7f_reveal */
               <>
                 <motion.div style={{
                   position: 'absolute', inset: 0,
@@ -710,6 +733,13 @@ function App() {
                   backgroundSize: 'cover',
                   backgroundPosition: 'center',
                   opacity: floor7BaseOpacity,
+                }} />
+                <motion.div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundImage: `url(${imgFloor7RevealMid})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  opacity: floor7MidOpacity,
                 }} />
                 <motion.div style={{
                   position: 'absolute', inset: 0,
@@ -2066,8 +2096,39 @@ function App() {
           <header style={{ position: 'fixed', top: 0, left: 0, right: 0, padding: '20px', zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
             <div />
 
-            <div style={{ display: 'flex', gap: '8px', pointerEvents: 'auto' }}>
-              {/* Back to Map Button */}
+            {/* 右上から: 設定 / 大学ルームマップ / 本館フロアガイド / 階層選択（エレベーター） */}
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', pointerEvents: 'auto' }}>
+              {/* 階層選択（エレベーター） */}
+              <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
+                <button
+                  onClick={handleOpenElevator}
+                  style={{
+                    background: 'transparent', border: '1px solid var(--glass-border)',
+                    color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+                    fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                  title="階層選択（エレベーター）"
+                >
+                  <ArrowUpDown size={16} /> <span className="header-btn-label">階層選択</span>
+                </button>
+              </div>
+
+              {/* 本館フロアガイド */}
+              <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
+                <button
+                  onClick={handleOpenFloorGuide}
+                  style={{
+                    background: 'transparent', border: '1px solid var(--glass-border)',
+                    color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+                    fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                  title="本館フロアガイド"
+                >
+                  <Building2 size={16} /> <span className="header-btn-label">本館フロアガイド</span>
+                </button>
+              </div>
+
+              {/* 大学ルームマップ */}
               <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
                 <button
                   onClick={handleBackToMap}
@@ -2076,8 +2137,9 @@ function App() {
                     color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
                     fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
                   }}
+                  title="大学ルームマップ"
                 >
-                  <MapPin size={16} /> Map
+                  <MapPin size={16} /> <span className="header-btn-label">大学ルームマップ</span>
                 </button>
               </div>
 
@@ -2090,23 +2152,9 @@ function App() {
                     border: 'none', color: isAdminMode ? 'black' : 'white', padding: '10px', borderRadius: '50%', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyItems: 'center'
                   }}
-                  title="管理モード切り替え"
+                  title="設定（管理モード切り替え）"
                 >
                   <Settings size={20} />
-                </button>
-              </div>
-
-              {/* Mobile Menu Toggle */}
-              <div className="glass-panel mobile-menu-btn" style={{ padding: '8px', borderRadius: '30px' }}>
-                <button
-                  onClick={() => setMobileMenuOpen(true)}
-                  style={{
-                    background: 'rgba(255,255,255,0.1)',
-                    border: 'none', color: 'white', padding: '10px', borderRadius: '50%', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyItems: 'center'
-                  }}
-                >
-                  <Menu size={20} />
                 </button>
               </div>
             </div>
@@ -2346,9 +2394,9 @@ function App() {
             <style>{`
           @media (min-width: 900px) {
             .desktop-nav { display: block !important; }
-            .mobile-menu-btn { display: none !important; }
           }
           @media (max-width: 899px) {
+             .header-btn-label { display: none; }
              main { grid-template-columns: 1fr !important; }
              .desktop-nav { display: none !important; }
           }
