@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600&family=Noto+Serif+JP:wght@400;700&display=swap');
 
 :root {
   --bg-deep: #050a14;
@@ -35,6 +35,8 @@
 
   --font-jp: 'Zen Kaku Gothic New', sans-serif;
   --font-en: 'Space Grotesk', sans-serif;
+  /* Word原稿と同じ游明朝。入っていない端末（Androidなど）は Noto Serif JP で代用 */
+  --font-mincho: 'Yu Mincho', 'YuMincho', 'Hiragino Mincho ProN', 'Noto Serif JP', serif;
 }
 
 body {

@@ -82,6 +82,11 @@ const LoadingScreen = () => (
   </div>
 );
 
+// Word原稿で大きくしてあるキーワード（本文10.5ptに対して16pt）。行間は本文に揃える
+const WordEm = ({ children }) => (
+  <span style={{ fontSize: '1.52em', lineHeight: 1 }}>{children}</span>
+);
+
 function App() {
   const [loading, setLoading] = useState(true);
   const [showIntro, setShowIntro] = useState(true);
@@ -974,7 +979,7 @@ function App() {
                       maxWidth: '700px', width: '100%',
                       margin: 'auto 0',
                       color: 'white',
-                      fontFamily: 'var(--font-jp)',
+                      fontFamily: 'var(--font-mincho)',
                       lineHeight: 2.6,
                       textAlign: 'center',
                       fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
@@ -982,74 +987,70 @@ function App() {
                       overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-6)' }}>
+                      {/* Word原稿（プロセス6.docx）に合わせた体裁: 明朝体・改行位置・キーワードの拡大 */}
+                      <h3 style={{ margin: '0 0 2.6em', fontSize: 'inherit', fontWeight: 'bold', color: 'var(--floor-6)' }}>
                         人が育ち、組織が育ち、未来が育つ。
                       </h3>
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         ようこそ、マインドデザイン研究所が体系化した<br />
-                        「心の階層」、第6フロアへ。
+                        <WordEm>「心の階層」</WordEm>、第6フロアへ。
                       </p>
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         ここまでのプロセスでは、自分自身を整え、<br />
                         周囲へ良い影響を与える力を育んできました。
                       </p>
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         しかし、この「プロセス6」では、その影響力をさらに広げ、<br />
-                        "未来へ残す価値"という新たな視点を育てていきます。
+                        <WordEm>"未来へ残す価値"</WordEm>という新たな視点を育てていきます。
                       </p>
-                      <p style={{ margin: '0 0 20px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         この講義では、以下の3つのステップで、<br />
-                        未来を創造するリーダーシップを身につけます。
+                        未来を創造する<WordEm>リーダーシップ</WordEm>を身につけます。
                       </p>
-
-                      <div style={{ marginBottom: '18px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「成果」ではなく「未来」を設計する</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          成果は、その瞬間で終わります。<br />
-                          しかし理念や文化は、人から人へ受け継がれ、<br />
-                          時代を超えて生き続けます。<br />
-                          目の前の結果だけを追いかけるのではなく、<br />
-                          「この選択は未来に何を残すのか。」<br />
-                          そんな時間軸で物事を捉えることで、<br />
-                          リーダーとしての視座は飛躍的に高まります。
-                        </p>
-                      </div>
-
-                      <div style={{ marginBottom: '18px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 人を動かすのではなく、人が育つ環境を創る</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          優れたリーダーは、人を管理しません。<br />
-                          人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。<br />
-                          一人の能力で組織を動かす時代から、<br />
-                          一人ひとりの可能性が自然に開花する組織へ。<br />
-                          あなた自身が「人を育てる存在」へと進化していきます。
-                        </p>
-                      </div>
-
-                      <div style={{ marginBottom: '20px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 未来へ受け継がれる価値を創造する</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          人生は、自分一人で完結するものではありません。<br />
-                          あなたの想いは、仲間へ。<br />
-                          仲間の想いは、組織へ。<br />
-                          組織の価値は、社会へ。<br />
-                          そして未来へ。
-                        </p>
-                      </div>
-
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        1. 「成果」ではなく「未来」を設計する
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        成果は、その瞬間で終わります。<br />
+                        しかし理念や文化は、人から人へ受け継がれ、<br />
+                        <WordEm>時代</WordEm>を超えて生き続けます。<br />
+                        目の前の結果だけを追いかけるのではなく、<br />
+                        「この選択は<WordEm>未来</WordEm>に何を残すのか。」<br />
+                        そんな時間軸で物事を捉えることで、<br />
+                        リーダーとしての<WordEm>視座</WordEm>は飛躍的に高まります。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        2. 人を動かすのではなく、人が育つ環境を創る
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        優れたリーダーは、人を管理しません。<br />
+                        人が自ら考え、自ら成長し、自ら挑戦したくなる環境を設計します。<br />
+                        一人の能力で組織を動かす<WordEm>時代</WordEm>から、<br />
+                        一人ひとりの<WordEm>可能性</WordEm>が自然に開花する組織へ。<br />
+                        あなた自身が<WordEm>「人を育てる存在」</WordEm>へと進化していきます。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        3. 未来へ受け継がれる価値を創造する
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        <WordEm>人生</WordEm>は、自分一人で完結するものではありません。<br />
+                        あなたの想いは、仲間へ。<br />
+                        仲間の想いは、組織へ。<br />
+                        組織の価値は、<WordEm>社会</WordEm>へ。<br />
+                        そして<WordEm>未来</WordEm>へ。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         プロセス6では、自分の人生を超えて続いていく<br />
                         「価値の循環」を設計し、<br />
-                        持続可能な組織と社会を創造するマインドを育てていきます。
+                        <WordEm>持続可能な組織と社会</WordEm>を創造するマインドを育てていきます。
                       </p>
-
-                      <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
-                        あなたが今日つくる"在り方"が、未来の誰かの希望になる。<br />
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        あなたが今日つくる<WordEm>"在り方"</WordEm>が、未来の誰かの希望になる。<br />
                         組織を育て、人を育て、文化を育てる。
                       </p>
-                      <p style={{ margin: 0, fontWeight: 'bold' }}>
-                        その循環を生み出すことこそ、真のリーダーシップです。<br />
-                        未来へと受け継がれる価値を創造する、<br />
+                      <p style={{ margin: 0 }}>
+                        その循環を生み出すことこそ、<WordEm>真のリーダーシップ</WordEm>です。<br />
+                        未来へと受け継がれる価値を<WordEm>創造</WordEm>する、<br />
                         マインドプロセス6の扉を開きましょう。
                       </p>
                     </div>
@@ -1201,7 +1202,7 @@ function App() {
                       maxWidth: '700px', width: '100%',
                       margin: 'auto 0',
                       color: 'white',
-                      fontFamily: 'var(--font-jp)',
+                      fontFamily: 'var(--font-mincho)',
                       lineHeight: 2.6,
                       textAlign: 'center',
                       fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
@@ -1209,65 +1210,62 @@ function App() {
                       overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-7)' }}>
+                      {/* Word原稿（プロセス7.docx）に合わせた体裁: 明朝体・改行位置・キーワードの拡大 */}
+                      <h3 style={{ margin: '0 0 2.6em', fontSize: 'inherit', fontWeight: 'bold', color: 'var(--floor-7)' }}>
                         潜在意識を最大化し、地球規模の「価値」を創出する
                       </h3>
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         ようこそ、マインドデザイン研究所が体系化した<br />
-                        「心の階層」のゴール、第7フロアへ。
+                        <WordEm>「心の階層」</WordEm>のゴール、第7フロアへ。
                       </p>
-                      <p style={{ margin: '0 0 16px' }}>
-                        これまでのプロセスでは、自分のマインドを整え、<br />
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        これまでのプロセスでは、自分の<WordEm>マインド</WordEm>を整え、<br />
                         周囲に影響を与える「技術」を磨いてきました。
                       </p>
-                      <p style={{ margin: '0 0 16px' }}>
-                        しかし、この最高階層である「プロセス7」では、<br />
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        しかし、この最高階層である<WordEm>「プロセス7」</WordEm>では、<br />
                         これまでの常識を一度手放していただきます。
                       </p>
-                      <p style={{ margin: '0 0 20px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         この講義では、以下の3つのステップで<br />
-                        「心の在り方」を書き換えていきます。
+                        <WordEm>「心の在り方」</WordEm>を書き換えていきます。
                       </p>
-
-                      <div style={{ marginBottom: '18px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 「心の視座」を宇宙の高さまで引き上げる</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          日常の忙しさやストレスという「重力」から離れ、<br />
-                          もっとも高い視点から自分を俯瞰（ふかん）してみましょう。<br />
-                          時間軸を広げ、宇宙のような大きな視座を持つことで、<br />
-                          目先の不安は消え、あなたがこの世に存在する「真の理由」が見えてきます。
-                        </p>
-                      </div>
-
-                      <div style={{ marginBottom: '18px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 究極の自分軸「在（Being）」を体得する</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          「何かをしなければ（Doing）」という執着を捨て、<br />
-                          ただ「自分として在る（Being）」ことに集中します。<br />
-                          「何もない＝無」の状態は、実はあらゆる可能性が詰まった<br />
-                          「満たされている」状態です。<br />
-                          言葉や論理を超えた「感じる世界」の感度を高めることで、<br />
-                          しなやかで揺るぎない自分軸が完成します。
-                        </p>
-                      </div>
-
-                      <div style={{ marginBottom: '20px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. 「共生」によるサステナブルな繁栄</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          一人のリーダーがこの高い視座に立つことは、<br />
-                          社会に計り知れない価値をもたらします。<br />
-                          「自分のため」という枠を超え、<br />
-                          「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」<br />
-                          という循環（共生）を、透明な設計図として描き出します。
-                        </p>
-                      </div>
-
-                      <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
-                        あなたの心の変革が、地球の未来を創り出す。
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        1. 「心の視座」を宇宙の高さまで引き上げる
                       </p>
-                      <p style={{ margin: 0, fontWeight: 'bold' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        日常の忙しさやストレスという<WordEm>「重力」</WordEm>から離れ、<br />
+                        もっとも<WordEm>高い視点</WordEm>から自分を俯瞰（ふかん）してみましょう。<br />
+                        時間軸を広げ、宇宙のような<WordEm>大きな視座</WordEm>を持つことで、<br />
+                        目先の不安は消え、あなたがこの世に存在する<WordEm>「真の理由」</WordEm>が見えてきます。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        2. 究極の自分軸「在（Being）」を体得する
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        「<WordEm>何か</WordEm>をしなければ（Doing）」という執着を捨て、<br />
+                        ただ「自分として<WordEm>在る</WordEm>（Being）」ことに集中します。<br />
+                        「何もない＝無」の状態は、実はあらゆる可能性が詰まった<br />
+                        「満たされている」状態です。<br />
+                        言葉や論理を超えた<WordEm>「感じる世界」</WordEm>の感度を高めることで、<br />
+                        しなやかで揺るぎない自分軸が完成します。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        3. 「共生」によるサステナブルな繁栄
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        一人のリーダーがこの<WordEm>高い視座</WordEm>に立つことは、<br />
+                        社会に計り知れない<WordEm>価値</WordEm>をもたらします。<br />
+                        「自分のため」という枠を超え、<br />
+                        「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」<br />
+                        という循環（共生）を、<WordEm>透明な設計図</WordEm>として描き出します。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        あなたの<WordEm>心の変革</WordEm>が、地球の未来を創り出す。
+                      </p>
+                      <p style={{ margin: 0 }}>
                         人類の可能性を解き放つ、<br />
-                        究極のメンタルトレーニングを始めましょう。
+                        究極の<WordEm>メンタルトレーニング</WordEm>を始めましょう。
                       </p>
                     </div>
                   </motion.div>
@@ -1418,7 +1416,7 @@ function App() {
                       maxWidth: '700px', width: '100%',
                       margin: 'auto 0',
                       color: 'white',
-                      fontFamily: 'var(--font-jp)',
+                      fontFamily: 'var(--font-mincho)',
                       lineHeight: 2.6,
                       textAlign: 'center',
                       fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
@@ -1426,56 +1424,72 @@ function App() {
                       overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      <h3 style={{ margin: '0 0 20px', fontSize: 'clamp(0.9rem, 4.2vw, 1.3rem)', fontWeight: 'bold', color: 'var(--floor-5)' }}>
+                      {/* Word原稿（プロセス5.docx）に合わせた体裁: 明朝体・改行位置・キーワードの拡大 */}
+                      <h3 style={{ margin: '0 0 2.6em', fontSize: 'inherit', fontWeight: 'bold', color: 'var(--floor-5)' }}>
                         「人との間」に、新しい価値が生まれる。
                       </h3>
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         ようこそ、マインドデザイン研究所が体系化した<br />
-                        「心の階層」、第5フロアへ。
+                        <WordEm>「心の階層」</WordEm>、第5フロアへ。
                       </p>
-                      <p style={{ margin: '0 0 16px' }}>
-                        ここまでのプロセスでは、自分自身と向き合い、心を整え、揺るぎない自分軸を育ててきました。
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        ここまでのプロセスでは、自分自身と向き合い、<br />
+                        心を整え、揺るぎない自分軸を育ててきました。
                       </p>
-                      <p style={{ margin: '0 0 16px' }}>
-                        しかし、本当のマインドの力は、一人の中で完結するものではありません。
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        しかし、本当の<WordEm>マインド</WordEm>の力は、<br />
+                        一人の中で完結するものではありません。
                       </p>
-                      <p style={{ margin: '0 0 20px' }}>
-                        この「プロセス5」では、人と人との間に流れるエネルギーに着目し、互いの可能性を引き出し合いながら、新しい価値を共に創り出す力を育んでいきます。この講義では、以下の3つのステップで、「共創する心」を育てていきます。
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        この「プロセス5」では、<br />
+                        人と人との間に流れるエネルギーに着目し、<br />
+                        互いの可能性を引き出し合いながら、<br />
+                        <WordEm>新しい価値</WordEm>を共に創り出す力を育んでいきます。<br />
+                        この講義では、以下の3つのステップで、<WordEm>「共創する心」</WordEm>を育てていきます。
                       </p>
-
-                      <div style={{ marginBottom: '18px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>1. 相手を変えるのではなく、相手の可能性を信じる</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          人は、変えられることで成長するのではありません。信じられることで、自ら変わり始めます。相手を評価するのではなく、「この人には、まだ見えていない可能性がある。」そんな視点で人を見ること。その眼差しが、人の潜在能力を引き出していきます。
-                        </p>
-                      </div>
-
-                      <div style={{ marginBottom: '18px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>2. 「競争」から「共創」へ</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          競争は、勝者と敗者を生みます。共創は、全員の価値を高めます。一人で答えを出すのではなく、異なる価値観や経験を重ね合わせることで、一人では辿り着けなかった未来が生まれていきます。人とつながることは、可能性を広げること。共創とは、未来を創る最も大きなエネルギーなのです。
-                        </p>
-                      </div>
-
-                      <div style={{ marginBottom: '20px' }}>
-                        <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>3. チームの力を最大化する</p>
-                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
-                          本当に強い組織とは、優秀な人が集まる組織ではありません。一人ひとりの違いが尊重され、それぞれの個性が活かされる組織です。互いを認め、互いに高め合い、互いの成長を喜び合う。その循環が生まれたとき、チームは想像を超える力を発揮します。
-                        </p>
-                      </div>
-
-                      <p style={{ margin: '0 0 16px' }}>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        1. 相手を変えるのではなく、相手の可能性を信じる
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        人は、変えられることで<WordEm>成長</WordEm>するのではありません。<br />
+                        信じられることで、自ら変わり始めます。<br />
+                        相手を評価するのではなく、<br />
+                        「この人には、まだ見えていない可能性がある。」<br />
+                        そんな視点で人を見ること。<br />
+                        その眼差しが、人の<WordEm>潜在能力</WordEm>を引き出していきます。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        2. 「競争」から「共創」へ
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        競争は、勝者と敗者を生みます。<br />
+                        <WordEm>共創</WordEm>は、全員の価値を高めます。<br />
+                        一人で答えを出すのではなく、<br />
+                        異なる価値観や経験を重ね合わせることで、<br />
+                        一人では辿り着けなかった<WordEm>未来</WordEm>が生まれていきます。<br />
+                        人とつながることは、可能性を広げること。<br />
+                        共創とは、<WordEm>未来</WordEm>を創る最も大きなエネルギーなのです。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        3. チームの力を最大化する
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        本当に強い組織とは、優秀な人が集まる組織ではありません。<br />
+                        一人ひとりの違いが尊重され、それぞれの個性が活かされる組織です。<br />
+                        互いを認め、互いに高め合い、互いの成長を喜び合う。<br />
+                        その循環が生まれたとき、チームは<WordEm>想像を超える力</WordEm>を発揮します。
+                      </p>
+                      <p style={{ margin: '0 0 2.6em' }}>
                         あなたの心が変わることで、人との関係が変わる。<br />
                         人との関係が変わることで、組織が変わる。<br />
-                        組織が変わることで、社会が変わる。<br />
+                        組織が変わることで、<WordEm>社会</WordEm>が変わる。<br />
                         すべての変化は、「人とのつながり」から始まります。
                       </p>
-
-                      <p style={{ margin: '0 0 8px', fontWeight: 'bold' }}>
-                        共に学び、共に育ち、共に未来を創る。
+                      <p style={{ margin: '0 0 2.6em' }}>
+                        共に学び、共に育ち、共に<WordEm>未来</WordEm>を創る。
                       </p>
-                      <p style={{ margin: 0, fontWeight: 'bold' }}>
-                        マインドプロセス5は、あなたを"共創するリーダー"へと導く、新たな扉です。
+                      <p style={{ margin: 0 }}>
+                        マインドプロセス5は、あなたを<WordEm>"共創するリーダー"</WordEm>へと導く、新たな扉です。
                       </p>
                     </div>
                   </motion.div>
@@ -2305,8 +2319,8 @@ function App() {
 
             {/* Right Column: エレベーター（Desktop） */}
             <div className="desktop-nav" style={{ display: 'none' }}>
-              {/* エレベーターに入るボタン（幕/扉が開いている間は表示しない。部屋に入ったら再表示） */}
-              {!showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (doorPhase5 === 'idle' || fiveFRoomEntered) && (doorPhase4 === 'idle' || fourFRoomEntered) && (doorPhase3 === 'idle' || threeFRoomEntered) && (doorPhase2 === 'idle' || twoFRoomEntered) && (
+              {/* エレベーターに入るボタン（本館に入ってすぐのエントランスだけ。各フロア内では出さず、右上の「階層選択」を使う） */}
+              {!currentFloorId && !showFloorElevator && (curtainPhase === 'idle' || sixFRoomEntered) && (doorPhase7 === 'idle' || sevenFRoomEntered) && (doorPhase5 === 'idle' || fiveFRoomEntered) && (doorPhase4 === 'idle' || fourFRoomEntered) && (doorPhase3 === 'idle' || threeFRoomEntered) && (doorPhase2 === 'idle' || twoFRoomEntered) && (
                 <motion.div
                   key={`elev-btn-${currentFloorId ?? 'entrance'}`}
                   style={{

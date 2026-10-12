@@ -11,6 +11,11 @@ import floor6Reveal from '../assets/floor_6f_reveal.png';
 import floor6Base from '../assets/floor_bg2.png';
 import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
+import workshopSide1 from '../assets/workshop_side_1.webp';
+import workshopSide2 from '../assets/workshop_side_2.webp';
+
+// ワーク画面の右端に入れる写真（ワークごとに順番に切り替える）
+const WORKSHOP_SIDE_PHOTOS = [workshopSide1, workshopSide2];
 import imgCinema from '../assets/cinema_room.png';
 import imgClassroom from '../assets/virtual_classroom.png';
 import lectureBg from '../assets/lecture_bg2.png';
@@ -977,7 +982,23 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                             overflowY: 'auto',
                         }}
                     >
-                        <div style={{ maxWidth: '760px', margin: '0 auto', padding: '32px 24px 100px' }}>
+                        {/* 右端の写真: 左側を背景に溶け込ませる。画面が狭いときはフォームと重なるので出さない */}
+                        <img
+                            className="workshop-side-photo"
+                            src={WORKSHOP_SIDE_PHOTOS[Math.max(0, activeLecture.workshops.findIndex(w => w.id === activeWorkshop.id)) % WORKSHOP_SIDE_PHOTOS.length]}
+                            alt=""
+                            draggable={false}
+                            style={{
+                                position: 'fixed', right: 0, top: '4vh', zIndex: 0,
+                                height: 'min(82vh, 760px)', width: 'auto', maxWidth: '34vw',
+                                objectFit: 'contain', objectPosition: 'right top',
+                                pointerEvents: 'none', userSelect: 'none',
+                                maskImage: 'linear-gradient(to right, transparent 0%, black 38%)',
+                                WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 38%)',
+                            }}
+                        />
+                        <style>{`@media (max-width: 1099px) { .workshop-side-photo { display: none; } }`}</style>
+                        <div style={{ position: 'relative', zIndex: 1, maxWidth: '760px', margin: '0 auto', padding: '32px 24px 100px' }}>
                             <button
                                 onClick={handleCloseWorkshop}
                                 style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '20px', background: '#ffffff', border: '1px solid #dee2e6', color: '#1a202c', cursor: 'pointer', fontSize: '0.85rem', marginBottom: '24px' }}
