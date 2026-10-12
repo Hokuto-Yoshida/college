@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen } from 'lucide-react';
+import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, ArrowUp, ArrowDown } from 'lucide-react';
 import { buildings } from '../data/buildings';
 
 export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Books, onClose }) {
@@ -256,13 +256,32 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
 
 // 0F: PDFをアップロードして「本棚」に本を並べるための管理パネル
 function Floor0BooksPanel({ floor0Books }) {
-    const { rawBooks = [], uploadBook, deleteBook } = floor0Books || {};
+    const { rawBooks = [], uploadBook, deleteBook, reorderBooks } = floor0Books || {};
     const [selectedFile, setSelectedFile] = useState(null);
     const [titleInput, setTitleInput] = useState('');
     const [isUploading, setIsUploading] = useState(false);
     const [message, setMessage] = useState('');
     const [deletingId, setDeletingId] = useState(null);
     const [fileInputKey, setFileInputKey] = useState(0);
+    const [isReordering, setIsReordering] = useState(false);
+
+    // 本を1つ上/下へ動かし、その並び順をサーバーに保存する
+    const handleMove = async (index, delta) => {
+        const target = index + delta;
+        if (target < 0 || target >= rawBooks.length || isReordering) return;
+        const ids = rawBooks.map((b) => b.id);
+        [ids[index], ids[target]] = [ids[target], ids[index]];
+        setIsReordering(true);
+        setMessage('');
+        try {
+            await reorderBooks(ids);
+        } catch (e) {
+            console.error(e);
+            setMessage('並び順の保存に失敗しました');
+        } finally {
+            setIsReordering(false);
+        }
+    };
 
     const handleFileChange = (e) => {
         const file = e.target.files && e.target.files[0];
@@ -322,15 +341,32 @@ function Floor0BooksPanel({ floor0Books }) {
 
             <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px' }}>
                 <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '12px' }}>
-                    登録済みの本（{rawBooks.length}冊）
+                    登録済みの本（{rawBooks.length}冊）※ 矢印で並び順を変更できます（本棚の表示順に反映）
                 </div>
                 {rawBooks.length === 0 ? (
                     <div style={{ color: '#ccc' }}>まだ本が登録されていません。現在はデフォルトのサンプルPDFが1冊表示されています。</div>
                 ) : (
                     <div style={{ display: 'grid', gap: '10px' }}>
-                        {rawBooks.map((b) => (
+                        {rawBooks.map((b, i) => (
                             <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', gap: '12px' }}>
-                                <div style={{ minWidth: 0 }}>
+                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    {[[-1, <ArrowUp size={14} />, '上へ'], [1, <ArrowDown size={14} />, '下へ']].map(([delta, icon, label]) => {
+                                        const disabled = isReordering || i + delta < 0 || i + delta >= rawBooks.length;
+                                        return (
+                                            <button
+                                                key={delta}
+                                                type="button"
+                                                onClick={() => handleMove(i, delta)}
+                                                disabled={disabled}
+                                                title={label}
+                                                style={{ display: 'flex', padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.3 : 1 }}
+                                            >
+                                                {icon}
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                                <div style={{ minWidth: 0, flex: 1 }}>
                                     <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</div>
                                     <div style={{ color: '#888', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</div>
                                 </div>

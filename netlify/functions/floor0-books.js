@@ -10,12 +10,23 @@ async function readIndex(store) {
     return Array.isArray(list) ? list : [];
 }
 
+// 表示順: 管理画面で並べ替えた本は order の小さい順。まだ並べ替えていない本
+// （新しくアップロードした本など）は、その前に新しい順で並べる。
+function sortBooks(books) {
+    const hasOrder = (b) => typeof b.order === 'number';
+    return books.sort((a, b) => {
+        if (hasOrder(a) && hasOrder(b)) return a.order - b.order;
+        if (hasOrder(a)) return 1;
+        if (hasOrder(b)) return -1;
+        return (b.uploadedAt || '').localeCompare(a.uploadedAt || '');
+    });
+}
+
 export default async (req) => {
     const store = getStore(STORE_NAME);
 
     if (req.method === 'GET') {
-        const books = await readIndex(store);
-        books.sort((a, b) => (b.uploadedAt || '').localeCompare(a.uploadedAt || ''));
+        const books = sortBooks(await readIndex(store));
         return new Response(JSON.stringify({ books }), {
             headers: { 'Content-Type': 'application/json' },
         });
@@ -64,6 +75,33 @@ export default async (req) => {
         await store.setJSON(INDEX_KEY, books);
 
         return new Response(JSON.stringify({ ok: true, book: meta }), {
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+    // 並び順の保存: { order: [id, id, ...] } を受け取り、その順番を全訪問者に共有する
+    if (req.method === 'PUT') {
+        let body;
+        try {
+            body = await req.json();
+        } catch {
+            body = null;
+        }
+        const ids = body && Array.isArray(body.order) ? body.order : null;
+        if (!ids) {
+            return new Response(JSON.stringify({ error: 'orderが必要です' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        const books = await readIndex(store);
+        const next = books.map((b) => {
+            const idx = ids.indexOf(b.id);
+            if (idx === -1) return b;
+            return { ...b, order: idx };
+        });
+        await store.setJSON(INDEX_KEY, next);
+        return new Response(JSON.stringify({ ok: true, books: sortBooks(next) }), {
             headers: { 'Content-Type': 'application/json' },
         });
     }

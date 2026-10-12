@@ -11,23 +11,45 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
 // クローン/差し替えして扱うため、ルートに直接背景などを指定すると失われることがある。
 // ルートは素の入れ物にし、見た目は内側のdivに持たせることで回避する。
 
+// page-flip には右綴じ（右から左へ読む本）の設定が無いため、本全体を左右反転して
+// めくる向きを逆にし、各ページの中身だけをもう一度反転して元の向きに戻している。
+// 反転はページ要素の直下ではなく、もう一段内側の要素に掛ける。page-flip はページ要素を
+// 3D（preserve-3d）で回して裏面を隠すため、直下の要素に transform があると独立した面として
+// 扱われ、表紙をめくるときに表と裏が同時に見えてしまう。
+const MIRROR = 'scaleX(-1)';
+const FILL = { width: '100%', height: '100%' };
+
+// 反転表示に合わせて、クリック/ドラッグ位置の判定も左右反転させる
+const mirrorPointer = (pageFlip) => {
+    const ui = pageFlip?.getUI?.();
+    if (!ui || ui.__mirrored) return;
+    ui.getMousePos = (x, y) => {
+        const rect = ui.getDistElement().getBoundingClientRect();
+        return { x: rect.right - x, y: y - rect.top };
+    };
+    ui.__mirrored = true;
+};
+
 // 本文ページ（PDFの1ページをcanvasでレンダリングした画像）
 const PdfPage = React.forwardRef(({ imageUrl, pageNumber }, ref) => (
-    <div ref={ref} style={{ width: '100%', height: '100%' }}>
-        <div style={{ background: '#fdfaf2', width: '100%', height: '100%', overflow: 'hidden' }}>
-            <img
-                src={imageUrl}
-                alt={`page ${pageNumber}`}
-                draggable={false}
-                style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', userSelect: 'none' }}
-            />
+    <div ref={ref} style={FILL}>
+        <div style={{ ...FILL, overflow: 'hidden' }}>
+            <div style={{ background: '#fdfaf2', ...FILL, overflow: 'hidden', transform: MIRROR }}>
+                <img
+                    src={imageUrl}
+                    alt={`page ${pageNumber}`}
+                    draggable={false}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', userSelect: 'none' }}
+                />
+            </div>
         </div>
     </div>
 ));
 
 // 表紙ページ
 const CoverPage = React.forwardRef(({ title }, ref) => (
-    <div ref={ref} style={{ width: '100%', height: '100%' }}>
+    <div ref={ref} style={FILL}>
+        <div style={{ ...FILL, overflow: 'hidden' }}>
         <div
             style={{
                 width: '100%', height: '100%', boxSizing: 'border-box',
@@ -35,6 +57,7 @@ const CoverPage = React.forwardRef(({ title }, ref) => (
                 border: '10px solid #0c130c',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                 padding: '12%', position: 'relative',
+                transform: MIRROR,
             }}
         >
             <div style={{ position: 'absolute', inset: '6%', border: '1.5px solid rgba(212,175,55,0.55)' }} />
@@ -46,6 +69,7 @@ const CoverPage = React.forwardRef(({ title }, ref) => (
             }}>
                 {title}
             </h2>
+        </div>
         </div>
     </div>
 ));
@@ -148,6 +172,7 @@ export function PdfFlipBook({ pdfUrl, title = '' }) {
         <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             width: '100%', height: '100%',
+            transform: MIRROR,
         }}>
             <HTMLFlipBook
                 ref={bookRef}
@@ -161,6 +186,8 @@ export function PdfFlipBook({ pdfUrl, title = '' }) {
                 showCover
                 maxShadowOpacity={0.5}
                 flippingTime={700}
+                onInit={(e) => mirrorPointer(e?.object ?? bookRef.current?.pageFlip())}
+                onUpdate={(e) => mirrorPointer(e?.object ?? bookRef.current?.pageFlip())}
                 className="pdf-flipbook"
                 style={{ margin: '0 auto', maxHeight: '88vh' }}
             >

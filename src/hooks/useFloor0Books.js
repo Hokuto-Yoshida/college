@@ -58,6 +58,27 @@ export function useFloor0Books() {
         await refresh();
     }, [refresh]);
 
+    // 並び順をサーバーに保存する（全端末・全訪問者に反映される）
+    const reorderBooks = useCallback(async (orderedIds) => {
+        // 先に画面へ反映し、失敗したらサーバーの状態に戻す
+        setRawBooks((prev) => {
+            const byId = new Map(prev.map((b) => [b.id, b]));
+            const ordered = orderedIds.map((id) => byId.get(id)).filter(Boolean);
+            const rest = prev.filter((b) => !orderedIds.includes(b.id));
+            return [...rest, ...ordered];
+        });
+        try {
+            const res = await fetch(LIST_ENDPOINT, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ order: orderedIds }),
+            });
+            if (!res.ok) throw new Error('並び順の保存に失敗しました');
+        } finally {
+            await refresh();
+        }
+    }, [refresh]);
+
     const books = rawBooks.length > 0
         ? rawBooks.map((b) => ({
             ...b,
@@ -65,5 +86,5 @@ export function useFloor0Books() {
         }))
         : [DEFAULT_BOOK];
 
-    return { books, rawBooks, loaded, uploadBook, deleteBook, refresh };
+    return { books, rawBooks, loaded, uploadBook, deleteBook, reorderBooks, refresh };
 }

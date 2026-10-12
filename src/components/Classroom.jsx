@@ -89,8 +89,10 @@ const ResourceTransitionOverlay = ({ resource }) => {
     );
 };
 
-const BookTransitionOverlay = ({ resource }) => {
+// hinge: 表紙の綴じ側。'left' なら表紙が左へ、'right' なら右へ開く
+const BookTransitionOverlay = ({ resource, hinge = 'left' }) => {
     if (!resource) return null;
+    const hingeRight = hinge === 'right';
 
     return (
         <AnimatePresence>
@@ -122,8 +124,8 @@ const BookTransitionOverlay = ({ resource }) => {
                         position: 'absolute', top: 0, bottom: 0, left: 0, width: '100%',
                         background: '#f8f9fa',
                         border: '1px solid #dee2e6',
-                        borderRadius: '4px 12px 12px 4px',
-                        boxShadow: '10px 10px 30px rgba(0,0,0,0.5)',
+                        borderRadius: hingeRight ? '12px 4px 4px 12px' : '4px 12px 12px 4px',
+                        boxShadow: `${hingeRight ? '-10px' : '10px'} 10px 30px rgba(0,0,0,0.5)`,
                         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                         padding: '24px',
                         overflow: 'hidden'
@@ -147,17 +149,19 @@ const BookTransitionOverlay = ({ resource }) => {
 
                     {/* Front Cover */}
                     <motion.div
-                        animate={{ rotateY: [0, 0, -150] }}
+                        animate={{ rotateY: [0, 0, hingeRight ? 150 : -150] }}
                         transition={{ duration: 2.5, times: [0, 0.4, 1], ease: "easeInOut" }}
                         style={{
                             position: 'absolute', top: 0, bottom: 0, left: 0, width: '100%',
                             background: `linear-gradient(135deg, ${resource.color || 'var(--floor-6)'} 0%, #151e32 100%)`,
                             border: '2px solid #111',
-                            borderRadius: '4px 12px 12px 4px',
-                            transformOrigin: 'left center',
+                            borderRadius: hingeRight ? '12px 4px 4px 12px' : '4px 12px 12px 4px',
+                            transformOrigin: hingeRight ? 'right center' : 'left center',
                             display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                             padding: '24px', textAlign: 'center',
-                            boxShadow: 'inset 4px 0 10px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.5)'
+                            boxShadow: hingeRight
+                                ? 'inset -4px 0 10px rgba(0,0,0,0.5), -5px 0 15px rgba(0,0,0,0.5)'
+                                : 'inset 4px 0 10px rgba(0,0,0,0.5), 5px 0 15px rgba(0,0,0,0.5)'
                         }}
                     >
                         <div style={{ border: '2px solid rgba(255,255,255,0.2)', position: 'absolute', inset: '12px', borderRadius: '8px' }} />
@@ -434,7 +438,7 @@ function Floor0Library({ books = [] }) {
             </div>
 
             {/* 本を開く演出（ワークショップの本と同じ3D演出を流用） */}
-            <BookTransitionOverlay resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />
+            <BookTransitionOverlay hinge="right" resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />
 
             {/* 全画面での本文表示 */}
             <AnimatePresence>
