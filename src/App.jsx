@@ -1203,31 +1203,37 @@ function App() {
                       margin: 'auto 0',
                       color: 'white',
                       fontFamily: 'var(--font-mincho)',
-                      lineHeight: 2.6,
-                      textAlign: 'center',
+                      lineHeight: 5.2,
+                      textAlign: 'left',
                       fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
                       wordBreak: 'keep-all',
                       overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      {/* Word原稿（プロセス7.docx）に合わせた体裁: 明朝体・改行位置・キーワードの拡大 */}
+                      {/* Word原稿（プロセス7.docx）に合わせた体裁: 明朝体・キーワードの拡大。7階は行間を倍、「、」ごとに改行、左詰め */}
                       <h3 style={{ margin: '0 0 2.6em', fontSize: 'inherit', fontWeight: 'bold', color: 'var(--floor-7)' }}>
-                        潜在意識を最大化し、地球規模の「価値」を創出する
+                        潜在意識を最大化し、<br />
+                        地球規模の「価値」を創出する
                       </h3>
                       <p style={{ margin: '0 0 2.6em' }}>
-                        ようこそ、マインドデザイン研究所が体系化した<br />
-                        <WordEm>「心の階層」</WordEm>のゴール、第7フロアへ。
+                        ようこそ、<br />
+                        マインドデザイン研究所が体系化した<br />
+                        <WordEm>「心の階層」</WordEm>のゴール、<br />
+                        第7フロアへ。
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
-                        これまでのプロセスでは、自分の<WordEm>マインド</WordEm>を整え、<br />
+                        これまでのプロセスでは、<br />
+                        自分の<WordEm>マインド</WordEm>を整え、<br />
                         周囲に影響を与える「技術」を磨いてきました。
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
-                        しかし、この最高階層である<WordEm>「プロセス7」</WordEm>では、<br />
+                        しかし、<br />
+                        この最高階層である<WordEm>「プロセス7」</WordEm>では、<br />
                         これまでの常識を一度手放していただきます。
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
-                        この講義では、以下の3つのステップで<br />
+                        この講義では、<br />
+                        以下の3つのステップで<br />
                         <WordEm>「心の在り方」</WordEm>を書き換えていきます。
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
@@ -1236,8 +1242,10 @@ function App() {
                       <p style={{ margin: '0 0 2.6em' }}>
                         日常の忙しさやストレスという<WordEm>「重力」</WordEm>から離れ、<br />
                         もっとも<WordEm>高い視点</WordEm>から自分を俯瞰（ふかん）してみましょう。<br />
-                        時間軸を広げ、宇宙のような<WordEm>大きな視座</WordEm>を持つことで、<br />
-                        目先の不安は消え、あなたがこの世に存在する<WordEm>「真の理由」</WordEm>が見えてきます。
+                        時間軸を広げ、<br />
+                        宇宙のような<WordEm>大きな視座</WordEm>を持つことで、<br />
+                        目先の不安は消え、<br />
+                        あなたがこの世に存在する<WordEm>「真の理由」</WordEm>が見えてきます。
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
                         2. 究極の自分軸「在（Being）」を体得する
@@ -1245,7 +1253,8 @@ function App() {
                       <p style={{ margin: '0 0 2.6em' }}>
                         「<WordEm>何か</WordEm>をしなければ（Doing）」という執着を捨て、<br />
                         ただ「自分として<WordEm>在る</WordEm>（Being）」ことに集中します。<br />
-                        「何もない＝無」の状態は、実はあらゆる可能性が詰まった<br />
+                        「何もない＝無」の状態は、<br />
+                        実はあらゆる可能性が詰まった<br />
                         「満たされている」状態です。<br />
                         言葉や論理を超えた<WordEm>「感じる世界」</WordEm>の感度を高めることで、<br />
                         しなやかで揺るぎない自分軸が完成します。
@@ -1257,11 +1266,16 @@ function App() {
                         一人のリーダーがこの<WordEm>高い視座</WordEm>に立つことは、<br />
                         社会に計り知れない<WordEm>価値</WordEm>をもたらします。<br />
                         「自分のため」という枠を超え、<br />
-                        「企業が繁栄することで、国が栄え、世界、そして地球全体が良くなる」<br />
-                        という循環（共生）を、<WordEm>透明な設計図</WordEm>として描き出します。
+                        「企業が繁栄することで、<br />
+                        国が栄え、<br />
+                        世界、<br />
+                        そして地球全体が良くなる」<br />
+                        という循環（共生）を、<br />
+                        <WordEm>透明な設計図</WordEm>として描き出します。
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
-                        あなたの<WordEm>心の変革</WordEm>が、地球の未来を創り出す。
+                        あなたの<WordEm>心の変革</WordEm>が、<br />
+                        地球の未来を創り出す。
                       </p>
                       <p style={{ margin: 0 }}>
                         人類の可能性を解き放つ、<br />
