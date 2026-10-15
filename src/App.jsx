@@ -1236,7 +1236,7 @@ function App() {
                         以下の3つのステップで<br />
                         <WordEm>「心の在り方」</WordEm>を書き換えていきます。
                       </p>
-                      <p style={{ margin: '0 0 2.6em' }}>
+                      <p style={{ margin: '0 0 2.6em', fontSize: '1.26em' }}>
                         1. 「心の視座」を宇宙の高さまで引き上げる
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
@@ -1247,7 +1247,7 @@ function App() {
                         目先の不安は消え、<br />
                         あなたがこの世に存在する<WordEm>「真の理由」</WordEm>が見えてきます。
                       </p>
-                      <p style={{ margin: '0 0 2.6em' }}>
+                      <p style={{ margin: '0 0 2.6em', fontSize: '1.26em' }}>
                         2. 究極の自分軸「在（Being）」を体得する
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
@@ -1259,7 +1259,7 @@ function App() {
                         言葉や論理を超えた<WordEm>「感じる世界」</WordEm>の感度を高めることで、<br />
                         しなやかで揺るぎない自分軸が完成します。
                       </p>
-                      <p style={{ margin: '0 0 2.6em' }}>
+                      <p style={{ margin: '0 0 2.6em', fontSize: '1.26em' }}>
                         3. 「共生」によるサステナブルな繁栄
                       </p>
                       <p style={{ margin: '0 0 2.6em' }}>
