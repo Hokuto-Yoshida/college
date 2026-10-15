@@ -1203,14 +1203,14 @@ function App() {
                       margin: 'auto 0',
                       color: 'white',
                       fontFamily: 'var(--font-mincho)',
-                      lineHeight: 5.2,
+                      lineHeight: 3.5,
                       textAlign: 'left',
                       fontSize: 'clamp(0.66rem, 3.3vw, 1rem)',
                       wordBreak: 'keep-all',
                       overflowWrap: 'break-word',
                       textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}>
-                      {/* Word原稿（プロセス7.docx）に合わせた体裁: 明朝体・キーワードの拡大。7階は行間を倍、「、」ごとに改行、左詰め */}
+                      {/* Word原稿（プロセス7.docx）に合わせた体裁: 明朝体・キーワードの拡大。7階は行間を広め（3.5）、「、」ごとに改行、左詰め */}
                       <h3 style={{ margin: '0 0 2.6em', fontSize: 'inherit', fontWeight: 'bold', color: 'var(--floor-7)' }}>
                         潜在意識を最大化し、<br />
                         地球規模の「価値」を創出する
