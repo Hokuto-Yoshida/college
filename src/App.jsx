@@ -33,7 +33,7 @@ import view4F from './assets/view_4f.png';   // 4F
 import viewHigh from './assets/view_high.png'; // 5F
 import view6F from './assets/view_6f.png';   // 6F
 import viewRoof from './assets/view_roof.png'; // 7F
-import imgLibrary from './assets/library_bg.jpg'; // All floors
+import imgFloor0Shelf from './assets/floor_0f_shelf.png'; // 0F 背景（本棚）
 import imgFloorBgB1 from './assets/floor_bg_B1.png';
 import imgFloorBg from './assets/floor_bg2.png'; // 各階背景
 import imgFloorBg6F from './assets/floor_bg.png'; // 6F背景
@@ -352,7 +352,7 @@ function App() {
   const floor7BaseOpacity = useTransform(floor7Progress, [0.1, 0.3], [1, 0]);
   const floor7MidOpacity = useTransform(floor7Progress, [0.1, 0.3, 0.5, 0.7], [0, 1, 1, 0]);
   const floor7RevealOpacity = useTransform(floor7Progress, [0.5, 0.7], [0, 1]);
-  const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 1.6]);
+  const floor7RevealScale = useTransform(floor7Progress, [0.7, 1.0], [1, 1.4]);
   const floor7DoorButtonOpacity = useTransform(floor7Progress, [0.88, 1.0], [0, 1]);
   const floor7NavOpacity = useTransform(floor7Progress, [0, 0.4], [1, 0]);
 
@@ -535,7 +535,7 @@ function App() {
       '5F': viewHigh,
       '6F': imgFloorBg,
       '7F': viewRoof,
-      '0F': imgLibrary,
+      '0F': imgFloor0Shelf,
       'B1': imgFloorBgB1,
     };
     return map[fid] ?? imgFloorBg;
@@ -849,7 +849,8 @@ function App() {
                 backgroundImage: `url(${getBgImage(currentFloorId)})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                opacity: 0.6,
+                // 0F・B1 は靄をかけず、背景画像をそのまま見せる
+                opacity: (currentFloorId === '0F' || currentFloorId === 'B1') ? 1 : 0.6,
                 filter: 'blur(0px)',
                 transition: 'background-image 1s ease-in-out'
               }} />
@@ -858,7 +859,7 @@ function App() {
               position: 'absolute', inset: 0,
               background: activeFloor ? activeFloor.bgCurrent : 'radial-gradient(circle at 50% 50%, rgba(11,16,36,0.5), #0b1024)',
               mixBlendMode: 'overlay',
-              opacity: (currentFloorId === '7F' || currentFloorId === '6F' || currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F') ? 0 : 1,
+              opacity: (currentFloorId === '7F' || currentFloorId === '6F' || currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F' || currentFloorId === '0F' || currentFloorId === 'B1') ? 0 : 1,
               transition: 'background 1s ease'
             }} />
             <div style={{
@@ -866,7 +867,7 @@ function App() {
               backgroundImage: `url(${imgStairsSky})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
-              opacity: (currentFloorId === '6F' || currentFloorId === '7F' || currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F') ? 0 : currentFloorId ? 0.1 : 0.05,
+              opacity: (currentFloorId === '6F' || currentFloorId === '7F' || currentFloorId === '5F' || currentFloorId === '4F' || currentFloorId === '3F' || currentFloorId === '2F' || currentFloorId === '0F' || currentFloorId === 'B1') ? 0 : currentFloorId ? 0.1 : 0.05,
               mixBlendMode: 'screen',
               pointerEvents: 'none'
             }} />

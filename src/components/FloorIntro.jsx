@@ -3,6 +3,10 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { EntranceDoor } from './EntranceDoor';
 
 import imgBg from '../assets/entrance_lobby.png';
+import introOpening from '../assets/intro_opening.png'; // イントロと同じ画像。一度だけ出してそのまま残す
+
+// 上下の端をぼかすマスク（イントロ/本館導入と同じ）
+const MASK = 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)';
 
 const processMap = {
     '7F': { num: 7, viewpoint: '地球視点', action: '地球を動かす' },
@@ -22,11 +26,14 @@ export const FloorIntro = ({ floor, onEnter }) => {
     // フロア内と同じく、スクロール終盤で背景をアップ
     const bgScale = useTransform(scrollYProgress, [0.7, 1.0], [1, 2.4]);
 
-    // 他の階（2F〜7F）と同じく、全体で1周だけ（何もない→薄く→濃く→薄く→消える）
-    const whiteLayerOpacity = useTransform(scrollYProgress,
-        [0, 0.25, 0.5, 0.75, 1.0],
-        [0, 0.5,  1,   0.5,  0]
+    // 他の階（2F〜7F）と同じく、0→0.5→1→1.5→1→0.5→0 の段階で出ては消える
+    const mistOpacity = useTransform(scrollYProgress,
+        [0, 1/6, 2/6, 3/6, 4/6, 5/6, 1.0],
+        [0, 0.5, 1,   1.5, 1,   0.5, 0]
     );
+    // opacityは1が上限なので、白幕は色を0.3→0.45に濃くしておき、1.5段階目まで表現する
+    const whiteOpacity = useTransform(mistOpacity, v => v / 1.5);
+    const imageOpacity = useTransform(mistOpacity, v => Math.min(v, 1));
 
     const textStyle = {
         maxWidth: '800px',
@@ -72,14 +79,29 @@ export const FloorIntro = ({ floor, onEnter }) => {
                 }} />
             </div>
 
-            {/* 白フラッシュレイヤー */}
-            <motion.div style={{
-                position: 'fixed', inset: 0,
-                background: 'rgba(255,255,255,0.3)',
-                pointerEvents: 'none',
-                opacity: whiteLayerOpacity,
-                zIndex: 20,
-            }} />
+            {/* opening image: 靄と同じく、スクロールに合わせて出ては消える */}
+            <motion.div
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 1,
+                    pointerEvents: 'none',
+                    backgroundImage: `url(${introOpening})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    opacity: imageOpacity,
+                }}
+            />
+
+            {/* 靄（白幕）: 2F〜7Fと同じく、スクロールに合わせて出ては消える */}
+            <motion.div
+                style={{
+                    position: 'fixed', inset: 0, zIndex: 2,
+                    pointerEvents: 'none',
+                    background: 'rgba(255, 255, 255, 0.45)',
+                    maskImage: MASK,
+                    WebkitMaskImage: MASK,
+                    opacity: whiteOpacity,
+                }}
+            />
 
             {/* スクロールコンテンツ */}
             <div style={{ position: 'relative', zIndex: 10, paddingTop: '15vh', paddingBottom: '30vh' }}>

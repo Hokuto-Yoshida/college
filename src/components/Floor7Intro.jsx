@@ -37,9 +37,12 @@ export const Floor7Intro = ({ onEnter }) => {
     // エントランス（FloorIntro）と同じく、スクロールに合わせて靄が出ては消える
     const { scrollYProgress } = useScroll();
     const mistOpacity = useTransform(scrollYProgress,
-        [0, 0.25, 0.5, 0.75, 1.0],
-        [0, 0.5,  1,   0.5,  0]
+        [0, 1/6, 2/6, 3/6, 4/6, 5/6, 1.0],
+        [0, 0.5, 1,   1.5, 1,   0.5, 0]
     );
+    // opacityは1が上限なので、白幕は色を0.3→0.45に濃くしておき、1.5段階目まで表現する
+    const whiteOpacity = useTransform(mistOpacity, v => v / 1.5);
+    const imageOpacity = useTransform(mistOpacity, v => Math.min(v, 1));
     // フロア内と同じく、スクロール終盤で背景をアップ
     const bgScale = useTransform(scrollYProgress, [0.7, 1.0], [1, 2.4]);
 
@@ -70,7 +73,7 @@ export const Floor7Intro = ({ onEnter }) => {
                     backgroundImage: `url(${introOpening})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
-                    opacity: mistOpacity,
+                    opacity: imageOpacity,
                 }}
             />
 
@@ -79,10 +82,10 @@ export const Floor7Intro = ({ onEnter }) => {
                 style={{
                     position: 'fixed', inset: 0, zIndex: 2,
                     pointerEvents: 'none',
-                    background: 'rgba(255, 255, 255, 0.3)',
+                    background: 'rgba(255, 255, 255, 0.45)',
                     maskImage: MASK,
                     WebkitMaskImage: MASK,
-                    opacity: mistOpacity,
+                    opacity: whiteOpacity,
                 }}
             />
 
