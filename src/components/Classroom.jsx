@@ -395,7 +395,7 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
             whileHover={{ scale: 1.05, y: -6 }}
             whileTap={{ scale: 0.96 }}
             style={{
-                aspectRatio: '3 / 4',
+                width: '100%', aspectRatio: '3 / 4', // 置かれた枠（スライダーの1枠・テーブルの上など）の幅いっぱいに広げる
                 borderRadius: '4px',
                 border: '1px solid rgba(212,175,55,0.4)',
                 background: coverUrl
@@ -521,7 +521,7 @@ function Floor0ChapterSlider({ children }) {
     };
 
     const arrowStyle = (side) => ({
-        position: 'absolute', top: '50%', [side]: '-6px', transform: 'translateY(-50%)', zIndex: 2,
+        position: 'absolute', top: '50%', [side]: '4px', transform: 'translateY(-50%)', zIndex: 2, // 枠の外に出すと隣のゾーンにはみ出して見える
         width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
         background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer',
         backdropFilter: 'blur(8px)',
@@ -539,7 +539,7 @@ function Floor0ChapterSlider({ children }) {
                 onScroll={updateArrows}
                 className="floor0-chapter-track"
                 style={{
-                    display: 'flex', gap: '28px', overflowX: 'auto', overflowY: 'hidden', padding: '10px 4px',
+                    display: 'flex', alignItems: 'flex-start', gap: '28px', overflowX: 'auto', overflowY: 'hidden', padding: '10px 4px',
                     scrollSnapType: 'x proximity', scrollbarWidth: 'none',
                     overscrollBehaviorX: 'contain', // 端まで送っても、本棚ゾーン/テーブルゾーンの切り替えにつながらないようにする
                 }}
@@ -709,16 +709,20 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
 
             {/* テーブルゾーン（背景は App 側で本棚ゾーンの右隣に並べている。ピックアップは下の Floor0PickupTable がテーブルの上に置く） */}
             <div style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', marginTop: '20px', minHeight: '60vh' }}>
-                <div style={{
-                    color: 'white', fontFamily: 'var(--font-jp)',
-                    textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                }}>
-                    <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
-                        今週のピックアップ
-                    </h3>
-                    {!pickupSeries && !pickupChapter && (
-                        <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>今週のピックアップは準備中です</p>
-                    )}
+                {/* 白いテーブル・壁の上でも読めるよう、文字の後ろに暗めの板を敷く */}
+                <div style={{ textAlign: 'center' }}>
+                    <div style={{
+                        display: 'inline-block', padding: '12px 28px', borderRadius: '14px',
+                        background: 'rgba(20,16,12,0.6)', backdropFilter: 'blur(6px)',
+                        color: 'white', fontFamily: 'var(--font-jp)',
+                    }}>
+                        <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
+                            今週のピックアップ
+                        </h3>
+                        {!pickupSeries && !pickupChapter && (
+                            <p style={{ margin: '6px 0 0', fontSize: '0.85rem', opacity: 0.85 }}>今週のピックアップは準備中です</p>
+                        )}
+                    </div>
                 </div>
             </div>
             </div>
