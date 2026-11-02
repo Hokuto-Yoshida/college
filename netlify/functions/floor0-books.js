@@ -9,10 +9,39 @@ const INDEX_KEY = 'index';
 const TITLE_FONTS = ['gothic', 'mincho'];
 const TITLE_SIZES = ['small', 'medium', 'large'];
 
-// titleFont / titleSize のうち、正しい値だけを target に書き込む
-function applyTitleStyle(target, { titleFont, titleSize }) {
+// titleFont / titleSize / titleRuns のうち、正しい値だけを target に書き込む
+// （titleRuns は送られてきたときだけ変更。null や空なら部分指定をやめる）
+function applyTitleStyle(target, { titleFont, titleSize, titleRuns }) {
     if (TITLE_FONTS.includes(titleFont)) target.titleFont = titleFont;
     if (TITLE_SIZES.includes(titleSize)) target.titleSize = titleSize;
+    if (titleRuns !== undefined) {
+        const runs = parseTitleRuns(titleRuns);
+        if (runs) target.titleRuns = runs;
+        else delete target.titleRuns;
+    }
+}
+
+// タイトルの一部だけフォント・大きさを変えた「区切り」の並び（titleRuns）を、正しい形だけにして返す。
+// [{ text, font?, size? }, ...]。JSON の文字列でも配列でもよい。空・不正なら null
+function parseTitleRuns(raw) {
+    let runs = raw;
+    if (typeof raw === 'string') {
+        try {
+            runs = JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    }
+    if (!Array.isArray(runs) || runs.length > 300) return null;
+    const clean = [];
+    for (const r of runs) {
+        if (!r || typeof r.text !== 'string' || !r.text) continue;
+        const run = { text: r.text.slice(0, 1000) };
+        if (TITLE_FONTS.includes(r.font)) run.font = r.font;
+        if (TITLE_SIZES.includes(r.size)) run.size = r.size;
+        clean.push(run);
+    }
+    return clean.length > 0 ? clean : null;
 }
 
 async function readIndex(store) {
@@ -82,7 +111,11 @@ export default async (req) => {
         };
         // どの本（表紙）の章か。未指定なら「未分類」
         if (typeof seriesId === 'string' && seriesId) meta.seriesId = seriesId;
-        applyTitleStyle(meta, { titleFont: formData.get('titleFont'), titleSize: formData.get('titleSize') });
+        applyTitleStyle(meta, {
+            titleFont: formData.get('titleFont'),
+            titleSize: formData.get('titleSize'),
+            titleRuns: formData.has('titleRuns') ? formData.get('titleRuns') : undefined,
+        });
 
         const books = await readIndex(store);
         // 新しく追加したものは一番下に並べる（今ある order の最大値の次の番号を付ける）
@@ -148,7 +181,11 @@ export default async (req) => {
             if (body.seriesId) target.seriesId = body.seriesId;
             else delete target.seriesId;
         }
-        if (typeof body.title === 'string' && body.title.trim()) target.title = body.title.trim();
+        if (typeof body.title === 'string' && body.title.trim()) {
+            target.title = body.title.trim();
+            // タイトルだけ変えて部分指定が送られてこなければ、古い部分指定は消す（文字がずれるため）
+            if (!('titleRuns' in body)) delete target.titleRuns;
+        }
         applyTitleStyle(target, body);
         await store.setJSON(INDEX_KEY, books);
         return new Response(JSON.stringify({ ok: true, book: target }), {

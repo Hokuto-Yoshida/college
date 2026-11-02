@@ -3,7 +3,12 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, GripVertical } from 'lucide-react';
 import { buildings } from '../data/buildings';
-import { TITLE_FONTS, TITLE_SIZES, DEFAULT_TITLE_FONT, DEFAULT_TITLE_SIZE, titleTextStyle } from '../data/floor0TitleStyle';
+import {
+    TITLE_FONTS, TITLE_SIZES, DEFAULT_TITLE_FONT, DEFAULT_TITLE_SIZE, titleTextStyle,
+    runTextStyle, normalizeRuns, runsFromItem, runsToText, runsToPlainTitle,
+    applyRunStyle, clearRunStyle, replaceRunText, titleRunsForSave,
+} from '../data/floor0TitleStyle';
+import { Floor0TitleText } from './Floor0TitleText';
 
 export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Books, onClose }) {
     const [selectedBuildingId, setSelectedBuildingId] = useState('main');
@@ -286,18 +291,19 @@ function Floor0BooksPanel({ floor0Books }) {
     };
 
     // 本を追加
-    const [newSeriesTitle, setNewSeriesTitle] = useState('');
+    // タイトルは { runs, titleFont, titleSize }（runs は一部だけ見た目を変えた区切り）
+    const [newSeriesTitle, setNewSeriesTitle] = useState({ runs: [], titleFont: DEFAULT_TITLE_FONT, titleSize: DEFAULT_TITLE_SIZE });
     const [newSeriesCover, setNewSeriesCover] = useState(null);
-    const [newSeriesStyle, setNewSeriesStyle] = useState({ titleFont: DEFAULT_TITLE_FONT, titleSize: DEFAULT_TITLE_SIZE });
     const [seriesInputKey, setSeriesInputKey] = useState(0);
     const handleCreateSeries = async () => {
-        if (!newSeriesTitle.trim()) {
+        const { title, ...titleStyle } = titleFieldsForSave(newSeriesTitle);
+        if (!title) {
             setMessage('本のタイトルを入力してください');
             return;
         }
-        const ok = await run(() => createSeries(newSeriesTitle.trim(), newSeriesCover, newSeriesStyle), '本を追加しました。');
+        const ok = await run(() => createSeries(title, newSeriesCover, titleStyle), '本を追加しました。');
         if (ok) {
-            setNewSeriesTitle('');
+            setNewSeriesTitle((prev) => ({ ...prev, runs: [] }));
             setNewSeriesCover(null);
             setSeriesInputKey((k) => k + 1);
         }
@@ -305,9 +311,8 @@ function Floor0BooksPanel({ floor0Books }) {
 
     // 章（PDF）を追加
     const [selectedFile, setSelectedFile] = useState(null);
-    const [titleInput, setTitleInput] = useState('');
     const [uploadSeriesId, setUploadSeriesId] = useState('');
-    const [uploadStyle, setUploadStyle] = useState({ titleFont: DEFAULT_TITLE_FONT, titleSize: DEFAULT_TITLE_SIZE });
+    const [uploadTitle, setUploadTitle] = useState({ runs: [], titleFont: DEFAULT_TITLE_FONT, titleSize: DEFAULT_TITLE_SIZE });
     const [fileInputKey, setFileInputKey] = useState(0);
     const handleFileChange = (e) => {
         const file = e.target.files && e.target.files[0];
@@ -324,10 +329,13 @@ function Floor0BooksPanel({ floor0Books }) {
             setMessage('先にPDFファイルを選択してください');
             return;
         }
-        const ok = await run(() => uploadBook(selectedFile, titleInput, uploadSeriesId, uploadStyle), 'アップロードしました。0階の本棚に追加されます。');
+        // タイトル未入力ならファイル名を使う（そのときは部分指定もなし）
+        const { title, ...titleStyle } = titleFieldsForSave(uploadTitle);
+        if (!title) titleStyle.titleRuns = undefined;
+        const ok = await run(() => uploadBook(selectedFile, title, uploadSeriesId, titleStyle), 'アップロードしました。0階の本棚に追加されます。');
         if (ok) {
             setSelectedFile(null);
-            setTitleInput('');
+            setUploadTitle((prev) => ({ ...prev, runs: [] }));
             setFileInputKey((k) => k + 1); // ファイル入力欄の表示をリセット
         }
     };
@@ -435,11 +443,7 @@ function Floor0BooksPanel({ floor0Books }) {
                 <h4 style={{ margin: '0 0 20px', color: '#ccc' }}>本を追加する</h4>
                 <div style={{ marginBottom: '20px' }}>
                     <label style={labelStyle}>本のタイトル</label>
-                    <input value={newSeriesTitle} onChange={(e) => setNewSeriesTitle(e.target.value)} placeholder="例: マインドの法則" style={inputStyle} />
-                </div>
-                <div style={{ marginBottom: '20px' }}>
-                    <label style={labelStyle}>タイトルの文字</label>
-                    <TitleStyleFields value={newSeriesStyle} onChange={setNewSeriesStyle} previewText={newSeriesTitle || '本のタイトル'} />
+                    <RichTitleEditor value={newSeriesTitle} onChange={setNewSeriesTitle} placeholder="例: マインドの法則" previewFallback="本のタイトル" inputStyle={inputStyle} />
                 </div>
                 <div style={{ marginBottom: '24px' }}>
                     <label style={labelStyle}>表紙の画像（任意・あとから変更できます）</label>
@@ -518,19 +522,12 @@ function Floor0BooksPanel({ floor0Books }) {
                 </div>
                 <div style={{ marginBottom: '24px' }}>
                     <label style={labelStyle}>章のタイトル（任意）</label>
-                    <input
-                        value={titleInput}
-                        onChange={(e) => setTitleInput(e.target.value)}
+                    <RichTitleEditor
+                        value={uploadTitle}
+                        onChange={setUploadTitle}
                         placeholder="未入力の場合はファイル名を使用します（例: 第1章 心の視点）"
-                        style={inputStyle}
-                    />
-                </div>
-                <div style={{ marginBottom: '24px' }}>
-                    <label style={labelStyle}>タイトルの文字</label>
-                    <TitleStyleFields
-                        value={uploadStyle}
-                        onChange={setUploadStyle}
-                        previewText={titleInput || (selectedFile ? selectedFile.name.replace(/\.pdf$/i, '') : '章のタイトル')}
+                        previewFallback={selectedFile ? selectedFile.name.replace(/\.pdf$/i, '') : '章のタイトル'}
+                        inputStyle={inputStyle}
                     />
                 </div>
                 <button type="button" onClick={handleUpload} disabled={busy} style={primaryButtonStyle}>
@@ -658,7 +655,7 @@ function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButt
             </div>
             {!isEditing && (
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> タイトル</button>
+                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> 編集</button>
                     <label style={{ ...smallButtonStyle, opacity: busy ? 0.5 : 1 }}>
                         <Upload size={14} /> 表紙
                         <input
@@ -684,8 +681,170 @@ function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButt
     );
 }
 
-// タイトルの文字（フォント: 明朝体/ゴシック体、大きさ: 大/中/小）を選ぶ欄と、その見た目のプレビュー
-function TitleStyleFields({ value, onChange, previewText }) {
+// --- タイトルの入力欄（Word のように、一部だけフォント・大きさを変えられる） ---
+// 入力欄の中の文字の位置（何文字目か）と、画面上の位置を相互に変換する。改行（<br>）は1文字と数える
+const isSentinelBr = (n) => n.nodeName === 'BR' && n.dataset.sentinel === '1';
+function countNodeChars(n) {
+    if (n.nodeType === 3) return n.data.length;
+    if (n.nodeName === 'BR') return isSentinelBr(n) ? 0 : 1;
+    let total = 0;
+    n.childNodes.forEach((c) => { total += countNodeChars(c); });
+    return total;
+}
+function pointToOffset(root, node, offset) {
+    let count = 0;
+    const visit = (n) => {
+        if (n === node) {
+            if (n.nodeType === 3) count += offset;
+            else for (let i = 0; i < offset && i < n.childNodes.length; i++) count += countNodeChars(n.childNodes[i]);
+            return true;
+        }
+        if (n.nodeType === 3 || n.nodeName === 'BR') {
+            count += countNodeChars(n);
+            return false;
+        }
+        for (const c of n.childNodes) if (visit(c)) return true;
+        return false;
+    };
+    visit(root);
+    return count;
+}
+function offsetToPoint(root, target) {
+    let count = 0;
+    let point = null;
+    const visit = (n) => {
+        for (let i = 0; i < n.childNodes.length; i++) {
+            const c = n.childNodes[i];
+            if (c.nodeType === 3) {
+                if (count + c.data.length >= target) { point = { node: c, offset: target - count }; return true; }
+                count += c.data.length;
+            } else if (c.nodeName === 'BR') {
+                if (count === target) { point = { node: n, offset: i }; return true; }
+                if (!isSentinelBr(c)) count += 1;
+            } else if (visit(c)) {
+                return true;
+            }
+        }
+        return false;
+    };
+    visit(root);
+    return point || { node: root, offset: root.childNodes.length };
+}
+
+// 区切り（runs）から入力欄の中身を作り直す。利用者の文字は textContent で入れる（HTML としては扱わない）
+function renderRunsInto(el, runs) {
+    el.replaceChildren();
+    runs.forEach((run) => {
+        const span = document.createElement('span');
+        if (run.font) span.dataset.font = run.font;
+        if (run.size) span.dataset.size = run.size;
+        Object.assign(span.style, runTextStyle(run));
+        run.text.split('\n').forEach((part, i) => {
+            if (i > 0) span.appendChild(document.createElement('br'));
+            if (part) span.appendChild(document.createTextNode(part));
+        });
+        el.appendChild(span);
+    });
+    // 最後が改行だと、次の行にカーソルを置けるよう目印の <br> を足す（文字数には数えない）
+    if (runsToText(runs).endsWith('\n')) {
+        const br = document.createElement('br');
+        br.dataset.sentinel = '1';
+        el.appendChild(br);
+    }
+}
+
+// 入力欄の中身を区切り（runs）に読み取る
+function readRunsFrom(el) {
+    const runs = [];
+    const push = (text, attrs) => {
+        if (text) runs.push({ text, ...(attrs.font && { font: attrs.font }), ...(attrs.size && { size: attrs.size }) });
+    };
+    const walk = (node, attrs) => {
+        node.childNodes.forEach((n) => {
+            if (n.nodeType === 3) push(n.data, attrs);
+            else if (n.nodeName === 'BR') { if (!isSentinelBr(n)) push('\n', attrs); }
+            else if (n.nodeType === 1) {
+                // ブラウザが改行で作る div / p は、改行として読む
+                if ((n.nodeName === 'DIV' || n.nodeName === 'P') && runs.length > 0) push('\n', attrs);
+                walk(n, { font: n.dataset.font || attrs.font, size: n.dataset.size || attrs.size });
+            }
+        });
+    };
+    walk(el, {});
+    return normalizeRuns(runs);
+}
+
+// value: { runs, titleFont, titleSize }。runs は [{ text, font?, size? }]（一部だけ変えた区切り）
+// 文字を選んでからボタンを押すとその部分だけ、何も選んでいなければタイトル全体の見た目が変わる
+function RichTitleEditor({ value, onChange, placeholder, previewFallback, inputStyle }) {
+    const editorRef = useRef(null);
+    const runsRef = useRef(null);
+
+    // 外から中身が変わったとき（最初・追加後に空に戻したとき）だけ入力欄を作り直す。
+    // 自分で入力した分は runsRef と同じなので作り直さない（作り直すとカーソルが飛ぶ）
+    useEffect(() => {
+        if (value.runs === runsRef.current) return;
+        runsRef.current = value.runs;
+        renderRunsInto(editorRef.current, value.runs);
+    }, [value.runs]);
+
+    const getSelectionOffsets = () => {
+        const el = editorRef.current;
+        const sel = window.getSelection();
+        if (!el || !sel || sel.rangeCount === 0) return null;
+        const range = sel.getRangeAt(0);
+        if (!el.contains(range.startContainer) || !el.contains(range.endContainer)) return null;
+        const a = pointToOffset(el, range.startContainer, range.startOffset);
+        const b = pointToOffset(el, range.endContainer, range.endOffset);
+        return { start: Math.min(a, b), end: Math.max(a, b) };
+    };
+    const setSelectionOffsets = (start, end) => {
+        const el = editorRef.current;
+        el.focus();
+        const a = offsetToPoint(el, start);
+        const b = offsetToPoint(el, end);
+        const range = document.createRange();
+        range.setStart(a.node, a.offset);
+        range.setEnd(b.node, b.offset);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    };
+
+    // 区切りを変えて入力欄を作り直し、選択していた範囲を選び直す
+    const commit = (runs, changes = {}, selection = null) => {
+        runsRef.current = runs;
+        renderRunsInto(editorRef.current, runs);
+        if (selection) setSelectionOffsets(selection.start, selection.end);
+        onChange({ ...value, ...changes, runs });
+    };
+
+    const handleInput = () => {
+        const runs = readRunsFrom(editorRef.current);
+        runsRef.current = runs;
+        onChange({ ...value, runs });
+    };
+
+    // 改行・貼り付けは自分で区切りに入れる（ブラウザ任せだと余計な装飾や要素が入るため）
+    const insertText = (text) => {
+        const total = runsToText(runsRef.current).length;
+        const sel = getSelectionOffsets() || { start: total, end: total };
+        const runs = replaceRunText(runsRef.current, sel.start, sel.end, text);
+        const caret = sel.start + text.length;
+        commit(runs, {}, { start: caret, end: caret });
+    };
+
+    const applyStyle = (prop, styleValue) => {
+        const sel = getSelectionOffsets();
+        if (sel && sel.end > sel.start) {
+            // 選んだ部分だけ変える
+            commit(applyRunStyle(runsRef.current, sel.start, sel.end, prop, styleValue), {}, sel);
+        } else {
+            // 何も選んでいなければタイトル全体を変える（部分指定していた分も全体に合わせる）
+            commit(clearRunStyle(runsRef.current, prop), { [prop === 'font' ? 'titleFont' : 'titleSize']: styleValue });
+        }
+    };
+
     const choiceStyle = (selected) => ({
         padding: '6px 14px', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer',
         border: selected ? '1px solid #d4af37' : '1px solid rgba(255,255,255,0.15)',
@@ -694,57 +853,104 @@ function TitleStyleFields({ value, onChange, previewText }) {
     });
     const font = value.titleFont || DEFAULT_TITLE_FONT;
     const size = value.titleSize || DEFAULT_TITLE_SIZE;
+    const previewItem = { titleFont: font, titleSize: size, titleRuns: value.runs, title: runsToText(value.runs) || previewFallback };
+    // ボタンを押しても入力欄の選択が外れないようにする
+    const keepSelection = (e) => e.preventDefault();
+
     return (
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
-            <div style={{ display: 'grid', gap: '8px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>フォント</span>
-                    {TITLE_FONTS.map((f) => (
-                        <button key={f.value} type="button" onClick={() => onChange({ ...value, titleFont: f.value })} style={{ ...choiceStyle(font === f.value), fontFamily: f.css }}>
-                            {f.label}
-                        </button>
-                    ))}
+        <div style={{ display: 'grid', gap: '10px' }}>
+            <style>{`.rich-title-input:empty::before { content: attr(data-placeholder); color: #666; pointer-events: none; }`}</style>
+            <div
+                ref={editorRef}
+                className="rich-title-input"
+                contentEditable
+                suppressContentEditableWarning
+                role="textbox"
+                aria-multiline="true"
+                data-placeholder={placeholder}
+                onInput={handleInput}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
+                        e.preventDefault();
+                        insertText('\n');
+                    }
+                }}
+                onPaste={(e) => {
+                    e.preventDefault();
+                    insertText(e.clipboardData.getData('text/plain').replace(/\r\n?/g, '\n'));
+                }}
+                style={{
+                    ...inputStyle, minHeight: '46px', boxSizing: 'border-box', whiteSpace: 'pre-wrap', overflowWrap: 'anywhere',
+                    lineHeight: 1.6, outline: 'none', ...titleTextStyle({ titleFont: font, titleSize: size }),
+                }}
+            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
+                <div style={{ display: 'grid', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>フォント</span>
+                        {TITLE_FONTS.map((f) => (
+                            <button key={f.value} type="button" onMouseDown={keepSelection} onClick={() => applyStyle('font', f.value)} style={{ ...choiceStyle(font === f.value), fontFamily: f.css }}>
+                                {f.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>大きさ</span>
+                        {[...TITLE_SIZES].reverse().map((sz) => (
+                            <button key={sz.value} type="button" onMouseDown={keepSelection} onClick={() => applyStyle('size', sz.value)} style={choiceStyle(size === sz.value)}>
+                                {sz.label}
+                            </button>
+                        ))}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.6, maxWidth: '300px' }}>
+                        文字を選んでからボタンを押すと、その部分だけ変わります。<br />
+                        何も選んでいないときは、タイトル全体が変わります。Enter で改行できます。
+                    </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>大きさ</span>
-                    {[...TITLE_SIZES].reverse().map((sz) => (
-                        <button key={sz.value} type="button" onClick={() => onChange({ ...value, titleSize: sz.value })} style={choiceStyle(size === sz.value)}>
-                            {sz.label}
-                        </button>
-                    ))}
-                </div>
-            </div>
-            {/* 本棚の表紙と同じ色・フォントでのプレビュー */}
-            <div style={{
-                width: '120px', aspectRatio: '3 / 4', borderRadius: '4px', padding: '12px',
-                border: '1px solid rgba(212,175,55,0.4)', background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-            }}>
-                <span style={{
-                    color: '#d4af37', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
-                    ...titleTextStyle({ titleFont: font, titleSize: size }),
+                {/* 本棚の表紙と同じ色・フォントでのプレビュー */}
+                <div style={{
+                    width: '120px', aspectRatio: '3 / 4', borderRadius: '4px', padding: '12px', boxSizing: 'border-box',
+                    border: '1px solid rgba(212,175,55,0.4)', background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                 }}>
-                    {previewText}
-                </span>
+                    <span style={{
+                        color: '#d4af37', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5,
+                        wordBreak: 'keep-all', overflowWrap: 'anywhere', whiteSpace: 'pre-line',
+                        ...titleTextStyle(previewItem),
+                    }}>
+                        <Floor0TitleText item={value.runs.length > 0 ? previewItem : null} fallback={previewFallback} />
+                    </span>
+                </div>
             </div>
         </div>
     );
 }
 
-// 本・章のタイトルと、その文字（フォント・大きさ）を編集する欄。onSave は成功したら true を返す
+// タイトルの入力欄の中身（{ runs, titleFont, titleSize }）を、保存用の { title, titleFont, titleSize, titleRuns } にする
+const titleFieldsForSave = (value) => ({
+    title: runsToPlainTitle(value.runs),
+    titleFont: value.titleFont,
+    titleSize: value.titleSize,
+    titleRuns: titleRunsForSave(value.runs),
+});
+
+// 本・章のタイトルと、その文字（フォント・大きさ・部分指定）を編集する欄。onSave は成功したら true を返す
 function TitleEditor({ item, busy, inputStyle, smallButtonStyle, onSave, onClose }) {
-    const [title, setTitle] = useState(item.title);
-    const [style, setStyle] = useState({ titleFont: item.titleFont || DEFAULT_TITLE_FONT, titleSize: item.titleSize || DEFAULT_TITLE_SIZE });
+    const [value, setValue] = useState(() => ({
+        runs: runsFromItem(item),
+        titleFont: item.titleFont || DEFAULT_TITLE_FONT,
+        titleSize: item.titleSize || DEFAULT_TITLE_SIZE,
+    }));
 
     const save = async () => {
-        if (!title.trim()) return;
-        if (await onSave({ title: title.trim(), ...style })) onClose();
+        const fields = titleFieldsForSave(value);
+        if (!fields.title) return;
+        if (await onSave(fields)) onClose();
     };
 
     return (
         <div style={{ display: 'grid', gap: '10px', padding: '6px 0' }}>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, padding: '8px' }} autoFocus />
-            <TitleStyleFields value={style} onChange={setStyle} previewText={title || 'タイトル'} />
+            <RichTitleEditor value={value} onChange={setValue} placeholder="タイトル" previewFallback="タイトル" inputStyle={{ ...inputStyle, padding: '8px' }} />
             <div style={{ display: 'flex', gap: '6px' }}>
                 <button type="button" onClick={save} disabled={busy} style={smallButtonStyle}><Save size={14} /> 保存</button>
                 <button type="button" onClick={onClose} style={smallButtonStyle}><X size={14} /> やめる</button>
@@ -787,7 +993,7 @@ function ChapterRow({ chapter, series, seriesId, busy, rowStyle, inputStyle, sma
                         <option value="">未分類</option>
                         {series.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
                     </select>
-                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> タイトル</button>
+                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> 編集</button>
                     <button type="button" onClick={onDelete} disabled={busy} style={deleteButtonStyle}><Trash2 size={14} /> 削除</button>
                 </div>
             )}

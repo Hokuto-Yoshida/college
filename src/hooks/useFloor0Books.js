@@ -28,10 +28,12 @@ async function shrinkCoverImage(file) {
     }
 }
 
-// タイトルのフォント・大きさ（{ titleFont, titleSize }）をフォームに入れる
-function appendTitleStyle(form, { titleFont, titleSize } = {}) {
+// タイトルのフォント・大きさ（{ titleFont, titleSize, titleRuns }）をフォームに入れる
+// titleRuns（一部だけ変えた区切り）は渡されたときだけ送る。null なら部分指定をやめる
+function appendTitleStyle(form, { titleFont, titleSize, titleRuns } = {}) {
     if (titleFont) form.append('titleFont', titleFont);
     if (titleSize) form.append('titleSize', titleSize);
+    if (titleRuns !== undefined) form.append('titleRuns', JSON.stringify(titleRuns));
 }
 
 async function throwIfFailed(res, fallbackMessage) {
@@ -136,7 +138,7 @@ export function useFloor0Books() {
         }
     }, [refresh]);
 
-    // 章の編集。{ seriesId, title, titleFont, titleSize } のうち指定したものだけ更新する
+    // 章の編集。{ seriesId, title, titleFont, titleSize, titleRuns } のうち指定したものだけ更新する
     // （seriesId を空にすると「未分類」）
     const updateChapter = useCallback(async (id, changes) => {
         const res = await fetch(LIST_ENDPOINT, {
@@ -158,12 +160,12 @@ export function useFloor0Books() {
         await refresh();
     }, [refresh]);
 
-    // { title, titleFont, titleSize, coverFile, removeCover } のうち指定したものだけ更新する
-    const updateSeries = useCallback(async (id, { title, titleFont, titleSize, coverFile, removeCover } = {}) => {
+    // { title, titleFont, titleSize, titleRuns, coverFile, removeCover } のうち指定したものだけ更新する
+    const updateSeries = useCallback(async (id, { title, titleFont, titleSize, titleRuns, coverFile, removeCover } = {}) => {
         const form = new FormData();
         form.append('id', id);
         if (title) form.append('title', title);
-        appendTitleStyle(form, { titleFont, titleSize });
+        appendTitleStyle(form, { titleFont, titleSize, titleRuns });
         if (removeCover) form.append('removeCover', '1');
         else if (coverFile) form.append('cover', await shrinkCoverImage(coverFile));
         const res = await fetch(SERIES_ENDPOINT, { method: 'PATCH', body: form });

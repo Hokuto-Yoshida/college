@@ -13,6 +13,7 @@ import floor6Base from '../assets/floor_bg2.png';
 import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
 import { titleTextStyle } from '../data/floor0TitleStyle';
+import { Floor0TitleText } from './Floor0TitleText';
 import workshopSide1 from '../assets/workshop_side_1.webp';
 import workshopSide2 from '../assets/workshop_side_2.webp';
 
@@ -387,7 +388,7 @@ const FLOOR0_ZONES = ['本棚ゾーン', 'テーブルゾーン'];
 const FLOOR0_COPY_NOTICE = '※ 本の内容の無断でのダウンロード・複製・転載はご遠慮ください。';
 
 // 0F の本の表紙。表紙画像があれば画像、なければ文字だけの表紙
-// titleStyle: 管理画面で選んだタイトルのフォント・大きさ（{ titleFont, titleSize }）
+// titleStyle: 管理画面で選んだタイトルの見た目（{ titleFont, titleSize, titleRuns }。titleRuns は一部だけ変えた区切りと改行）
 function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
     const titleCss = titleTextStyle(titleStyle);
     return (
@@ -396,7 +397,7 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
             whileHover={{ scale: 1.05, y: -6 }}
             whileTap={{ scale: 0.96 }}
             style={{
-                width: '100%', aspectRatio: '3 / 4', // 置かれた枠（スライダーの1枠・テーブルの上など）の幅いっぱいに広げる
+                width: '100%', minWidth: 0, aspectRatio: '3 / 4', // 置かれた枠（スライダーの1枠・テーブルの上など）の幅いっぱいに広げる
                 borderRadius: '4px',
                 border: '1px solid rgba(212,175,55,0.4)',
                 background: coverUrl
@@ -413,9 +414,9 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
                     width: '100%', padding: '28px 10px 12px',
                     background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.85))',
                     color: 'white', ...titleCss, fontWeight: 'bold',
-                    textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                    textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all', overflowWrap: 'anywhere',
                 }}>
-                    {title}
+                    <span style={{ whiteSpace: 'pre-line' }}><Floor0TitleText item={titleStyle} fallback={title} /></span>
                     {subLabel && <div style={{ fontSize: '0.7rem', fontWeight: 'normal', opacity: 0.75 }}>{subLabel}</div>}
                 </div>
             ) : (
@@ -423,9 +424,10 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
                     <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
                     <span style={{
                         color: '#d4af37', ...titleCss,
-                        fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                        fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all', overflowWrap: 'anywhere', // 長いタイトルは表紙の幅の中で折り返す（表紙が横に広がらないように）
+                        whiteSpace: 'pre-line', // 管理画面で入れた改行
                     }}>
-                        {title}
+                        <Floor0TitleText item={titleStyle} fallback={title} />
                     </span>
                     {subLabel && <span style={{ color: '#d4af37', fontSize: '0.7rem', opacity: 0.75 }}>{subLabel}</span>}
                 </>
@@ -684,7 +686,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
                 {openSeries ? (
                     <Floor0ChapterSlider key={openSeries.id}>
                         {openSeries.chapters.map((b) => (
-                            <div key={b.id} style={{ flex: '0 0 150px', scrollSnapAlign: 'start' }}>
+                            <div key={b.id} style={{ flex: '0 0 150px', width: '150px', minWidth: 0, scrollSnapAlign: 'start' }}>
                                 <Floor0Cover title={b.title} titleStyle={b} onClick={() => handleSelectBook(b)} />
                             </div>
                         ))}

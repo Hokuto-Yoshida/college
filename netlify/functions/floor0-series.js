@@ -11,12 +11,41 @@ const CHAPTER_INDEX_KEY = 'index';
 const TITLE_FONTS = ['gothic', 'mincho'];
 const TITLE_SIZES = ['small', 'medium', 'large'];
 
-// フォームの titleFont / titleSize のうち、正しい値だけを target に書き込む
+// フォームの titleFont / titleSize / titleRuns のうち、正しい値だけを target に書き込む
+// （titleRuns は送られてきたときだけ変更。null や空なら部分指定をやめる）
 function applyTitleStyle(target, formData) {
     const font = formData.get('titleFont');
     const size = formData.get('titleSize');
     if (TITLE_FONTS.includes(font)) target.titleFont = font;
     if (TITLE_SIZES.includes(size)) target.titleSize = size;
+    if (formData.has('titleRuns')) {
+        const runs = parseTitleRuns(formData.get('titleRuns'));
+        if (runs) target.titleRuns = runs;
+        else delete target.titleRuns;
+    }
+}
+
+// タイトルの一部だけフォント・大きさを変えた「区切り」の並び（titleRuns）を、正しい形だけにして返す。
+// [{ text, font?, size? }, ...]。JSON の文字列でも配列でもよい。空・不正なら null
+function parseTitleRuns(raw) {
+    let runs = raw;
+    if (typeof raw === 'string') {
+        try {
+            runs = JSON.parse(raw);
+        } catch {
+            return null;
+        }
+    }
+    if (!Array.isArray(runs) || runs.length > 300) return null;
+    const clean = [];
+    for (const r of runs) {
+        if (!r || typeof r.text !== 'string' || !r.text) continue;
+        const run = { text: r.text.slice(0, 1000) };
+        if (TITLE_FONTS.includes(r.font)) run.font = r.font;
+        if (TITLE_SIZES.includes(r.size)) run.size = r.size;
+        clean.push(run);
+    }
+    return clean.length > 0 ? clean : null;
 }
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
@@ -99,7 +128,11 @@ export default async (req) => {
         if (!target) return json({ error: '本が見つかりません' }, 404);
 
         const title = formData.get('title');
-        if (typeof title === 'string' && title.trim()) target.title = title.trim();
+        if (typeof title === 'string' && title.trim()) {
+            target.title = title.trim();
+            // タイトルだけ変えて部分指定が送られてこなければ、古い部分指定は消す（文字がずれるため）
+            if (!formData.has('titleRuns')) delete target.titleRuns;
+        }
         applyTitleStyle(target, formData);
 
         if (formData.get('removeCover') === '1') {
