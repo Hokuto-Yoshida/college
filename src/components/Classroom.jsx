@@ -497,18 +497,40 @@ function Floor0PickupTable({ zoneProgress, pickupSeries, pickupChapter, pickupCh
     );
 }
 
-// 0F: 本の中の章を1行に並べ、横スライド（スワイプ・横スクロール・左右の矢印）で送るスライダー
+// 0F: 本の中の章を1行に並べ、横スライド（スワイプ・横スクロール・左右の矢印・下のスライダー）で送るスライダー
+const FLOOR0_SLIDER_STEPS = 1000; // 下のスライダーの細かさ
+const FLOOR0_SLIDER_CSS = `
+.floor0-chapter-track::-webkit-scrollbar { display: none; }
+.floor0-chapter-range { -webkit-appearance: none; appearance: none; width: 100%; height: 20px; background: transparent; cursor: pointer; margin: 0; }
+.floor0-chapter-range::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.35); box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.floor0-chapter-range::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.35); box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.floor0-chapter-range::-webkit-slider-thumb { -webkit-appearance: none; width: 48px; height: 10px; margin-top: -3px; border-radius: 5px; background: #d4af37; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+.floor0-chapter-range::-moz-range-thumb { width: 48px; height: 10px; border: none; border-radius: 5px; background: #d4af37; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+`;
+
 function Floor0ChapterSlider({ children }) {
     const trackRef = useRef(null);
     const [canPrev, setCanPrev] = useState(false);
     const [canNext, setCanNext] = useState(false);
+    const [position, setPosition] = useState(0); // 下のスライダーの位置（0〜FLOOR0_SLIDER_STEPS）
 
-    // 左右にまだ送れるかで、矢印を出し分ける
+    // 左右にまだ送れるかで矢印を出し分け、下のスライダーの位置も合わせる
     const updateArrows = () => {
         const el = trackRef.current;
         if (!el) return;
+        const max = el.scrollWidth - el.clientWidth;
         setCanPrev(el.scrollLeft > 4);
         setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+        setPosition(max > 0 ? Math.round((el.scrollLeft / max) * FLOOR0_SLIDER_STEPS) : 0);
+    };
+
+    // 下のスライダーを動かしたら、章の列もその位置まで送る
+    const handleSliderChange = (e) => {
+        const el = trackRef.current;
+        if (!el) return;
+        const value = Number(e.target.value);
+        setPosition(value);
+        el.scrollLeft = (value / FLOOR0_SLIDER_STEPS) * (el.scrollWidth - el.clientWidth);
     };
     useEffect(() => {
         const el = trackRef.current;
@@ -531,7 +553,8 @@ function Floor0ChapterSlider({ children }) {
     });
 
     return (
-        <div style={{ position: 'relative', margin: '10px 0 40px' }}>
+        <div style={{ margin: '10px 0 40px' }}>
+        <div style={{ position: 'relative' }}>
             {canPrev && (
                 <button onClick={() => slide(-1)} style={arrowStyle('left')} aria-label="前の章へ">
                     <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
@@ -547,13 +570,28 @@ function Floor0ChapterSlider({ children }) {
                     overscrollBehaviorX: 'contain', // 端まで送っても、本棚ゾーン/テーブルゾーンの切り替えにつながらないようにする
                 }}
             >
-                <style>{`.floor0-chapter-track::-webkit-scrollbar { display: none; }`}</style>
+                <style>{FLOOR0_SLIDER_CSS}</style>
                 {children}
             </div>
             {canNext && (
                 <button onClick={() => slide(1)} style={arrowStyle('right')} aria-label="次の章へ">
                     <ChevronRight size={20} />
                 </button>
+            )}
+        </div>
+            {/* 章が画面に入りきらないときだけ、下にスライダーを出す */}
+            {(canPrev || canNext) && (
+                <div style={{ padding: '8px 4px 0' }}>
+                    <input
+                        type="range"
+                        className="floor0-chapter-range"
+                        min={0}
+                        max={FLOOR0_SLIDER_STEPS}
+                        value={position}
+                        onChange={handleSliderChange}
+                        aria-label="章の一覧を横に送る"
+                    />
+                </div>
             )}
         </div>
     );
