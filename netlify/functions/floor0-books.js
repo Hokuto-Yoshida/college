@@ -45,6 +45,7 @@ export default async (req) => {
 
         const file = formData.get('file');
         const title = formData.get('title');
+        const seriesId = formData.get('seriesId');
 
         if (!file || typeof file === 'string') {
             return new Response(JSON.stringify({ error: 'PDFファイルがありません' }), {
@@ -69,6 +70,8 @@ export default async (req) => {
             title: (title && title.trim()) || (file.name || '').replace(/\.pdf$/i, '') || '本',
             uploadedAt: new Date().toISOString(),
         };
+        // どの本（表紙）の章か。未指定なら「未分類」
+        if (typeof seriesId === 'string' && seriesId) meta.seriesId = seriesId;
 
         const books = await readIndex(store);
         books.push(meta);
@@ -102,6 +105,39 @@ export default async (req) => {
         });
         await store.setJSON(INDEX_KEY, next);
         return new Response(JSON.stringify({ ok: true, books: sortBooks(next) }), {
+            headers: { 'Content-Type': 'application/json' },
+        });
+    }
+
+    // 章の編集: { id, seriesId, title } 。seriesId を空にすると「未分類」に戻す
+    if (req.method === 'PATCH') {
+        let body;
+        try {
+            body = await req.json();
+        } catch {
+            body = null;
+        }
+        if (!body || !body.id) {
+            return new Response(JSON.stringify({ error: 'idが必要です' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        const books = await readIndex(store);
+        const target = books.find((b) => b.id === body.id);
+        if (!target) {
+            return new Response(JSON.stringify({ error: '章が見つかりません' }), {
+                status: 404,
+                headers: { 'Content-Type': 'application/json' },
+            });
+        }
+        if ('seriesId' in body) {
+            if (body.seriesId) target.seriesId = body.seriesId;
+            else delete target.seriesId;
+        }
+        if (typeof body.title === 'string' && body.title.trim()) target.title = body.title.trim();
+        await store.setJSON(INDEX_KEY, books);
+        return new Response(JSON.stringify({ ok: true, book: target }), {
             headers: { 'Content-Type': 'application/json' },
         });
     }

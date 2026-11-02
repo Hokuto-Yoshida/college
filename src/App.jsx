@@ -2319,7 +2319,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} room7RevealOpacity={room7RevealOpacity} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} floor0Series={floor0Books.series} room7RevealOpacity={room7RevealOpacity} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (

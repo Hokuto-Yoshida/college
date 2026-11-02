@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, ArrowUp, ArrowDown } from 'lucide-react';
 import { buildings } from '../data/buildings';
 
@@ -254,35 +254,57 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
 
 // --- Sub Components ---
 
-// 0F: PDFをアップロードして「本棚」に本を並べるための管理パネル
+// 0F: 「本」（表紙）と、その中の「章」（PDF）を管理するパネル
+// 本棚ではまず本の表紙が並び、表紙をクリックするとその本の章が並ぶ
 function Floor0BooksPanel({ floor0Books }) {
-    const { rawBooks = [], uploadBook, deleteBook, reorderBooks } = floor0Books || {};
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [titleInput, setTitleInput] = useState('');
-    const [isUploading, setIsUploading] = useState(false);
+    const {
+        rawBooks = [], series = [],
+        uploadBook, deleteBook, reorderBooks, assignChapter,
+        createSeries, updateSeries, deleteSeries, reorderSeries,
+    } = floor0Books || {};
     const [message, setMessage] = useState('');
-    const [deletingId, setDeletingId] = useState(null);
-    const [fileInputKey, setFileInputKey] = useState(0);
-    const [isReordering, setIsReordering] = useState(false);
+    const [busy, setBusy] = useState(false);
 
-    // 本を1つ上/下へ動かし、その並び順をサーバーに保存する
-    const handleMove = async (index, delta) => {
-        const target = index + delta;
-        if (target < 0 || target >= rawBooks.length || isReordering) return;
-        const ids = rawBooks.map((b) => b.id);
-        [ids[index], ids[target]] = [ids[target], ids[index]];
-        setIsReordering(true);
+    // 処理中は他の操作を止め、失敗したらメッセージを出す
+    const run = async (task, successMessage = '') => {
+        if (busy) return false;
+        setBusy(true);
         setMessage('');
         try {
-            await reorderBooks(ids);
+            await task();
+            if (successMessage) setMessage(successMessage);
+            return true;
         } catch (e) {
             console.error(e);
-            setMessage('並び順の保存に失敗しました');
+            setMessage(e.message || '処理に失敗しました');
+            return false;
         } finally {
-            setIsReordering(false);
+            setBusy(false);
         }
     };
 
+    // 本を追加
+    const [newSeriesTitle, setNewSeriesTitle] = useState('');
+    const [newSeriesCover, setNewSeriesCover] = useState(null);
+    const [seriesInputKey, setSeriesInputKey] = useState(0);
+    const handleCreateSeries = async () => {
+        if (!newSeriesTitle.trim()) {
+            setMessage('本のタイトルを入力してください');
+            return;
+        }
+        const ok = await run(() => createSeries(newSeriesTitle.trim(), newSeriesCover), '本を追加しました。');
+        if (ok) {
+            setNewSeriesTitle('');
+            setNewSeriesCover(null);
+            setSeriesInputKey((k) => k + 1);
+        }
+    };
+
+    // 章（PDF）を追加
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [titleInput, setTitleInput] = useState('');
+    const [uploadSeriesId, setUploadSeriesId] = useState('');
+    const [fileInputKey, setFileInputKey] = useState(0);
     const handleFileChange = (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
@@ -293,90 +315,148 @@ function Floor0BooksPanel({ floor0Books }) {
         setSelectedFile(file);
         setMessage('');
     };
-
     const handleUpload = async () => {
         if (!selectedFile) {
             setMessage('先にPDFファイルを選択してください');
             return;
         }
-        setIsUploading(true);
-        setMessage('');
-        try {
-            await uploadBook(selectedFile, titleInput);
-            setMessage('アップロードしました。0階の本棚に追加されます。');
+        const ok = await run(() => uploadBook(selectedFile, titleInput, uploadSeriesId), 'アップロードしました。0階の本棚に追加されます。');
+        if (ok) {
             setSelectedFile(null);
             setTitleInput('');
             setFileInputKey((k) => k + 1); // ファイル入力欄の表示をリセット
-        } catch (e) {
-            console.error(e);
-            setMessage('アップロードに失敗しました');
-        } finally {
-            setIsUploading(false);
         }
     };
 
-    const handleDelete = async (book) => {
-        if (!window.confirm(`「${book.title}」を削除しますか？`)) return;
-        setDeletingId(book.id);
-        try {
-            await deleteBook(book.id);
-        } catch (e) {
-            console.error(e);
-            setMessage('削除に失敗しました');
-        } finally {
-            setDeletingId(null);
-        }
+    // リストの中で1つ上/下へ動かした id の並びを返す
+    const moved = (items, index, delta) => {
+        const ids = items.map((x) => x.id);
+        [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]];
+        return ids;
     };
+
+    const seriesIds = new Set(series.map((s) => s.id));
+    const chapterCount = (seriesId) => rawBooks.filter((b) => b.seriesId === seriesId).length;
+
+    const panelStyle = { padding: '24px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px' };
+    const rowStyle = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', gap: '12px' };
+    const inputStyle = { width: '100%', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' };
+    const labelStyle = { display: 'block', marginBottom: '8px', color: '#888' };
+    const primaryButtonStyle = {
+        display: 'flex', alignItems: 'center', gap: '8px',
+        padding: '12px 32px', borderRadius: '24px',
+        background: busy ? '#555' : 'var(--floor-4, #4facfe)', color: 'black',
+        border: 'none', fontWeight: 'bold', cursor: busy ? 'default' : 'pointer'
+    };
+    const smallButtonStyle = { flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 12px', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: busy ? 'default' : 'pointer', fontSize: '0.85rem' };
+    const deleteButtonStyle = { ...smallButtonStyle, background: 'rgba(255,107,107,0.1)', color: '#ff6b6b' };
 
     return (
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <div style={{ maxWidth: '760px', margin: '0 auto' }}>
             <div style={{ marginBottom: '32px' }}>
                 <h2 style={{ margin: 0, fontSize: '2rem', display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <BookOpen size={28} /> 0階の本棚（PDF）
                 </h2>
                 <p style={{ color: '#888', marginTop: '8px' }}>
-                    ここでアップロードしたPDFが、0階の本棚に本として並びます。複数冊を登録できます。
+                    本棚にはまず「本」の表紙が並び、表紙を選ぶとその本の「章」（PDF）が並びます。<br />
+                    先に本（タイトル・表紙）を作り、PDFは章としてどの本に入れるかを選んでアップロードしてください。
                 </p>
+                {message && <div style={{ marginTop: '12px', fontSize: '0.9rem', color: '#9ae6b4' }}>{message}</div>}
             </div>
 
-            <div className="glass-panel" style={{ padding: '24px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', marginBottom: '24px' }}>
+            {/* 本（表紙）の一覧 */}
+            <div className="glass-panel" style={panelStyle}>
                 <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '12px' }}>
-                    登録済みの本（{rawBooks.length}冊）※ 矢印で並び順を変更できます（本棚の表示順に反映）
+                    本（{series.length}冊）※ 矢印で本棚に並ぶ順番を変更できます
+                </div>
+                {series.length === 0 ? (
+                    <div style={{ color: '#ccc' }}>まだ本がありません。下の「本を追加する」から作成してください。</div>
+                ) : (
+                    <div style={{ display: 'grid', gap: '10px' }}>
+                        {series.map((s, i) => (
+                            <SeriesRow
+                                key={s.id}
+                                series={s}
+                                chapterCount={chapterCount(s.id)}
+                                busy={busy}
+                                rowStyle={rowStyle}
+                                inputStyle={inputStyle}
+                                smallButtonStyle={smallButtonStyle}
+                                deleteButtonStyle={deleteButtonStyle}
+                                moveButtons={<MoveButtons index={i} length={series.length} busy={busy} onMove={(d) => run(() => reorderSeries(moved(series, i, d)))} />}
+                                onRename={(title) => run(() => updateSeries(s.id, { title }), 'タイトルを変更しました。')}
+                                onChangeCover={(file) => run(() => updateSeries(s.id, { coverFile: file }), '表紙を変更しました。')}
+                                onRemoveCover={() => run(() => updateSeries(s.id, { removeCover: true }), '表紙を外しました。')}
+                                onDelete={() => {
+                                    if (!window.confirm(`本「${s.title}」を削除しますか？\n（中の章（PDF）は削除されず「未分類」に移ります）`)) return;
+                                    run(() => deleteSeries(s.id), '本を削除しました。');
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            {/* 本を追加 */}
+            <div className="glass-panel" style={{ ...panelStyle, padding: '32px' }}>
+                <h4 style={{ margin: '0 0 20px', color: '#ccc' }}>本を追加する</h4>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>本のタイトル</label>
+                    <input value={newSeriesTitle} onChange={(e) => setNewSeriesTitle(e.target.value)} placeholder="例: マインドの法則" style={inputStyle} />
+                </div>
+                <div style={{ marginBottom: '24px' }}>
+                    <label style={labelStyle}>表紙の画像（任意・あとから変更できます）</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <CoverThumb file={newSeriesCover} />
+                        <input
+                            key={seriesInputKey}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setNewSeriesCover((e.target.files && e.target.files[0]) || null)}
+                            style={{ ...inputStyle, padding: '10px' }}
+                        />
+                    </div>
+                </div>
+                <button type="button" onClick={handleCreateSeries} disabled={busy} style={primaryButtonStyle}>
+                    <Plus size={18} /> 本を追加
+                </button>
+            </div>
+
+            {/* 章（PDF）の一覧 */}
+            <div className="glass-panel" style={panelStyle}>
+                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '12px' }}>
+                    章（PDF・{rawBooks.length}件）※ 右のプルダウンでどの本の章かを変更できます。矢印で本の中の章の順番を変更できます
                 </div>
                 {rawBooks.length === 0 ? (
-                    <div style={{ color: '#ccc' }}>まだ本が登録されていません。現在はデフォルトのサンプルPDFが1冊表示されています。</div>
+                    <div style={{ color: '#ccc' }}>まだ章が登録されていません。現在はデフォルトのサンプルPDFが1冊表示されています。</div>
                 ) : (
                     <div style={{ display: 'grid', gap: '10px' }}>
                         {rawBooks.map((b, i) => (
-                            <div key={b.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', gap: '12px' }}>
-                                <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                    {[[-1, <ArrowUp size={14} />, '上へ'], [1, <ArrowDown size={14} />, '下へ']].map(([delta, icon, label]) => {
-                                        const disabled = isReordering || i + delta < 0 || i + delta >= rawBooks.length;
-                                        return (
-                                            <button
-                                                key={delta}
-                                                type="button"
-                                                onClick={() => handleMove(i, delta)}
-                                                disabled={disabled}
-                                                title={label}
-                                                style={{ display: 'flex', padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.3 : 1 }}
-                                            >
-                                                {icon}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                            <div key={b.id} style={rowStyle}>
+                                <MoveButtons index={i} length={rawBooks.length} busy={busy} onMove={(d) => run(() => reorderBooks(moved(rawBooks, i, d)))} />
                                 <div style={{ minWidth: 0, flex: 1 }}>
                                     <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</div>
                                     <div style={{ color: '#888', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</div>
                                 </div>
+                                <select
+                                    value={b.seriesId && seriesIds.has(b.seriesId) ? b.seriesId : ''}
+                                    onChange={(e) => run(() => assignChapter(b.id, e.target.value))}
+                                    disabled={busy}
+                                    style={{ flexShrink: 0, maxWidth: '180px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'white' }}
+                                >
+                                    <option value="">未分類</option>
+                                    {series.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                                </select>
                                 <button
                                     type="button"
-                                    onClick={() => handleDelete(b)}
-                                    disabled={deletingId === b.id}
-                                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '8px', background: 'rgba(255,107,107,0.1)', color: '#ff6b6b', border: 'none', cursor: deletingId === b.id ? 'default' : 'pointer', fontSize: '0.85rem' }}
+                                    onClick={() => {
+                                        if (!window.confirm(`「${b.title}」を削除しますか？`)) return;
+                                        run(() => deleteBook(b.id));
+                                    }}
+                                    disabled={busy}
+                                    style={deleteButtonStyle}
                                 >
-                                    <Trash2 size={14} /> {deletingId === b.id ? '削除中…' : '削除'}
+                                    <Trash2 size={14} /> 削除
                                 </button>
                             </div>
                         ))}
@@ -384,16 +464,24 @@ function Floor0BooksPanel({ floor0Books }) {
                 )}
             </div>
 
-            <div className="glass-panel" style={{ padding: '32px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <h4 style={{ margin: '0 0 20px', color: '#ccc' }}>本を追加する</h4>
+            {/* 章を追加 */}
+            <div className="glass-panel" style={{ ...panelStyle, padding: '32px' }}>
+                <h4 style={{ margin: '0 0 20px', color: '#ccc' }}>章（PDF）を追加する</h4>
                 <div style={{ marginBottom: '20px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#888' }}>PDFファイル</label>
+                    <label style={labelStyle}>どの本の章か</label>
+                    <select value={uploadSeriesId} onChange={(e) => setUploadSeriesId(e.target.value)} style={inputStyle}>
+                        <option value="">未分類</option>
+                        {series.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    </select>
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>PDFファイル</label>
                     <input
                         key={fileInputKey}
                         type="file"
                         accept="application/pdf,.pdf"
                         onChange={handleFileChange}
-                        style={{ width: '100%', padding: '10px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                        style={{ ...inputStyle, padding: '10px' }}
                     />
                     {selectedFile && (
                         <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#aaa' }}>
@@ -401,34 +489,123 @@ function Floor0BooksPanel({ floor0Books }) {
                         </div>
                     )}
                 </div>
-
                 <div style={{ marginBottom: '24px' }}>
-                    <label style={{ display: 'block', marginBottom: '8px', color: '#888' }}>本のタイトル（表紙に表示・任意）</label>
+                    <label style={labelStyle}>章のタイトル（任意）</label>
                     <input
                         value={titleInput}
                         onChange={(e) => setTitleInput(e.target.value)}
-                        placeholder="未入力の場合はファイル名を使用します"
-                        style={{ width: '100%', padding: '12px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white' }}
+                        placeholder="未入力の場合はファイル名を使用します（例: 第1章 心の視点）"
+                        style={inputStyle}
                     />
                 </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                    <button
-                        type="button"
-                        onClick={handleUpload}
-                        disabled={isUploading}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: '8px',
-                            padding: '12px 32px', borderRadius: '24px',
-                            background: isUploading ? '#555' : 'var(--floor-4, #4facfe)', color: 'black',
-                            border: 'none', fontWeight: 'bold', cursor: isUploading ? 'default' : 'pointer'
-                        }}
-                    >
-                        <Upload size={18} /> {isUploading ? 'アップロード中…' : '本を追加'}
-                    </button>
-                    {message && <span style={{ fontSize: '0.85rem', color: '#9ae6b4' }}>{message}</span>}
-                </div>
+                <button type="button" onClick={handleUpload} disabled={busy} style={primaryButtonStyle}>
+                    <Upload size={18} /> {busy ? '処理中…' : '章を追加'}
+                </button>
             </div>
+        </div>
+    );
+}
+
+// 上へ/下へボタン
+function MoveButtons({ index, length, busy, onMove }) {
+    return (
+        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {[[-1, <ArrowUp size={14} />, '上へ'], [1, <ArrowDown size={14} />, '下へ']].map(([delta, icon, label]) => {
+                const disabled = busy || index + delta < 0 || index + delta >= length;
+                return (
+                    <button
+                        key={delta}
+                        type="button"
+                        onClick={() => onMove(delta)}
+                        disabled={disabled}
+                        title={label}
+                        style={{ display: 'flex', padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.3 : 1 }}
+                    >
+                        {icon}
+                    </button>
+                );
+            })}
+        </div>
+    );
+}
+
+// 表紙のサムネイル。url（保存済みの表紙）か file（選択中の画像）を表示する
+function CoverThumb({ url, file }) {
+    const previewUrl = useMemo(() => (file ? URL.createObjectURL(file) : null), [file]);
+    useEffect(() => () => {
+        if (previewUrl) URL.revokeObjectURL(previewUrl);
+    }, [previewUrl]);
+    const src = previewUrl || url;
+    return (
+        <div style={{
+            flexShrink: 0, width: '54px', aspectRatio: '3 / 4', borderRadius: '4px',
+            border: '1px solid rgba(212,175,55,0.4)',
+            background: src ? `center / cover no-repeat url(${src})` : 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+            {!src && <BookOpen size={18} color="#d4af37" />}
+        </div>
+    );
+}
+
+// 本（表紙）1冊分の行。タイトルの変更・表紙の変更/削除・本の削除ができる
+function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButtonStyle, deleteButtonStyle, moveButtons, onRename, onChangeCover, onRemoveCover, onDelete }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [title, setTitle] = useState(series.title);
+    const [coverInputKey, setCoverInputKey] = useState(0);
+
+    const saveTitle = async () => {
+        if (!title.trim() || title.trim() === series.title) {
+            setIsEditing(false);
+            return;
+        }
+        if (await onRename(title.trim())) setIsEditing(false);
+    };
+
+    return (
+        <div style={{ ...rowStyle, flexWrap: 'wrap' }}>
+            {moveButtons}
+            <CoverThumb url={series.coverUrl} />
+            <div style={{ minWidth: '140px', flex: 1 }}>
+                {isEditing ? (
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                        <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, padding: '8px' }} autoFocus />
+                        <button type="button" onClick={saveTitle} disabled={busy} style={smallButtonStyle}><Save size={14} /></button>
+                        <button type="button" onClick={() => { setTitle(series.title); setIsEditing(false); }} style={smallButtonStyle}><X size={14} /></button>
+                    </div>
+                ) : (
+                    <>
+                        <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{series.title}</div>
+                        <div style={{ color: '#888', fontSize: '0.8rem' }}>
+                            全{chapterCount}章{chapterCount === 0 ? '（章がない本は本棚に表示されません）' : ''}
+                        </div>
+                    </>
+                )}
+            </div>
+            {!isEditing && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> 名前</button>
+                    <label style={{ ...smallButtonStyle, opacity: busy ? 0.5 : 1 }}>
+                        <Upload size={14} /> 表紙
+                        <input
+                            key={coverInputKey}
+                            type="file"
+                            accept="image/*"
+                            disabled={busy}
+                            onChange={(e) => {
+                                const file = e.target.files && e.target.files[0];
+                                if (file) onChangeCover(file);
+                                setCoverInputKey((k) => k + 1);
+                            }}
+                            style={{ display: 'none' }}
+                        />
+                    </label>
+                    {series.coverUrl && (
+                        <button type="button" onClick={onRemoveCover} disabled={busy} style={smallButtonStyle}><X size={14} /> 表紙を外す</button>
+                    )}
+                    <button type="button" onClick={onDelete} disabled={busy} style={deleteButtonStyle}><Trash2 size={14} /> 削除</button>
+                </div>
+            )}
         </div>
     );
 }

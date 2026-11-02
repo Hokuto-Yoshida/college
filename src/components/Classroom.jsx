@@ -374,18 +374,80 @@ function Floor7Placeholder() {
     return <div style={{ height: '540vh' }} />;
 }
 
-// 0F: 地下ホールの書庫。長いPDFを本のようにめくって読める。
-function Floor0Library({ books = [] }) {
+// 0F: どの本にも入っていない章をまとめて見せるための仮の本
+const FLOOR0_UNSORTED_ID = '__unsorted__';
+
+// 0F の本の表紙。表紙画像があれば画像、なければ文字だけの表紙
+function Floor0Cover({ title, coverUrl, subLabel, onClick }) {
+    return (
+        <motion.button
+            onClick={onClick}
+            whileHover={{ scale: 1.05, y: -6 }}
+            whileTap={{ scale: 0.96 }}
+            style={{
+                aspectRatio: '3 / 4',
+                borderRadius: '4px',
+                border: '1px solid rgba(212,175,55,0.4)',
+                background: coverUrl
+                    ? `center / cover no-repeat url(${coverUrl})`
+                    : 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                boxShadow: '0 10px 24px rgba(0,0,0,0.5)',
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: coverUrl ? 'flex-end' : 'center',
+                gap: '12px', padding: coverUrl ? 0 : '16px', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+            }}
+        >
+            {coverUrl ? (
+                <div style={{
+                    width: '100%', padding: '28px 10px 12px',
+                    background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.85))',
+                    color: 'white', fontFamily: 'var(--font-jp)', fontSize: '0.9rem', fontWeight: 'bold',
+                    textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                }}>
+                    {title}
+                    {subLabel && <div style={{ fontSize: '0.7rem', fontWeight: 'normal', opacity: 0.75 }}>{subLabel}</div>}
+                </div>
+            ) : (
+                <>
+                    <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
+                    <BookOpen size={28} color="#d4af37" />
+                    <span style={{
+                        color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
+                        fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                    }}>
+                        {title}
+                    </span>
+                    {subLabel && <span style={{ color: '#d4af37', fontSize: '0.7rem', opacity: 0.75 }}>{subLabel}</span>}
+                </>
+            )}
+        </motion.button>
+    );
+}
+
+// 0F: 地下ホールの書庫。まず本（表紙）を選び、その本の章（PDF）を本のようにめくって読める。
+function Floor0Library({ books = [], series = [] }) {
     const [activeBook, setActiveBook] = useState(null);
     const [transitioningBook, setTransitioningBook] = useState(null);
+    const [openSeriesId, setOpenSeriesId] = useState(null);
 
-    // 表示中の本がリストから消えた（削除された）場合は本棚に戻す
+    // 本棚に並べる本: 章が1つ以上ある本と、どの本にも入っていない章をまとめた「未分類」
+    const seriesIds = new Set(series.map(s => s.id));
+    const unsorted = books.filter(b => !b.seriesId || !seriesIds.has(b.seriesId));
+    const shelf = [
+        ...series
+            .map(s => ({ ...s, chapters: books.filter(b => b.seriesId === s.id) }))
+            .filter(s => s.chapters.length > 0),
+        ...(unsorted.length > 0 ? [{ id: FLOOR0_UNSORTED_ID, title: series.length > 0 ? '未分類' : '書庫', coverUrl: null, chapters: unsorted }] : []),
+    ];
+    // 開いている本が消えた（章がなくなった・削除された）場合は null になり、表紙の一覧に戻る
+    const openSeries = shelf.find(s => s.id === openSeriesId) || null;
+
+    // 表示中の章がリストから消えた（削除された）場合は本棚に戻す
     useEffect(() => {
         if (activeBook && !books.some(b => b.id === activeBook.id)) {
             setActiveBook(null);
         }
     }, [books, activeBook]);
-
     const handleSelectBook = (book) => {
         setTransitioningBook(book);
         // 本が開き切る演出(BookTransitionOverlayの2.5秒アニメーション)を見せてから全画面へ切り替える
@@ -402,43 +464,42 @@ function Floor0Library({ books = [] }) {
                     marginBottom: '20px', color: 'white', fontFamily: 'var(--font-jp)',
                     textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                 }}>
+                    {openSeries && (
+                        <button
+                            onClick={() => setOpenSeriesId(null)}
+                            style={{
+                                display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '14px',
+                                padding: '8px 18px', borderRadius: '20px', background: 'rgba(0,0,0,0.45)',
+                                border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', fontSize: '0.8rem',
+                            }}
+                        >
+                            <ArrowLeft size={14} /> 本の一覧に戻る
+                        </button>
+                    )}
                     <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
-                        地下書庫
+                        {openSeries ? openSeries.title : '地下書庫'}
                     </h3>
                     <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
-                        読みたい本を選んでください
+                        {openSeries ? '読みたい章を選んでください' : '読みたい本を選んでください'}
                     </p>
                 </div>
                 <div style={{
                     display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '28px',
                     padding: '10px 4px 40px',
                 }}>
-                    {books.map((b) => (
-                        <motion.button
-                            key={b.id}
-                            onClick={() => handleSelectBook(b)}
-                            whileHover={{ scale: 1.05, y: -6 }}
-                            whileTap={{ scale: 0.96 }}
-                            style={{
-                                aspectRatio: '3 / 4',
-                                borderRadius: '4px',
-                                border: '1px solid rgba(212,175,55,0.4)',
-                                background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
-                                boxShadow: '0 10px 24px rgba(0,0,0,0.5)',
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                                gap: '12px', padding: '16px', cursor: 'pointer', position: 'relative',
-                            }}
-                        >
-                            <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
-                            <BookOpen size={28} color="#d4af37" />
-                            <span style={{
-                                color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
-                                fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
-                            }}>
-                                {b.title}
-                            </span>
-                        </motion.button>
-                    ))}
+                    {openSeries
+                        ? openSeries.chapters.map((b) => (
+                            <Floor0Cover key={b.id} title={b.title} onClick={() => handleSelectBook(b)} />
+                        ))
+                        : shelf.map((s) => (
+                            <Floor0Cover
+                                key={s.id}
+                                title={s.title}
+                                coverUrl={s.coverUrl}
+                                subLabel={`全${s.chapters.length}章`}
+                                onClick={() => setOpenSeriesId(s.id)}
+                            />
+                        ))}
                 </div>
             </div>
 
@@ -471,7 +532,7 @@ function Floor0Library({ books = [] }) {
                                 fontSize: '0.85rem', marginBottom: '20px', flexShrink: 0,
                             }}
                         >
-                            <ArrowLeft size={14} /> 本棚に戻る
+                            <ArrowLeft size={14} /> 章の一覧に戻る
                         </button>
                         <div style={{
                             flex: '1 1 auto', minHeight: 0, width: '100%',
@@ -486,7 +547,7 @@ function Floor0Library({ books = [] }) {
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], room7RevealOpacity }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], floor0Series = [], room7RevealOpacity }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -557,7 +618,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '4F' && !fourFRoomEntered) return <Floor4View />;
     if (currentFloorId === '3F' && !threeFRoomEntered) return <Floor3View />;
     if (currentFloorId === '2F' && !twoFRoomEntered) return <Floor2View />;
-    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} />;
+    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} series={floor0Series} />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
