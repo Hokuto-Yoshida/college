@@ -2,3 +2,74 @@
   command = "npm run build"
   publish = "dist"
   functions = "netlify/functions"
+
+# 建物・階ごとの URL（例: /main/2F）を直接開いてもアプリが表示されるようにする（/api/* には影響しない）
+[[redirects]]
+  from = "/personal"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/personal/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mirror"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mirror/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/collage"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/collage/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/main"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/main/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mind"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/mind/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/yosei"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/yosei/*"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/practical"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/practical/*"
+  to = "/index.html"
+  status = 200

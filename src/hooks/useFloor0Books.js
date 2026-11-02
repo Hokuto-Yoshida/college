@@ -7,6 +7,8 @@ const FILE_ENDPOINT = '/api/floor0-book-file';
 // 本（表紙）。各PDFは本の中の「章」として seriesId で本に紐づく
 const SERIES_ENDPOINT = '/api/floor0-series';
 const COVER_ENDPOINT = '/api/floor0-series-cover';
+// テーブルゾーンに置く「今週のピックアップ」（{ seriesId, chapterId }）
+const PICKUP_ENDPOINT = '/api/floor0-pickup';
 
 // 表紙画像はアップロード前に縮小する（Netlify Functionsの送信サイズ上限に収めるため）
 const COVER_MAX_SIZE = 1200;
@@ -50,13 +52,15 @@ const DEFAULT_BOOK = {
 export function useFloor0Books() {
     const [rawBooks, setRawBooks] = useState([]);
     const [rawSeries, setRawSeries] = useState([]);
+    const [pickup, setPickupState] = useState({});
     const [loaded, setLoaded] = useState(false);
 
     const refresh = useCallback(async () => {
         try {
-            const [res, seriesRes] = await Promise.all([
+            const [res, seriesRes, pickupRes] = await Promise.all([
                 fetch(LIST_ENDPOINT, { cache: 'no-store' }),
                 fetch(SERIES_ENDPOINT, { cache: 'no-store' }),
+                fetch(PICKUP_ENDPOINT, { cache: 'no-store' }),
             ]);
             if (res.ok) {
                 const data = await res.json();
@@ -69,6 +73,12 @@ export function useFloor0Books() {
                 setRawSeries(Array.isArray(data.series) ? data.series : []);
             } else {
                 setRawSeries([]);
+            }
+            if (pickupRes.ok) {
+                const data = await pickupRes.json();
+                setPickupState(data.pickup && typeof data.pickup === 'object' ? data.pickup : {});
+            } else {
+                setPickupState({});
             }
         } catch (e) {
             console.error('0階の本の一覧取得に失敗しました', e);
@@ -189,6 +199,21 @@ export function useFloor0Books() {
         }
     }, [refresh]);
 
+    // 今週のピックアップを変更する。{ seriesId, chapterId } のうち渡したものだけ（空文字で外す）
+    const setPickup = useCallback(async (changes) => {
+        setPickupState((prev) => ({ ...prev, ...changes }));
+        try {
+            const res = await fetch(PICKUP_ENDPOINT, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(changes),
+            });
+            await throwIfFailed(res, 'ピックアップの保存に失敗しました');
+        } finally {
+            await refresh();
+        }
+    }, [refresh]);
+
     const series = rawSeries.map((s) => ({
         ...s,
         coverUrl: s.coverUpdatedAt
@@ -204,7 +229,7 @@ export function useFloor0Books() {
         : [DEFAULT_BOOK];
 
     return {
-        books, rawBooks, series, loaded, refresh,
+        books, rawBooks, series, pickup, loaded, refresh, setPickup,
         uploadBook, deleteBook, reorderBooks, updateChapter,
         createSeries, updateSeries, deleteSeries, reorderSeries,
     };

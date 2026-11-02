@@ -78,6 +78,8 @@ export default async (req) => {
         if (formData.get('cover') && typeof formData.get('cover') !== 'string') meta.coverUpdatedAt = now;
 
         const series = await readList(store, SERIES_KEY);
+        // 新しく追加したものは一番下に並べる（今ある order の最大値の次の番号を付ける）
+        meta.order = Math.max(-1, ...series.map((x) => (typeof x.order === 'number' ? x.order : -1))) + 1;
         series.push(meta);
         await store.setJSON(SERIES_KEY, series);
         return json({ ok: true, series: meta });

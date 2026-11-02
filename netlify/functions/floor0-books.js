@@ -85,6 +85,8 @@ export default async (req) => {
         applyTitleStyle(meta, { titleFont: formData.get('titleFont'), titleSize: formData.get('titleSize') });
 
         const books = await readIndex(store);
+        // 新しく追加したものは一番下に並べる（今ある order の最大値の次の番号を付ける）
+        meta.order = Math.max(-1, ...books.map((x) => (typeof x.order === 'number' ? x.order : -1))) + 1;
         books.push(meta);
         await store.setJSON(INDEX_KEY, books);
 

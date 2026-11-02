@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent } from 'framer-motion';
+import { createPortal } from 'react-dom';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useMotionValueEvent } from 'framer-motion';
 import { Send, User, BookOpen, PenTool, ChevronRight, ExternalLink, PlayCircle, ArrowLeft } from 'lucide-react';
 
 import { ResponseModal } from './ResponseModal';
@@ -378,6 +379,12 @@ function Floor7Placeholder() {
 // 0F: どの本にも入っていない章をまとめて見せるための仮の本
 const FLOOR0_UNSORTED_ID = '__unsorted__';
 
+// 0F: 横スクロールで切り替わるゾーン（左から順に）
+const FLOOR0_ZONES = ['本棚ゾーン', 'テーブルゾーン'];
+
+// 0F: 本棚と本を読む画面に出す、無断ダウンロード等へのお願い
+const FLOOR0_COPY_NOTICE = '※ 本の内容の無断でのダウンロード・複製・転載はご遠慮ください。';
+
 // 0F の本の表紙。表紙画像があれば画像、なければ文字だけの表紙
 // titleStyle: 管理画面で選んだタイトルのフォント・大きさ（{ titleFont, titleSize }）
 function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
@@ -426,8 +433,131 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
     );
 }
 
+// 0F テーブルゾーンの背景画像（2309×1299）。テーブルの上の、表紙(左)・章(右)を置く位置（画像に対する%）
+// 縦長の画面では画像の左右が切れて見えなくなるので、テーブルの中央に上下に並べる
+const FLOOR0_TABLE_ASPECT = 2309 / 1299;
+const FLOOR0_TABLE_CSS = `
+.floor0-pick { position: absolute; top: 47%; width: 13%; transform: translate(-50%, -50%); }
+.floor0-pick-series { left: 33.5%; }
+.floor0-pick-chapter { left: 57.5%; }
+@media (max-aspect-ratio: 1/1) {
+    .floor0-pick { left: 45.6%; width: 10%; }
+    .floor0-pick-series { top: 33%; }
+    .floor0-pick-chapter { top: 64%; }
+}
+`;
+
+// 0F テーブルゾーンのテーブルの上に、今週のピックアップの本と章を置く。
+// 背景（App 側、画面全体に cover で表示）とぴったり重なるよう、画面に固定して同じ大きさ・同じ横スクロールで動かす
+function Floor0PickupTable({ zoneProgress, pickupSeries, pickupChapter, pickupChapterSeries, onOpenSeries, onOpenChapter }) {
+    const fallbackProgress = useMotionValue(0);
+    // テーブルゾーンの背景は本棚ゾーンの右隣（+100vw）にあり、スクロールに合わせて 0 まで流れてくる
+    const x = useTransform(zoneProgress || fallbackProgress, [0, 1], ['100vw', '0vw']);
+    if (!pickupSeries && !pickupChapter) return null;
+
+    const items = [
+        pickupSeries && {
+            key: 'series', label: '今週の本',
+            cover: <Floor0Cover title={pickupSeries.title} coverUrl={pickupSeries.coverUrl} titleStyle={pickupSeries} subLabel={`全${pickupSeries.chapters.length}章`} onClick={onOpenSeries} />,
+        },
+        pickupChapter && {
+            key: 'chapter', label: '今週の章',
+            cover: <Floor0Cover title={pickupChapter.title} titleStyle={pickupChapter} subLabel={pickupChapterSeries?.title} onClick={onOpenChapter} />,
+        },
+    ].filter(Boolean);
+
+    return createPortal(
+        <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 5, x }}>
+            {/* 背景画像の cover 表示と同じ大きさ・位置の枠。この中の % は画像に対する位置になる */}
+            <div style={{
+                position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
+                width: `max(100vw, ${100 * FLOOR0_TABLE_ASPECT}vh)`, height: `max(100vh, ${100 / FLOOR0_TABLE_ASPECT}vw)`,
+            }}>
+                <style>{FLOOR0_TABLE_CSS}</style>
+                {items.map(({ key, label, cover }) => (
+                    <div key={key} className={`floor0-pick floor0-pick-${key}`} style={{
+                        pointerEvents: 'auto',
+                        filter: 'drop-shadow(0 18px 18px rgba(60,45,30,0.35))', // テーブルに落ちる影
+                    }}>
+                        <div style={{
+                            marginBottom: '8px', textAlign: 'center', fontFamily: 'var(--font-jp)', fontSize: '0.8rem',
+                            fontWeight: 'bold', letterSpacing: '0.15em', color: '#5a4630',
+                        }}>
+                            {label}
+                        </div>
+                        {cover}
+                    </div>
+                ))}
+            </div>
+        </motion.div>,
+        document.body,
+    );
+}
+
+// 0F: 本の中の章を1行に並べ、横スライド（スワイプ・横スクロール・左右の矢印）で送るスライダー
+function Floor0ChapterSlider({ children }) {
+    const trackRef = useRef(null);
+    const [canPrev, setCanPrev] = useState(false);
+    const [canNext, setCanNext] = useState(false);
+
+    // 左右にまだ送れるかで、矢印を出し分ける
+    const updateArrows = () => {
+        const el = trackRef.current;
+        if (!el) return;
+        setCanPrev(el.scrollLeft > 4);
+        setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+    };
+    useEffect(() => {
+        const el = trackRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(updateArrows);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, []);
+
+    const slide = (direction) => {
+        const el = trackRef.current;
+        if (el) el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' });
+    };
+
+    const arrowStyle = (side) => ({
+        position: 'absolute', top: '50%', [side]: '-6px', transform: 'translateY(-50%)', zIndex: 2,
+        width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer',
+        backdropFilter: 'blur(8px)',
+    });
+
+    return (
+        <div style={{ position: 'relative', margin: '10px 0 40px' }}>
+            {canPrev && (
+                <button onClick={() => slide(-1)} style={arrowStyle('left')} aria-label="前の章へ">
+                    <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
+                </button>
+            )}
+            <div
+                ref={trackRef}
+                onScroll={updateArrows}
+                className="floor0-chapter-track"
+                style={{
+                    display: 'flex', gap: '28px', overflowX: 'auto', overflowY: 'hidden', padding: '10px 4px',
+                    scrollSnapType: 'x proximity', scrollbarWidth: 'none',
+                    overscrollBehaviorX: 'contain', // 端まで送っても、本棚ゾーン/テーブルゾーンの切り替えにつながらないようにする
+                }}
+            >
+                <style>{`.floor0-chapter-track::-webkit-scrollbar { display: none; }`}</style>
+                {children}
+            </div>
+            {canNext && (
+                <button onClick={() => slide(1)} style={arrowStyle('right')} aria-label="次の章へ">
+                    <ChevronRight size={20} />
+                </button>
+            )}
+        </div>
+    );
+}
+
 // 0F: 地下ホールの書庫。まず本（表紙）を選び、その本の章（PDF）を本のようにめくって読める。
-function Floor0Library({ books = [], series = [] }) {
+function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
     const [activeBook, setActiveBook] = useState(null);
     const [transitioningBook, setTransitioningBook] = useState(null);
     const [openSeriesId, setOpenSeriesId] = useState(null);
@@ -459,9 +589,71 @@ function Floor0Library({ books = [], series = [] }) {
         }, 2500);
     };
 
+    // 本棚ゾーン / テーブルゾーン の横スクロール。位置(0〜1)を App に伝えて背景も一緒に流す
+    const zoneScrollRef = useRef(null);
+    const [activeZone, setActiveZone] = useState(0);
+    useEffect(() => {
+        zoneProgress?.set(0);
+        return () => zoneProgress?.set(0);
+    }, [zoneProgress]);
+    const handleZoneScroll = (e) => {
+        const el = e.currentTarget;
+        const max = el.scrollWidth - el.clientWidth;
+        const progress = max > 0 ? el.scrollLeft / max : 0;
+        zoneProgress?.set(progress);
+        setActiveZone(Math.round(progress * (FLOOR0_ZONES.length - 1)));
+    };
+    const scrollToZone = (index) => {
+        const el = zoneScrollRef.current;
+        if (el) el.scrollTo({ left: el.clientWidth * index, behavior: 'smooth' });
+    };
+
+    // 今週のピックアップ（設定画面で選んだ本1冊・章1つ）。消された本・章は置かない
+    const pickupSeries = shelf.find(s => s.id === pickup.seriesId && s.id !== FLOOR0_UNSORTED_ID) || null;
+    const pickupChapter = books.find(b => b.id === pickup.chapterId && !b.isDefault) || null;
+    const pickupChapterSeries = pickupChapter ? series.find(s => s.id === pickupChapter.seriesId) : null;
+    // 表紙をクリック: 本棚ゾーンへ戻って、その本の章の一覧を開く
+    const openPickupSeries = () => {
+        setOpenSeriesId(pickupSeries.id);
+        scrollToZone(0);
+    };
+
     return (
         <>
-            <div style={{ marginTop: '20px' }}>
+            {/* ゾーン切り替えのタブ（横スクロール・スワイプでも切り替わる） */}
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
+                {FLOOR0_ZONES.map((zone, i) => (
+                    <button
+                        key={zone}
+                        onClick={() => scrollToZone(i)}
+                        style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '6px',
+                            padding: '8px 18px', borderRadius: '20px', fontSize: '0.85rem', cursor: 'pointer',
+                            fontFamily: 'var(--font-jp)', color: 'white', backdropFilter: 'blur(8px)',
+                            background: activeZone === i ? 'rgba(79,195,176,0.35)' : 'rgba(0,0,0,0.45)',
+                            border: activeZone === i ? '1px solid var(--floor-0)' : '1px solid rgba(255,255,255,0.2)',
+                        }}
+                    >
+                        {i < activeZone && <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }} />}
+                        {zone}
+                        {i > activeZone && <ChevronRight size={14} />}
+                    </button>
+                ))}
+            </div>
+
+            <div
+                ref={zoneScrollRef}
+                onScroll={handleZoneScroll}
+                className="floor0-zones"
+                style={{
+                    display: 'flex', overflowX: 'auto', overflowY: 'hidden',
+                    scrollSnapType: 'x mandatory', scrollbarWidth: 'none',
+                }}
+            >
+            <style>{`.floor0-zones::-webkit-scrollbar { display: none; }`}</style>
+
+            {/* 本棚ゾーン */}
+            <div style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', marginTop: '20px' }}>
                 <div style={{
                     marginBottom: '20px', color: 'white', fontFamily: 'var(--font-jp)',
                     textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
@@ -484,16 +676,24 @@ function Floor0Library({ books = [], series = [] }) {
                     <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
                         {openSeries ? '読みたい章を選んでください' : '読みたい本を選んでください'}
                     </p>
+                    <p style={{ margin: '10px 0 0', fontSize: '0.75rem', opacity: 0.6 }}>
+                        {FLOOR0_COPY_NOTICE}
+                    </p>
                 </div>
-                <div style={{
-                    display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '28px',
-                    padding: '10px 4px 40px',
-                }}>
-                    {openSeries
-                        ? openSeries.chapters.map((b) => (
-                            <Floor0Cover key={b.id} title={b.title} titleStyle={b} onClick={() => handleSelectBook(b)} />
-                        ))
-                        : shelf.map((s) => (
+                {openSeries ? (
+                    <Floor0ChapterSlider key={openSeries.id}>
+                        {openSeries.chapters.map((b) => (
+                            <div key={b.id} style={{ flex: '0 0 150px', scrollSnapAlign: 'start' }}>
+                                <Floor0Cover title={b.title} titleStyle={b} onClick={() => handleSelectBook(b)} />
+                            </div>
+                        ))}
+                    </Floor0ChapterSlider>
+                ) : (
+                    <div style={{
+                        display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '28px',
+                        padding: '10px 4px 40px',
+                    }}>
+                        {shelf.map((s) => (
                             <Floor0Cover
                                 key={s.id}
                                 title={s.title}
@@ -503,8 +703,34 @@ function Floor0Library({ books = [], series = [] }) {
                                 onClick={() => setOpenSeriesId(s.id)}
                             />
                         ))}
+                    </div>
+                )}
+            </div>
+
+            {/* テーブルゾーン（背景は App 側で本棚ゾーンの右隣に並べている。ピックアップは下の Floor0PickupTable がテーブルの上に置く） */}
+            <div style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', marginTop: '20px', minHeight: '60vh' }}>
+                <div style={{
+                    color: 'white', fontFamily: 'var(--font-jp)',
+                    textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                }}>
+                    <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
+                        今週のピックアップ
+                    </h3>
+                    {!pickupSeries && !pickupChapter && (
+                        <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>今週のピックアップは準備中です</p>
+                    )}
                 </div>
             </div>
+            </div>
+
+            <Floor0PickupTable
+                zoneProgress={zoneProgress}
+                pickupSeries={pickupSeries}
+                pickupChapter={pickupChapter}
+                pickupChapterSeries={pickupChapterSeries}
+                onOpenSeries={openPickupSeries}
+                onOpenChapter={() => handleSelectBook(pickupChapter)}
+            />
 
             {/* 本を開く演出（ワークショップの本と同じ3D演出を流用） */}
             <BookTransitionOverlay hinge="right" resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />
@@ -543,6 +769,12 @@ function Floor0Library({ books = [], series = [] }) {
                         }}>
                             {activeBook && <PdfFlipBook pdfUrl={activeBook.pdfUrl} title={activeBook.title} />}
                         </div>
+                        <p style={{
+                            margin: '20px 0 0', flexShrink: 0, color: 'white', opacity: 0.55,
+                            fontSize: '0.75rem', fontFamily: 'var(--font-jp)', textAlign: 'center',
+                        }}>
+                            {FLOOR0_COPY_NOTICE}
+                        </p>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -550,7 +782,7 @@ function Floor0Library({ books = [], series = [] }) {
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], floor0Series = [], room7RevealOpacity }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], floor0Series = [], floor0Pickup, floor0ZoneProgress, room7RevealOpacity }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -621,7 +853,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '4F' && !fourFRoomEntered) return <Floor4View />;
     if (currentFloorId === '3F' && !threeFRoomEntered) return <Floor3View />;
     if (currentFloorId === '2F' && !twoFRoomEntered) return <Floor2View />;
-    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} series={floor0Series} />;
+    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} series={floor0Series} pickup={floor0Pickup} zoneProgress={floor0ZoneProgress} />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);

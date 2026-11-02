@@ -260,7 +260,7 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
 // 本棚ではまず本の表紙が並び、表紙をクリックするとその本の章が並ぶ
 function Floor0BooksPanel({ floor0Books }) {
     const {
-        rawBooks = [], series = [],
+        rawBooks = [], series = [], pickup = {}, setPickup,
         uploadBook, deleteBook, reorderBooks, updateChapter,
         createSeries, updateSeries, deleteSeries, reorderSeries,
     } = floor0Books || {};
@@ -359,6 +359,43 @@ function Floor0BooksPanel({ floor0Books }) {
                     先に本（タイトル・表紙）を作り、PDFは章としてどの本に入れるかを選んでアップロードしてください。
                 </p>
                 {message && <div style={{ marginTop: '12px', fontSize: '0.9rem', color: '#9ae6b4' }}>{message}</div>}
+            </div>
+
+            {/* 今週のピックアップ（テーブルゾーン） */}
+            <div className="glass-panel" style={panelStyle}>
+                <h4 style={{ margin: '0 0 6px', color: '#ccc' }}>今週のピックアップ（テーブルゾーン）</h4>
+                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '16px' }}>
+                    0階のテーブルゾーンのテーブルの上に、左に本の表紙・右に章が置かれます。選ぶとすぐ反映されます。
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                    <div>
+                        <label style={labelStyle}>本（左に置く表紙）</label>
+                        <select
+                            value={pickup.seriesId && seriesIds.has(pickup.seriesId) ? pickup.seriesId : ''}
+                            onChange={(e) => run(() => setPickup({ seriesId: e.target.value }), 'ピックアップを保存しました。')}
+                            disabled={busy}
+                            style={inputStyle}
+                        >
+                            <option value="">置かない</option>
+                            {series.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                        </select>
+                    </div>
+                    <div>
+                        <label style={labelStyle}>章（右に置く）</label>
+                        <select
+                            value={pickup.chapterId && rawBooks.some((b) => b.id === pickup.chapterId) ? pickup.chapterId : ''}
+                            onChange={(e) => run(() => setPickup({ chapterId: e.target.value }), 'ピックアップを保存しました。')}
+                            disabled={busy}
+                            style={inputStyle}
+                        >
+                            <option value="">置かない</option>
+                            {rawBooks.map((b) => {
+                                const owner = series.find((s) => s.id === b.seriesId);
+                                return <option key={b.id} value={b.id}>{owner ? `${owner.title} ／ ${b.title}` : `未分類 ／ ${b.title}`}</option>;
+                            })}
+                        </select>
+                    </div>
+                </div>
             </div>
 
             {/* 本（表紙）の一覧 */}
