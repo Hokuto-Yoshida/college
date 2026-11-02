@@ -7,6 +7,18 @@ const STORE_NAME = 'floor0-books';
 const SERIES_KEY = 'series';
 const CHAPTER_INDEX_KEY = 'index';
 
+// タイトルのフォント・大きさとして受け付ける値（src/data/floor0TitleStyle.js と同じ）
+const TITLE_FONTS = ['gothic', 'mincho'];
+const TITLE_SIZES = ['small', 'medium', 'large'];
+
+// フォームの titleFont / titleSize のうち、正しい値だけを target に書き込む
+function applyTitleStyle(target, formData) {
+    const font = formData.get('titleFont');
+    const size = formData.get('titleSize');
+    if (TITLE_FONTS.includes(font)) target.titleFont = font;
+    if (TITLE_SIZES.includes(size)) target.titleSize = size;
+}
+
 const json = (body, status = 200) => new Response(JSON.stringify(body), {
     status,
     headers: { 'Content-Type': 'application/json' },
@@ -62,6 +74,7 @@ export default async (req) => {
 
         const now = new Date().toISOString();
         const meta = { id, title, createdAt: now };
+        applyTitleStyle(meta, formData);
         if (formData.get('cover') && typeof formData.get('cover') !== 'string') meta.coverUpdatedAt = now;
 
         const series = await readList(store, SERIES_KEY);
@@ -85,6 +98,7 @@ export default async (req) => {
 
         const title = formData.get('title');
         if (typeof title === 'string' && title.trim()) target.title = title.trim();
+        applyTitleStyle(target, formData);
 
         if (formData.get('removeCover') === '1') {
             await store.delete(`cover:${id}`);

@@ -11,6 +11,7 @@ import floor6Reveal from '../assets/floor_6f_reveal.png';
 import floor6Base from '../assets/floor_bg2.png';
 import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
+import { titleTextStyle } from '../data/floor0TitleStyle';
 import workshopSide1 from '../assets/workshop_side_1.webp';
 import workshopSide2 from '../assets/workshop_side_2.webp';
 
@@ -378,7 +379,9 @@ function Floor7Placeholder() {
 const FLOOR0_UNSORTED_ID = '__unsorted__';
 
 // 0F の本の表紙。表紙画像があれば画像、なければ文字だけの表紙
-function Floor0Cover({ title, coverUrl, subLabel, onClick }) {
+// titleStyle: 管理画面で選んだタイトルのフォント・大きさ（{ titleFont, titleSize }）
+function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
+    const titleCss = titleTextStyle(titleStyle);
     return (
         <motion.button
             onClick={onClick}
@@ -401,7 +404,7 @@ function Floor0Cover({ title, coverUrl, subLabel, onClick }) {
                 <div style={{
                     width: '100%', padding: '28px 10px 12px',
                     background: 'linear-gradient(to bottom, transparent, rgba(0,0,0,0.85))',
-                    color: 'white', fontFamily: 'var(--font-jp)', fontSize: '0.9rem', fontWeight: 'bold',
+                    color: 'white', ...titleCss, fontWeight: 'bold',
                     textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
                 }}>
                     {title}
@@ -410,9 +413,8 @@ function Floor0Cover({ title, coverUrl, subLabel, onClick }) {
             ) : (
                 <>
                     <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />
-                    <BookOpen size={28} color="#d4af37" />
                     <span style={{
-                        color: '#d4af37', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
+                        color: '#d4af37', ...titleCss,
                         fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
                     }}>
                         {title}
@@ -489,13 +491,14 @@ function Floor0Library({ books = [], series = [] }) {
                 }}>
                     {openSeries
                         ? openSeries.chapters.map((b) => (
-                            <Floor0Cover key={b.id} title={b.title} onClick={() => handleSelectBook(b)} />
+                            <Floor0Cover key={b.id} title={b.title} titleStyle={b} onClick={() => handleSelectBook(b)} />
                         ))
                         : shelf.map((s) => (
                             <Floor0Cover
                                 key={s.id}
                                 title={s.title}
                                 coverUrl={s.coverUrl}
+                                titleStyle={s}
                                 subLabel={`全${s.chapters.length}章`}
                                 onClick={() => setOpenSeriesId(s.id)}
                             />

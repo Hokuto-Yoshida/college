@@ -1,7 +1,9 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, ArrowUp, ArrowDown } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { Reorder, useDragControls } from 'framer-motion';
+import { Plus, Save, Trash2, Edit3, ArrowLeft, Link as LinkIcon, ExternalLink, FileText, X, Upload, BookOpen, GripVertical } from 'lucide-react';
 import { buildings } from '../data/buildings';
+import { TITLE_FONTS, TITLE_SIZES, DEFAULT_TITLE_FONT, DEFAULT_TITLE_SIZE, titleTextStyle } from '../data/floor0TitleStyle';
 
 export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Books, onClose }) {
     const [selectedBuildingId, setSelectedBuildingId] = useState('main');
@@ -259,7 +261,7 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
 function Floor0BooksPanel({ floor0Books }) {
     const {
         rawBooks = [], series = [],
-        uploadBook, deleteBook, reorderBooks, assignChapter,
+        uploadBook, deleteBook, reorderBooks, updateChapter,
         createSeries, updateSeries, deleteSeries, reorderSeries,
     } = floor0Books || {};
     const [message, setMessage] = useState('');
@@ -286,13 +288,14 @@ function Floor0BooksPanel({ floor0Books }) {
     // 本を追加
     const [newSeriesTitle, setNewSeriesTitle] = useState('');
     const [newSeriesCover, setNewSeriesCover] = useState(null);
+    const [newSeriesStyle, setNewSeriesStyle] = useState({ titleFont: DEFAULT_TITLE_FONT, titleSize: DEFAULT_TITLE_SIZE });
     const [seriesInputKey, setSeriesInputKey] = useState(0);
     const handleCreateSeries = async () => {
         if (!newSeriesTitle.trim()) {
             setMessage('本のタイトルを入力してください');
             return;
         }
-        const ok = await run(() => createSeries(newSeriesTitle.trim(), newSeriesCover), '本を追加しました。');
+        const ok = await run(() => createSeries(newSeriesTitle.trim(), newSeriesCover, newSeriesStyle), '本を追加しました。');
         if (ok) {
             setNewSeriesTitle('');
             setNewSeriesCover(null);
@@ -304,6 +307,7 @@ function Floor0BooksPanel({ floor0Books }) {
     const [selectedFile, setSelectedFile] = useState(null);
     const [titleInput, setTitleInput] = useState('');
     const [uploadSeriesId, setUploadSeriesId] = useState('');
+    const [uploadStyle, setUploadStyle] = useState({ titleFont: DEFAULT_TITLE_FONT, titleSize: DEFAULT_TITLE_SIZE });
     const [fileInputKey, setFileInputKey] = useState(0);
     const handleFileChange = (e) => {
         const file = e.target.files && e.target.files[0];
@@ -320,19 +324,12 @@ function Floor0BooksPanel({ floor0Books }) {
             setMessage('先にPDFファイルを選択してください');
             return;
         }
-        const ok = await run(() => uploadBook(selectedFile, titleInput, uploadSeriesId), 'アップロードしました。0階の本棚に追加されます。');
+        const ok = await run(() => uploadBook(selectedFile, titleInput, uploadSeriesId, uploadStyle), 'アップロードしました。0階の本棚に追加されます。');
         if (ok) {
             setSelectedFile(null);
             setTitleInput('');
             setFileInputKey((k) => k + 1); // ファイル入力欄の表示をリセット
         }
-    };
-
-    // リストの中で1つ上/下へ動かした id の並びを返す
-    const moved = (items, index, delta) => {
-        const ids = items.map((x) => x.id);
-        [ids[index], ids[index + delta]] = [ids[index + delta], ids[index]];
-        return ids;
     };
 
     const seriesIds = new Set(series.map((s) => s.id));
@@ -367,15 +364,14 @@ function Floor0BooksPanel({ floor0Books }) {
             {/* 本（表紙）の一覧 */}
             <div className="glass-panel" style={panelStyle}>
                 <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '12px' }}>
-                    本（{series.length}冊）※ 矢印で本棚に並ぶ順番を変更できます
+                    本（{series.length}冊）※ 左の <GripVertical size={12} style={{ verticalAlign: 'middle' }} /> をドラッグすると、本棚に並ぶ順番を変更できます
                 </div>
                 {series.length === 0 ? (
                     <div style={{ color: '#ccc' }}>まだ本がありません。下の「本を追加する」から作成してください。</div>
                 ) : (
-                    <div style={{ display: 'grid', gap: '10px' }}>
-                        {series.map((s, i) => (
+                    <SortableList items={series} disabled={busy} onReorder={(ids) => run(() => reorderSeries(ids), '並び順を保存しました。')}>
+                        {(s, dragHandle) => (
                             <SeriesRow
-                                key={s.id}
                                 series={s}
                                 chapterCount={chapterCount(s.id)}
                                 busy={busy}
@@ -383,8 +379,8 @@ function Floor0BooksPanel({ floor0Books }) {
                                 inputStyle={inputStyle}
                                 smallButtonStyle={smallButtonStyle}
                                 deleteButtonStyle={deleteButtonStyle}
-                                moveButtons={<MoveButtons index={i} length={series.length} busy={busy} onMove={(d) => run(() => reorderSeries(moved(series, i, d)))} />}
-                                onRename={(title) => run(() => updateSeries(s.id, { title }), 'タイトルを変更しました。')}
+                                dragHandle={dragHandle}
+                                onSaveTitle={(changes) => run(() => updateSeries(s.id, changes), 'タイトルを変更しました。')}
                                 onChangeCover={(file) => run(() => updateSeries(s.id, { coverFile: file }), '表紙を変更しました。')}
                                 onRemoveCover={() => run(() => updateSeries(s.id, { removeCover: true }), '表紙を外しました。')}
                                 onDelete={() => {
@@ -392,8 +388,8 @@ function Floor0BooksPanel({ floor0Books }) {
                                     run(() => deleteSeries(s.id), '本を削除しました。');
                                 }}
                             />
-                        ))}
-                    </div>
+                        )}
+                    </SortableList>
                 )}
             </div>
 
@@ -403,6 +399,10 @@ function Floor0BooksPanel({ floor0Books }) {
                 <div style={{ marginBottom: '20px' }}>
                     <label style={labelStyle}>本のタイトル</label>
                     <input value={newSeriesTitle} onChange={(e) => setNewSeriesTitle(e.target.value)} placeholder="例: マインドの法則" style={inputStyle} />
+                </div>
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={labelStyle}>タイトルの文字</label>
+                    <TitleStyleFields value={newSeriesStyle} onChange={setNewSeriesStyle} previewText={newSeriesTitle || '本のタイトル'} />
                 </div>
                 <div style={{ marginBottom: '24px' }}>
                     <label style={labelStyle}>表紙の画像（任意・あとから変更できます）</label>
@@ -425,42 +425,32 @@ function Floor0BooksPanel({ floor0Books }) {
             {/* 章（PDF）の一覧 */}
             <div className="glass-panel" style={panelStyle}>
                 <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '12px' }}>
-                    章（PDF・{rawBooks.length}件）※ 右のプルダウンでどの本の章かを変更できます。矢印で本の中の章の順番を変更できます
+                    章（PDF・{rawBooks.length}件）※ プルダウンでどの本の章かを変更できます。左の <GripVertical size={12} style={{ verticalAlign: 'middle' }} /> をドラッグすると、本の中の章の順番を変更できます
                 </div>
                 {rawBooks.length === 0 ? (
                     <div style={{ color: '#ccc' }}>まだ章が登録されていません。現在はデフォルトのサンプルPDFが1冊表示されています。</div>
                 ) : (
-                    <div style={{ display: 'grid', gap: '10px' }}>
-                        {rawBooks.map((b, i) => (
-                            <div key={b.id} style={rowStyle}>
-                                <MoveButtons index={i} length={rawBooks.length} busy={busy} onMove={(d) => run(() => reorderBooks(moved(rawBooks, i, d)))} />
-                                <div style={{ minWidth: 0, flex: 1 }}>
-                                    <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.title}</div>
-                                    <div style={{ color: '#888', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{b.name}</div>
-                                </div>
-                                <select
-                                    value={b.seriesId && seriesIds.has(b.seriesId) ? b.seriesId : ''}
-                                    onChange={(e) => run(() => assignChapter(b.id, e.target.value))}
-                                    disabled={busy}
-                                    style={{ flexShrink: 0, maxWidth: '180px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'white' }}
-                                >
-                                    <option value="">未分類</option>
-                                    {series.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
-                                </select>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        if (!window.confirm(`「${b.title}」を削除しますか？`)) return;
-                                        run(() => deleteBook(b.id));
-                                    }}
-                                    disabled={busy}
-                                    style={deleteButtonStyle}
-                                >
-                                    <Trash2 size={14} /> 削除
-                                </button>
-                            </div>
-                        ))}
-                    </div>
+                    <SortableList items={rawBooks} disabled={busy} onReorder={(ids) => run(() => reorderBooks(ids), '並び順を保存しました。')}>
+                        {(b, dragHandle) => (
+                            <ChapterRow
+                                chapter={b}
+                                series={series}
+                                seriesId={b.seriesId && seriesIds.has(b.seriesId) ? b.seriesId : ''}
+                                busy={busy}
+                                rowStyle={rowStyle}
+                                inputStyle={inputStyle}
+                                smallButtonStyle={smallButtonStyle}
+                                deleteButtonStyle={deleteButtonStyle}
+                                dragHandle={dragHandle}
+                                onChangeSeries={(seriesId) => run(() => updateChapter(b.id, { seriesId: seriesId || null }))}
+                                onSaveTitle={(changes) => run(() => updateChapter(b.id, changes), 'タイトルを変更しました。')}
+                                onDelete={() => {
+                                    if (!window.confirm(`「${b.title}」を削除しますか？`)) return;
+                                    run(() => deleteBook(b.id));
+                                }}
+                            />
+                        )}
+                    </SortableList>
                 )}
             </div>
 
@@ -498,6 +488,14 @@ function Floor0BooksPanel({ floor0Books }) {
                         style={inputStyle}
                     />
                 </div>
+                <div style={{ marginBottom: '24px' }}>
+                    <label style={labelStyle}>タイトルの文字</label>
+                    <TitleStyleFields
+                        value={uploadStyle}
+                        onChange={setUploadStyle}
+                        previewText={titleInput || (selectedFile ? selectedFile.name.replace(/\.pdf$/i, '') : '章のタイトル')}
+                    />
+                </div>
                 <button type="button" onClick={handleUpload} disabled={busy} style={primaryButtonStyle}>
                     <Upload size={18} /> {busy ? '処理中…' : '章を追加'}
                 </button>
@@ -506,26 +504,71 @@ function Floor0BooksPanel({ floor0Books }) {
     );
 }
 
-// 上へ/下へボタン
-function MoveButtons({ index, length, busy, onMove }) {
+// ドラッグ＆ドロップで並べ替えられるリスト（マウス・タッチ両対応）。
+// 行の左のつまみ（dragHandle）をつかんでドラッグし、離したときに新しい id の並びで onReorder を呼ぶ。
+// children は (item, dragHandle) => 行の中身
+function SortableList({ items, disabled, onReorder, children }) {
+    // ドラッグ中だけ、並び替え途中の id の並びを持つ
+    const [draftIds, setDraftIds] = useState(null);
+    const draftRef = useRef(null);
+    const ids = items.map((item) => item.id);
+    const byId = new Map(items.map((item) => [item.id, item]));
+    const shownIds = (draftIds || ids).filter((id) => byId.has(id));
+
+    const handleReorder = (nextIds) => {
+        draftRef.current = nextIds;
+        setDraftIds(nextIds);
+    };
+    const handleDragEnd = () => {
+        const nextIds = draftRef.current;
+        draftRef.current = null;
+        setDraftIds(null);
+        if (nextIds && nextIds.join(',') !== ids.join(',')) onReorder(nextIds);
+    };
+
     return (
-        <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {[[-1, <ArrowUp size={14} />, '上へ'], [1, <ArrowDown size={14} />, '下へ']].map(([delta, icon, label]) => {
-                const disabled = busy || index + delta < 0 || index + delta >= length;
-                return (
-                    <button
-                        key={delta}
-                        type="button"
-                        onClick={() => onMove(delta)}
-                        disabled={disabled}
-                        title={label}
-                        style={{ display: 'flex', padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', cursor: disabled ? 'default' : 'pointer', opacity: disabled ? 0.3 : 1 }}
-                    >
-                        {icon}
-                    </button>
-                );
-            })}
+        <Reorder.Group as="div" axis="y" values={shownIds} onReorder={handleReorder} style={{ display: 'grid', gap: '10px' }}>
+            {shownIds.map((id) => (
+                <SortableItem key={id} id={id} disabled={disabled} onDragEnd={handleDragEnd}>
+                    {(dragHandle) => children(byId.get(id), dragHandle)}
+                </SortableItem>
+            ))}
+        </Reorder.Group>
+    );
+}
+
+function SortableItem({ id, disabled, onDragEnd, children }) {
+    const dragControls = useDragControls();
+    const dragHandle = (
+        <div
+            onPointerDown={(e) => {
+                if (disabled) return;
+                e.preventDefault();
+                dragControls.start(e);
+            }}
+            title="ドラッグして並べ替え"
+            style={{
+                flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                alignSelf: 'stretch', padding: '0 4px', borderRadius: '6px',
+                color: '#aaa', cursor: disabled ? 'default' : 'grab', opacity: disabled ? 0.3 : 1,
+                touchAction: 'none', // スマホでつまみを触ったときに画面がスクロールしないようにする
+            }}
+        >
+            <GripVertical size={20} />
         </div>
+    );
+    return (
+        <Reorder.Item
+            as="div"
+            value={id}
+            dragListener={false}
+            dragControls={dragControls}
+            onDragEnd={onDragEnd}
+            whileDrag={{ scale: 1.02, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', zIndex: 1 }}
+            style={{ position: 'relative', borderRadius: '8px' }}
+        >
+            {children(dragHandle)}
+        </Reorder.Item>
     );
 }
 
@@ -549,33 +592,27 @@ function CoverThumb({ url, file }) {
 }
 
 // 本（表紙）1冊分の行。タイトルの変更・表紙の変更/削除・本の削除ができる
-function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButtonStyle, deleteButtonStyle, moveButtons, onRename, onChangeCover, onRemoveCover, onDelete }) {
+function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButtonStyle, deleteButtonStyle, dragHandle, onSaveTitle, onChangeCover, onRemoveCover, onDelete }) {
     const [isEditing, setIsEditing] = useState(false);
-    const [title, setTitle] = useState(series.title);
     const [coverInputKey, setCoverInputKey] = useState(0);
-
-    const saveTitle = async () => {
-        if (!title.trim() || title.trim() === series.title) {
-            setIsEditing(false);
-            return;
-        }
-        if (await onRename(title.trim())) setIsEditing(false);
-    };
 
     return (
         <div style={{ ...rowStyle, flexWrap: 'wrap' }}>
-            {moveButtons}
+            {dragHandle}
             <CoverThumb url={series.coverUrl} />
             <div style={{ minWidth: '140px', flex: 1 }}>
                 {isEditing ? (
-                    <div style={{ display: 'flex', gap: '6px' }}>
-                        <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, padding: '8px' }} autoFocus />
-                        <button type="button" onClick={saveTitle} disabled={busy} style={smallButtonStyle}><Save size={14} /></button>
-                        <button type="button" onClick={() => { setTitle(series.title); setIsEditing(false); }} style={smallButtonStyle}><X size={14} /></button>
-                    </div>
+                    <TitleEditor
+                        item={series}
+                        busy={busy}
+                        inputStyle={inputStyle}
+                        smallButtonStyle={smallButtonStyle}
+                        onSave={onSaveTitle}
+                        onClose={() => setIsEditing(false)}
+                    />
                 ) : (
                     <>
-                        <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{series.title}</div>
+                        <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...titleTextStyle(series) }}>{series.title}</div>
                         <div style={{ color: '#888', fontSize: '0.8rem' }}>
                             全{chapterCount}章{chapterCount === 0 ? '（章がない本は本棚に表示されません）' : ''}
                         </div>
@@ -584,7 +621,7 @@ function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButt
             </div>
             {!isEditing && (
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> 名前</button>
+                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> タイトル</button>
                     <label style={{ ...smallButtonStyle, opacity: busy ? 0.5 : 1 }}>
                         <Upload size={14} /> 表紙
                         <input
@@ -603,6 +640,117 @@ function SeriesRow({ series, chapterCount, busy, rowStyle, inputStyle, smallButt
                     {series.coverUrl && (
                         <button type="button" onClick={onRemoveCover} disabled={busy} style={smallButtonStyle}><X size={14} /> 表紙を外す</button>
                     )}
+                    <button type="button" onClick={onDelete} disabled={busy} style={deleteButtonStyle}><Trash2 size={14} /> 削除</button>
+                </div>
+            )}
+        </div>
+    );
+}
+
+// タイトルの文字（フォント: 明朝体/ゴシック体、大きさ: 大/中/小）を選ぶ欄と、その見た目のプレビュー
+function TitleStyleFields({ value, onChange, previewText }) {
+    const choiceStyle = (selected) => ({
+        padding: '6px 14px', borderRadius: '16px', fontSize: '0.85rem', cursor: 'pointer',
+        border: selected ? '1px solid #d4af37' : '1px solid rgba(255,255,255,0.15)',
+        background: selected ? 'rgba(212,175,55,0.2)' : 'rgba(0,0,0,0.3)',
+        color: selected ? '#f0d77a' : '#ccc',
+    });
+    const font = value.titleFont || DEFAULT_TITLE_FONT;
+    const size = value.titleSize || DEFAULT_TITLE_SIZE;
+    return (
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '16px' }}>
+            <div style={{ display: 'grid', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>フォント</span>
+                    {TITLE_FONTS.map((f) => (
+                        <button key={f.value} type="button" onClick={() => onChange({ ...value, titleFont: f.value })} style={{ ...choiceStyle(font === f.value), fontFamily: f.css }}>
+                            {f.label}
+                        </button>
+                    ))}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>大きさ</span>
+                    {[...TITLE_SIZES].reverse().map((sz) => (
+                        <button key={sz.value} type="button" onClick={() => onChange({ ...value, titleSize: sz.value })} style={choiceStyle(size === sz.value)}>
+                            {sz.label}
+                        </button>
+                    ))}
+                </div>
+            </div>
+            {/* 本棚の表紙と同じ色・フォントでのプレビュー */}
+            <div style={{
+                width: '120px', aspectRatio: '3 / 4', borderRadius: '4px', padding: '12px',
+                border: '1px solid rgba(212,175,55,0.4)', background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+            }}>
+                <span style={{
+                    color: '#d4af37', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all',
+                    ...titleTextStyle({ titleFont: font, titleSize: size }),
+                }}>
+                    {previewText}
+                </span>
+            </div>
+        </div>
+    );
+}
+
+// 本・章のタイトルと、その文字（フォント・大きさ）を編集する欄。onSave は成功したら true を返す
+function TitleEditor({ item, busy, inputStyle, smallButtonStyle, onSave, onClose }) {
+    const [title, setTitle] = useState(item.title);
+    const [style, setStyle] = useState({ titleFont: item.titleFont || DEFAULT_TITLE_FONT, titleSize: item.titleSize || DEFAULT_TITLE_SIZE });
+
+    const save = async () => {
+        if (!title.trim()) return;
+        if (await onSave({ title: title.trim(), ...style })) onClose();
+    };
+
+    return (
+        <div style={{ display: 'grid', gap: '10px', padding: '6px 0' }}>
+            <input value={title} onChange={(e) => setTitle(e.target.value)} style={{ ...inputStyle, padding: '8px' }} autoFocus />
+            <TitleStyleFields value={style} onChange={setStyle} previewText={title || 'タイトル'} />
+            <div style={{ display: 'flex', gap: '6px' }}>
+                <button type="button" onClick={save} disabled={busy} style={smallButtonStyle}><Save size={14} /> 保存</button>
+                <button type="button" onClick={onClose} style={smallButtonStyle}><X size={14} /> やめる</button>
+            </div>
+        </div>
+    );
+}
+
+// 章（PDF）1つ分の行。どの本の章か・タイトルと文字の変更・削除ができる
+function ChapterRow({ chapter, series, seriesId, busy, rowStyle, inputStyle, smallButtonStyle, deleteButtonStyle, dragHandle, onChangeSeries, onSaveTitle, onDelete }) {
+    const [isEditing, setIsEditing] = useState(false);
+    return (
+        <div style={{ ...rowStyle, flexWrap: 'wrap' }}>
+            {dragHandle}
+            <div style={{ minWidth: '140px', flex: 1 }}>
+                {isEditing ? (
+                    <TitleEditor
+                        item={chapter}
+                        busy={busy}
+                        inputStyle={inputStyle}
+                        smallButtonStyle={smallButtonStyle}
+                        onSave={onSaveTitle}
+                        onClose={() => setIsEditing(false)}
+                    />
+                ) : (
+                    <>
+                        <div style={{ color: 'white', fontWeight: 'bold', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', ...titleTextStyle(chapter) }}>{chapter.title}</div>
+                        <div style={{ color: '#888', fontSize: '0.8rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{chapter.name}</div>
+                    </>
+                )}
+            </div>
+            {!isEditing && (
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <select
+                        value={seriesId}
+                        onChange={(e) => onChangeSeries(e.target.value)}
+                        disabled={busy}
+                        style={{ flexShrink: 0, maxWidth: '180px', padding: '8px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', color: 'white' }}
+                    >
+                        <option value="">未分類</option>
+                        {series.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                    </select>
+                    <button type="button" onClick={() => setIsEditing(true)} disabled={busy} style={smallButtonStyle}><Edit3 size={14} /> タイトル</button>
                     <button type="button" onClick={onDelete} disabled={busy} style={deleteButtonStyle}><Trash2 size={14} /> 削除</button>
                 </div>
             )}

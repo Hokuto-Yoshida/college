@@ -5,6 +5,16 @@ import { getStore } from '@netlify/blobs';
 const STORE_NAME = 'floor0-books';
 const INDEX_KEY = 'index';
 
+// タイトルのフォント・大きさとして受け付ける値（src/data/floor0TitleStyle.js と同じ）
+const TITLE_FONTS = ['gothic', 'mincho'];
+const TITLE_SIZES = ['small', 'medium', 'large'];
+
+// titleFont / titleSize のうち、正しい値だけを target に書き込む
+function applyTitleStyle(target, { titleFont, titleSize }) {
+    if (TITLE_FONTS.includes(titleFont)) target.titleFont = titleFont;
+    if (TITLE_SIZES.includes(titleSize)) target.titleSize = titleSize;
+}
+
 async function readIndex(store) {
     const list = await store.get(INDEX_KEY, { type: 'json' });
     return Array.isArray(list) ? list : [];
@@ -72,6 +82,7 @@ export default async (req) => {
         };
         // どの本（表紙）の章か。未指定なら「未分類」
         if (typeof seriesId === 'string' && seriesId) meta.seriesId = seriesId;
+        applyTitleStyle(meta, { titleFont: formData.get('titleFont'), titleSize: formData.get('titleSize') });
 
         const books = await readIndex(store);
         books.push(meta);
@@ -109,7 +120,7 @@ export default async (req) => {
         });
     }
 
-    // 章の編集: { id, seriesId, title } 。seriesId を空にすると「未分類」に戻す
+    // 章の編集: { id, seriesId, title, titleFont, titleSize } 。seriesId を空にすると「未分類」に戻す
     if (req.method === 'PATCH') {
         let body;
         try {
@@ -136,6 +147,7 @@ export default async (req) => {
             else delete target.seriesId;
         }
         if (typeof body.title === 'string' && body.title.trim()) target.title = body.title.trim();
+        applyTitleStyle(target, body);
         await store.setJSON(INDEX_KEY, books);
         return new Response(JSON.stringify({ ok: true, book: target }), {
             headers: { 'Content-Type': 'application/json' },

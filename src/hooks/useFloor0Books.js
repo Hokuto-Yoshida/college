@@ -26,6 +26,12 @@ async function shrinkCoverImage(file) {
     }
 }
 
+// タイトルのフォント・大きさ（{ titleFont, titleSize }）をフォームに入れる
+function appendTitleStyle(form, { titleFont, titleSize } = {}) {
+    if (titleFont) form.append('titleFont', titleFont);
+    if (titleSize) form.append('titleSize', titleSize);
+}
+
 async function throwIfFailed(res, fallbackMessage) {
     if (res.ok) return;
     const err = await res.json().catch(() => ({}));
@@ -78,11 +84,12 @@ export function useFloor0Books() {
     }, [refresh]);
 
     // 章（PDF）のアップロード。seriesId でどの本の章かを指定する
-    const uploadBook = useCallback(async (file, title, seriesId) => {
+    const uploadBook = useCallback(async (file, title, seriesId, titleStyle) => {
         const form = new FormData();
         form.append('file', file);
         if (title) form.append('title', title);
         if (seriesId) form.append('seriesId', seriesId);
+        appendTitleStyle(form, titleStyle);
 
         const res = await fetch(LIST_ENDPOINT, { method: 'POST', body: form });
         if (!res.ok) {
@@ -119,31 +126,34 @@ export function useFloor0Books() {
         }
     }, [refresh]);
 
-    // 章を別の本へ移す（seriesId を空にすると「未分類」）
-    const assignChapter = useCallback(async (id, seriesId) => {
+    // 章の編集。{ seriesId, title, titleFont, titleSize } のうち指定したものだけ更新する
+    // （seriesId を空にすると「未分類」）
+    const updateChapter = useCallback(async (id, changes) => {
         const res = await fetch(LIST_ENDPOINT, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id, seriesId: seriesId || null }),
+            body: JSON.stringify({ id, ...changes }),
         });
-        await throwIfFailed(res, '本の変更に失敗しました');
+        await throwIfFailed(res, '章の更新に失敗しました');
         await refresh();
     }, [refresh]);
 
-    const createSeries = useCallback(async (title, coverFile) => {
+    const createSeries = useCallback(async (title, coverFile, titleStyle) => {
         const form = new FormData();
         form.append('title', title);
+        appendTitleStyle(form, titleStyle);
         if (coverFile) form.append('cover', await shrinkCoverImage(coverFile));
         const res = await fetch(SERIES_ENDPOINT, { method: 'POST', body: form });
         await throwIfFailed(res, '本の追加に失敗しました');
         await refresh();
     }, [refresh]);
 
-    // { title, coverFile, removeCover } のうち指定したものだけ更新する
-    const updateSeries = useCallback(async (id, { title, coverFile, removeCover } = {}) => {
+    // { title, titleFont, titleSize, coverFile, removeCover } のうち指定したものだけ更新する
+    const updateSeries = useCallback(async (id, { title, titleFont, titleSize, coverFile, removeCover } = {}) => {
         const form = new FormData();
         form.append('id', id);
         if (title) form.append('title', title);
+        appendTitleStyle(form, { titleFont, titleSize });
         if (removeCover) form.append('removeCover', '1');
         else if (coverFile) form.append('cover', await shrinkCoverImage(coverFile));
         const res = await fetch(SERIES_ENDPOINT, { method: 'PATCH', body: form });
@@ -158,7 +168,15 @@ export function useFloor0Books() {
         await refresh();
     }, [refresh]);
 
+    // 本の並び順をサーバーに保存する（全端末・全訪問者に反映される）
     const reorderSeries = useCallback(async (orderedIds) => {
+        // 先に画面へ反映し、失敗したらサーバーの状態に戻す
+        setRawSeries((prev) => {
+            const byId = new Map(prev.map((s) => [s.id, s]));
+            const ordered = orderedIds.map((id) => byId.get(id)).filter(Boolean);
+            const rest = prev.filter((s) => !orderedIds.includes(s.id));
+            return [...rest, ...ordered];
+        });
         try {
             const res = await fetch(SERIES_ENDPOINT, {
                 method: 'PUT',
@@ -187,7 +205,7 @@ export function useFloor0Books() {
 
     return {
         books, rawBooks, series, loaded, refresh,
-        uploadBook, deleteBook, reorderBooks, assignChapter,
+        uploadBook, deleteBook, reorderBooks, updateChapter,
         createSeries, updateSeries, deleteSeries, reorderSeries,
     };
 }
