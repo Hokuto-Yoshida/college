@@ -14,7 +14,7 @@ export default async (req) => {
         return new Response('Bad Request', { status: 400 });
     }
 
-    const store = getStore(STORE_NAME);
+    const store = getStore({ name: STORE_NAME, consistency: 'strong' }); // 保存した直後に読み直しても最新の内容が返るようにする
     const data = await store.get(`file:${id}`, { type: 'arrayBuffer' });
 
     if (!data) {

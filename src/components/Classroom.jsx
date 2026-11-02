@@ -97,7 +97,8 @@ const ResourceTransitionOverlay = ({ resource }) => {
 };
 
 // hinge: 表紙の綴じ側。'left' なら表紙が左へ、'right' なら右へ開く
-const BookTransitionOverlay = ({ resource, hinge = 'left' }) => {
+// showIcon: 表紙に本のマークを出すか（0F の本棚では出さない）
+const BookTransitionOverlay = ({ resource, hinge = 'left', showIcon = true }) => {
     if (!resource) return null;
     const hingeRight = hinge === 'right';
 
@@ -172,7 +173,7 @@ const BookTransitionOverlay = ({ resource, hinge = 'left' }) => {
                         }}
                     >
                         <div style={{ border: '2px solid rgba(255,255,255,0.2)', position: 'absolute', inset: '12px', borderRadius: '8px' }} />
-                        <BookOpen size={48} color="white" style={{ marginBottom: '20px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />
+                        {showIcon && <BookOpen size={48} color="white" style={{ marginBottom: '20px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }} />}
                         <h3 style={{ color: 'white', margin: 0, fontSize: '1.4rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', fontFamily: 'var(--font-jp)' }}>
                             {resource.title}
                         </h3>
@@ -437,7 +438,7 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick }) {
 // 縦長の画面では画像の左右が切れて見えなくなるので、テーブルの中央に上下に並べる
 const FLOOR0_TABLE_ASPECT = 2309 / 1299;
 const FLOOR0_TABLE_CSS = `
-.floor0-pick { position: absolute; top: 47%; width: 13%; transform: translate(-50%, -50%); }
+.floor0-pick { position: absolute; top: 51%; width: 13%; transform: translate(-50%, -50%); }
 .floor0-pick-series { left: 33.5%; }
 .floor0-pick-chapter { left: 57.5%; }
 @media (max-aspect-ratio: 1/1) {
@@ -709,7 +710,9 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
 
             {/* テーブルゾーン（背景は App 側で本棚ゾーンの右隣に並べている。ピックアップは下の Floor0PickupTable がテーブルの上に置く） */}
             <div style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', marginTop: '20px', minHeight: '60vh' }}>
-                {/* 白いテーブル・壁の上でも読めるよう、文字の後ろに暗めの板を敷く */}
+                {/* 白いテーブル・壁の上でも読めるよう、文字の後ろに暗めの板を敷く。
+                    ピックアップがあるときは本と章が「今週の本/今週の章」の札付きでテーブルに置かれ、見出しと重なるので出さない */}
+                {!pickupSeries && !pickupChapter && (
                 <div style={{ textAlign: 'center' }}>
                     <div style={{
                         display: 'inline-block', padding: '12px 28px', borderRadius: '14px',
@@ -719,11 +722,10 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
                         <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
                             今週のピックアップ
                         </h3>
-                        {!pickupSeries && !pickupChapter && (
-                            <p style={{ margin: '6px 0 0', fontSize: '0.85rem', opacity: 0.85 }}>今週のピックアップは準備中です</p>
-                        )}
+                        <p style={{ margin: '6px 0 0', fontSize: '0.85rem', opacity: 0.85 }}>今週のピックアップは準備中です</p>
                     </div>
                 </div>
+                )}
             </div>
             </div>
 
@@ -737,7 +739,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
             />
 
             {/* 本を開く演出（ワークショップの本と同じ3D演出を流用） */}
-            <BookTransitionOverlay hinge="right" resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />
+            <BookTransitionOverlay hinge="right" showIcon={false} resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />
 
             {/* 全画面での本文表示 */}
             <AnimatePresence>
@@ -763,6 +765,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
                                 padding: '10px 20px', borderRadius: '20px', background: 'rgba(255,255,255,0.1)',
                                 border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer',
                                 fontSize: '0.85rem', marginBottom: '20px', flexShrink: 0,
+                                position: 'relative', zIndex: 2, // 本（めくり部分）が大きいと上にはみ出して重なるので、ボタンを手前に出して押せるようにする
                             }}
                         >
                             <ArrowLeft size={14} /> 章の一覧に戻る
@@ -774,7 +777,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress }) {
                             {activeBook && <PdfFlipBook pdfUrl={activeBook.pdfUrl} title={activeBook.title} />}
                         </div>
                         <p style={{
-                            margin: '20px 0 0', flexShrink: 0, color: 'white', opacity: 0.55,
+                            margin: '20px 0 0', flexShrink: 0, color: 'white', opacity: 0.55, position: 'relative', zIndex: 2, pointerEvents: 'none',
                             fontSize: '0.75rem', fontFamily: 'var(--font-jp)', textAlign: 'center',
                         }}>
                             {FLOOR0_COPY_NOTICE}

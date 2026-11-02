@@ -61,7 +61,6 @@ const CoverPage = React.forwardRef(({ title }, ref) => (
             }}
         >
             <div style={{ position: 'absolute', inset: '6%', border: '1.5px solid rgba(212,175,55,0.55)' }} />
-            <BookOpen size={36} color="#d4af37" style={{ marginBottom: 20, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }} />
             <h2 style={{
                 margin: 0, color: '#d4af37', textAlign: 'center', fontFamily: 'var(--font-jp)',
                 fontSize: 'clamp(1rem, 4vw, 1.4rem)', lineHeight: 1.9, letterSpacing: '0.05em',
