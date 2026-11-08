@@ -645,9 +645,10 @@ function Floor0ChapterSlider({ children, rows = 1, visible = null, autoSlide = t
     );
 }
 
-// 0F 本棚の検索用に、タイトルの表記ゆれ（全角/半角・大文字/小文字・空白や改行）をそろえる
+// 0F 本棚の検索用に、タイトルの表記ゆれ（全角/半角・大文字/小文字・ひらがな/カタカナ・空白や改行）をそろえる
 function normalizeForSearch(text) {
-    return String(text || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+    return String(text || '').normalize('NFKC').toLowerCase().replace(/\s+/g, '')
+        .replace(/[\u3041-\u3096]/g, (ch) => String.fromCharCode(ch.charCodeAt(0) + 0x60));
 }
 
 // 0F: 地下ホールの書庫。まず本（表紙）を選び、その本の章（PDF）を本のようにめくって読める。
@@ -723,6 +724,10 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [zoneIndex]);
 
+    // 「スクロールして本棚へ」の案内は、少しスクロールしたら消す
+    const { scrollY } = useScroll();
+    const scrollHintOpacity = useTransform(scrollY, [0, 160], [1, 0]);
+
     // ピックアップの URL（/main/0F/pickup）で開いたときは、導入の余白を飛ばしてゾーンまでスクロールしておく
     const zonesTopRef = useRef(null);
     useEffect(() => {
@@ -753,7 +758,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
                     style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
                         color: 'white', fontFamily: 'var(--font-jp)', fontSize: '0.85rem', letterSpacing: '0.1em',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)', opacity: scrollHintOpacity,
                     }}
                 >
                     スクロールして本棚へ
