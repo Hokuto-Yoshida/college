@@ -137,7 +137,7 @@ export const Floor3Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-3)' }}>3F</p>
+                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-3)' }}>3階</p>
                             <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>揺るぎない自分軸が、人生の土台になる</p>
                         </div>
                     </div>

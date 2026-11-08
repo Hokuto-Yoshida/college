@@ -137,7 +137,7 @@ export const Floor5Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-5)' }}>5F</p>
+                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-5)' }}>5階</p>
                             <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>社会を動かす</p>
                         </div>
                     </div>

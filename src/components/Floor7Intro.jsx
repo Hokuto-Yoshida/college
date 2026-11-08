@@ -138,7 +138,7 @@ export const Floor7Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-7)' }}>7F</p>
+                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-7)' }}>7階</p>
                             <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>地球を動かす</p>
                         </div>
                     </div>

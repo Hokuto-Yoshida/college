@@ -10,6 +10,7 @@ import thumb4F from '../assets/floor_thumb_4F.png';
 import thumb5F from '../assets/floor_thumb_5F.png';
 import thumb6F from '../assets/floor_thumb_6F.png';
 import thumb7F from '../assets/floor_thumb_7F.png';
+import { floorLabel } from '../data/floors';
 
 const thumbMap = {
     '7F': thumb7F, '6F': thumb6F, '5F': thumb5F, '4F': thumb4F,
@@ -23,9 +24,9 @@ const processMap = {
     '4F': { num: 4,  viewpoint: '高層階',   action: '潜在意識を動かす' },
     '3F': { num: 3,  viewpoint: '中層階',   action: '他者を動かす' },
     '2F': { num: 2,  viewpoint: '低層階',   action: '自分を動かす' },
-    '1F': { num: 1,  viewpoint: '地上層',   action: '自分を知る' },
-    '0F': { num: 0,  viewpoint: '地下層',   action: '自分を知らない' },
-    'B1': { num: -1, viewpoint: '地中階',   action: '自分を見失う' },
+    '1F': { num: 1,  viewpoint: '地上階',   action: '自分を知る' },
+    '0F': { num: 0,  viewpoint: '境界層',   action: '自分を知らない' },
+    'B1': { num: -1, viewpoint: '地下階',   action: '自分を見失う' },
 };
 
 export function SpiralNav({ floors, onSelectFloor, compact = false }) {
@@ -88,7 +89,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                             lineHeight: 1,
                             letterSpacing: '0.03em',
                         }}>
-                            {floor.id}
+                            {floorLabel(floor.id)}
                         </div>
 
                         {/* サムネイル */}
@@ -139,7 +140,8 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                             </div>
                             <div style={{
                                 fontSize: compact ? '0.62rem' : '0.85rem',
-                                color: '#555',
+                                fontWeight: '700',
+                                color: '#333',
                                 fontFamily: 'var(--font-jp)',
                                 letterSpacing: '0.04em',
                                 whiteSpace: 'nowrap',

@@ -9,6 +9,7 @@ import {
     applyRunStyle, clearRunStyle, replaceRunText, titleRunsForSave,
 } from '../data/floor0TitleStyle';
 import { Floor0TitleText } from './Floor0TitleText';
+import { floorLabel } from '../data/floors';
 
 export function AdminDashboard({ lectures, addLecture, updateLecture, addWorkshop, updateWorkshop, deleteWorkshop, floor0Books, onClose }) {
     const [selectedBuildingId, setSelectedBuildingId] = useState('main');
@@ -176,7 +177,7 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
                                 whiteSpace: 'nowrap'
                             }}
                         >
-                            <span style={{ fontWeight: 'bold' }}>{f.id}</span>
+                            <span style={{ fontWeight: 'bold' }}>{floorLabel(f.id)}</span>
                             {!isMobile && <span style={{ fontSize: '0.8rem', marginLeft: '8px', opacity: 0.7 }}>{f.domain}</span>}
                         </button>
                     ))}
@@ -216,7 +217,7 @@ export function AdminDashboard({ lectures, addLecture, updateLecture, addWorksho
                     <div style={{ maxWidth: '900px', margin: '0 auto' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px' }}>
                             <div>
-                                <h2 style={{ margin: 0, fontSize: '2rem' }}>{selectedFloorId} 講座一覧</h2>
+                                <h2 style={{ margin: 0, fontSize: '2rem' }}>{floorLabel(selectedFloorId)} 講座一覧</h2>
                                 <p style={{ color: '#888', marginTop: '8px' }}>{currentBuilding.name}</p>
                             </div>
                             <button
@@ -369,11 +370,11 @@ function Floor0BooksPanel({ floor0Books }) {
                 {message && <div style={{ marginTop: '12px', fontSize: '0.9rem', color: '#9ae6b4' }}>{message}</div>}
             </div>
 
-            {/* 今週のピックアップ（テーブルゾーン） */}
+            {/* 今週のピックアップ */}
             <div className="glass-panel" style={panelStyle}>
-                <h4 style={{ margin: '0 0 6px', color: '#ccc' }}>今週のピックアップ（テーブルゾーン）</h4>
+                <h4 style={{ margin: '0 0 6px', color: '#ccc' }}>今週のピックアップ</h4>
                 <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '16px' }}>
-                    0階のテーブルゾーンのテーブルの上に、左に本の表紙・右に章が置かれます。選ぶとすぐ反映されます。
+                    0階のピックアップのテーブルの上に、左に本の表紙・右に章が置かれます。選ぶとすぐ反映されます。
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                     <div>
@@ -902,19 +903,28 @@ function RichTitleEditor({ value, onChange, placeholder, previewFallback, inputS
                             </button>
                         ))}
                     </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: '56px', fontSize: '0.8rem', color: '#888' }}>改行</span>
+                        <button type="button" onMouseDown={keepSelection} onClick={() => insertText('\n')} style={choiceStyle(false)}>
+                            ↵ カーソルの位置で改行
+                        </button>
+                    </div>
                     <div style={{ fontSize: '0.75rem', color: '#888', lineHeight: 1.6, maxWidth: '300px' }}>
                         文字を選んでからボタンを押すと、その部分だけ変わります。<br />
-                        何も選んでいないときは、タイトル全体が変わります。Enter で改行できます。
+                        何も選んでいないときは、タイトル全体が変わります。<br />
+                        改行したい位置にカーソルを置いて Enter（または上の「改行」ボタン）で改行できます。
                     </div>
                 </div>
-                {/* 本棚の表紙と同じ色・フォントでのプレビュー */}
-                <div style={{
-                    width: '120px', aspectRatio: '3 / 4', borderRadius: '4px', padding: '12px', boxSizing: 'border-box',
-                    border: '1px solid rgba(212,175,55,0.4)', background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                }}>
+                {/* 本棚と同じ見た目でのプレビュー（本の下にタイトル） */}
+                <div style={{ width: '120px', display: 'grid', gap: '8px' }}>
+                    <div style={{
+                        width: '100%', aspectRatio: '1 / 1.47', borderRadius: '4px', position: 'relative',
+                        border: '1px solid rgba(212,175,55,0.4)', background: 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
+                    }}>
+                        <div style={{ position: 'absolute', inset: '6px', border: '1px solid rgba(212,175,55,0.4)' }} />
+                    </div>
                     <span style={{
-                        color: '#d4af37', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5,
+                        color: 'white', fontWeight: 'bold', textAlign: 'center', lineHeight: 1.5,
                         wordBreak: 'keep-all', overflowWrap: 'anywhere', whiteSpace: 'pre-line',
                         ...titleTextStyle(previewItem),
                     }}>

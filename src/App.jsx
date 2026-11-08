@@ -71,6 +71,7 @@ import imgFloor7Room from './assets/floor_7f_room.png'; // 7F 部屋に入った
 import imgFloor7RoomEntry from './assets/floor_7f_room_entry.png'; // 7F 部屋に入った直後の背景（スクロール前）
 import lobbyMain from './assets/lobby_main.png';
 import lobbyAnnex from './assets/lobby_annex.png';
+import { floorLabel } from './data/floors';
 
 const LoadingScreen = () => (
   <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: '#000' }}>
@@ -90,18 +91,23 @@ const WordEm = ({ children }) => (
 
 
 // 建物・階ごとの URL（例: /main/2F）。URL を開くとその階から始まり、ブラウザの「戻る」で前の階に戻れる
+// 0F だけは中のゾーンも URL にする（/main/0F は本棚ゾーン、/main/0F/pickup はピックアップ）
 // ※ 新しい建物を足したら netlify.toml の redirects にもその建物のパスを追加する
+const FLOOR0_ZONE_PATHS = ['pickup']; // 0F のゾーンのうち、URL に付けるもの（本棚ゾーンは付けない）
+
 function parseLocationPath(pathname) {
-  const [buildingId, floorId] = decodeURIComponent(pathname).split('/').filter(Boolean);
+  const [buildingId, floorId, zone] = decodeURIComponent(pathname).split('/').filter(Boolean);
   const building = buildings.find((b) => b.id === buildingId);
-  if (!building) return { buildingId: null, floorId: null };
+  if (!building) return { buildingId: null, floorId: null, floor0Zone: null };
   const floor = (building.floors || []).find((f) => f.id === floorId);
-  return { buildingId: building.id, floorId: floor ? floor.id : null };
+  const floor0Zone = floor?.id === '0F' && FLOOR0_ZONE_PATHS.includes(zone) ? zone : null;
+  return { buildingId: building.id, floorId: floor ? floor.id : null, floor0Zone };
 }
 
-function buildLocationPath(buildingId, floorId) {
+function buildLocationPath(buildingId, floorId, floor0Zone = null) {
   if (!buildingId) return '/';
-  return floorId ? `/${buildingId}/${floorId}` : `/${buildingId}`;
+  if (!floorId) return `/${buildingId}`;
+  return floorId === '0F' && floor0Zone ? `/${buildingId}/${floorId}/${floor0Zone}` : `/${buildingId}/${floorId}`;
 }
 
 function App() {
@@ -110,7 +116,8 @@ function App() {
   const [initialLocation] = useState(() => parseLocationPath(window.location.pathname));
   const [showIntro, setShowIntro] = useState(!initialLocation.buildingId);
   const [showMainIntro, setShowMainIntro] = useState(initialLocation.buildingId === 'main' && !initialLocation.floorId);
-  const [showFloorIntro, setShowFloorIntro] = useState(!!initialLocation.floorId);
+  // ゾーンまで指定した URL（/main/0F/pickup）は、フロアの導入を飛ばしてそのゾーンを直接見せる
+  const [showFloorIntro, setShowFloorIntro] = useState(!!initialLocation.floorId && !initialLocation.floor0Zone);
   const [curtainPhase, setCurtainPhase] = useState('idle'); // 'idle' | 'split' | 'open'
   const [sixFRoomEntered, setSixFRoomEntered] = useState(false);
   const [doorPhase7, setDoorPhase7] = useState('idle'); // 'idle' | 'split' | 'darken' | 'open'
@@ -126,6 +133,13 @@ function App() {
   const [showFloorElevator, setShowFloorElevator] = useState(false);
   const [currentBuildingId, setCurrentBuildingId] = useState(initialLocation.buildingId); // null = Map
   const [currentFloorId, setCurrentFloorId] = useState(initialLocation.floorId); // null = Hero View
+  const [floor0Zone, setFloor0Zone] = useState(initialLocation.floor0Zone); // 0F で見ているゾーン（null = 本棚ゾーン, 'pickup'）
+  // 0F 以外の階に移ったら、次に 0F に来たときは本棚ゾーンから
+  const [floor0ZoneFloorId, setFloor0ZoneFloorId] = useState(currentFloorId);
+  if (floor0ZoneFloorId !== currentFloorId) {
+    setFloor0ZoneFloorId(currentFloorId);
+    if (currentFloorId !== '0F') setFloor0Zone(null);
+  }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [isAdminMode, setIsAdminMode] = useState(false);
@@ -212,6 +226,19 @@ function App() {
     return () => window.removeEventListener('scroll', update);
   }, [currentFloorId, showFloorIntro, fiveFRoomEntered]);
 
+  // 0F: 入った直後は本棚全体、下へスクロールすると本棚にズームアップする（画面1枚分のスクロールで 0 → 1）
+  const floor0ShelfProgress = useMotionValue(0);
+  useEffect(() => {
+    floor0ShelfProgress.set(0);
+    if (currentFloorId !== '0F' || showFloorIntro) return;
+    const update = () => {
+      floor0ShelfProgress.set(Math.min(1, Math.max(0, window.scrollY / Math.max(1, window.innerHeight * 0.8))));
+    };
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, [currentFloorId, showFloorIntro, floor0ShelfProgress]);
+
   // 4F crossfade: 4F に入った瞬間に 0 リセットし、スクロールで追跡。部屋に入ったら最終状態で固定
   const floor4Progress = useMotionValue(0);
   useEffect(() => {
@@ -293,22 +320,26 @@ function App() {
   }, [currentFloorId, sevenFRoomEntered]);
 
   // 今いる建物・階を URL に反映する（階を移るたびに履歴が増え、「戻る」で前の階に戻れる）
+  // 0F の中でゾーンを切り替えただけのときは履歴を増やさず、URL だけ書き換える
   useEffect(() => {
-    const path = buildLocationPath(currentBuildingId, currentFloorId);
-    if (window.location.pathname !== path) {
-      window.history.pushState(null, '', path);
-    }
-  }, [currentBuildingId, currentFloorId]);
+    const path = buildLocationPath(currentBuildingId, currentFloorId, floor0Zone);
+    if (window.location.pathname === path) return;
+    const shown = parseLocationPath(window.location.pathname);
+    const sameFloor = shown.buildingId === currentBuildingId && shown.floorId === currentFloorId;
+    if (sameFloor) window.history.replaceState(null, '', path);
+    else window.history.pushState(null, '', path);
+  }, [currentBuildingId, currentFloorId, floor0Zone]);
 
   // ブラウザの「戻る」「進む」で URL が変わったら、その建物・階を表示する
   useEffect(() => {
     const handlePopState = () => {
-      const { buildingId, floorId } = parseLocationPath(window.location.pathname);
+      const { buildingId, floorId, floor0Zone: zone } = parseLocationPath(window.location.pathname);
       setShowIntro(false);
       setCurrentBuildingId(buildingId);
       setCurrentFloorId(floorId);
+      setFloor0Zone(zone);
       setShowMainIntro(false);
-      setShowFloorIntro(!!floorId);
+      setShowFloorIntro(!!floorId && !zone);
       window.scrollTo(0, 0);
     };
     window.addEventListener('popstate', handlePopState);
@@ -406,6 +437,7 @@ function App() {
   // 0F: 本棚ゾーン(0) ↔ テーブルゾーン(1) の横スクロール位置。背景も同じだけ横に流す
   const floor0ZoneProgress = useMotionValue(0);
   const floor0BgX = useTransform(floor0ZoneProgress, [0, 1], ['0vw', '-100vw']);
+  const floor0ShelfScale = useTransform(floor0ShelfProgress, [0, 1], [1, 2]); // 本棚の背景を倍までアップ
 
   // 5F: 廊下 → 開いた扉越しの部屋 → 扉前 の3枚を順にクロスフェードし、最後にじわっとズーム
   const floor5HallwayOpacity = useTransform(floor5Progress, [0, 0.28], [1, 0]);
@@ -890,11 +922,17 @@ function App() {
                 }} />
               </>
             ) : currentFloorId === '0F' ? (
-              /* 0F: 本棚ゾーンとテーブルゾーンの背景を横に並べ、横スクロールに合わせて流す */
+              /* 0F: 本棚ゾーンとテーブルゾーンの背景を横に並べ、横スクロールに合わせて流す。
+                 本棚の背景は、下へスクロールすると倍までズームアップする */
               <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
                 <motion.div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '200vw', display: 'flex', x: floor0BgX }}>
                   {[imgFloor0Shelf, imgFloor0Table].map((img) => (
-                    <div key={img} style={{ width: '100vw', height: '100%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                    <div key={img} style={{ width: '100vw', height: '100%', overflow: 'hidden' }}>
+                      <motion.div style={{
+                        width: '100%', height: '100%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                        scale: img === imgFloor0Shelf ? floor0ShelfScale : 1,
+                      }} />
+                    </div>
                   ))}
                 </motion.div>
               </div>
@@ -2369,12 +2407,12 @@ function App() {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                       <span style={{ fontSize: '3rem', fontWeight: 'bold', color: activeFloor.color, lineHeight: 1 }}>
-                        {activeFloor.id}
+                        {floorLabel(activeFloor.id)}
                       </span>
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} floor0Series={floor0Books.series} floor0Pickup={floor0Books.pickup} floor0ZoneProgress={floor0ZoneProgress} room7RevealOpacity={room7RevealOpacity} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} floor0Series={floor0Books.series} floor0Pickup={floor0Books.pickup} floor0ZoneProgress={floor0ZoneProgress} floor0Zone={floor0Zone} onFloor0ZoneChange={setFloor0Zone} room7RevealOpacity={room7RevealOpacity} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (

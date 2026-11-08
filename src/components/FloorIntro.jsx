@@ -4,6 +4,7 @@ import { EntranceDoor } from './EntranceDoor';
 
 import imgBg from '../assets/entrance_lobby.png';
 import introOpening from '../assets/intro_opening.png'; // イントロと同じ画像。一度だけ出してそのまま残す
+import { floorLabel } from '../data/floors';
 
 // 上下の端をぼかすマスク（イントロ/本館導入と同じ）
 const MASK = 'linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%)';
@@ -15,9 +16,9 @@ const processMap = {
     '4F': { num: 4, viewpoint: '高層階',   action: '潜在意識を動かす' },
     '3F': { num: 3, viewpoint: '中層階',   action: '他者を動かす' },
     '2F': { num: 2, viewpoint: '低層階',   action: '自分を動かす' },
-    '1F': { num: 1, viewpoint: '地上層',   action: '自分を知る' },
-    '0F': { num: 0, viewpoint: '地下層',   action: '自分を知らない' },
-    'B1': { num: -1, viewpoint: '地中階',  action: '自分を見失う' },
+    '1F': { num: 1, viewpoint: '地上階',   action: '自分を知る' },
+    '0F': { num: 0, viewpoint: '境界層',   action: '自分を知らない' },
+    'B1': { num: -1, viewpoint: '地下階',  action: '自分を見失う' },
 };
 
 export const FloorIntro = ({ floor, onEnter }) => {
@@ -143,7 +144,7 @@ export const FloorIntro = ({ floor, onEnter }) => {
                     <div style={textStyle}>
                         <div style={blockStyle}>
                             <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: floor.color }}>
-                                {floor.id}
+                                {floorLabel(floor.id)}
                             </p>
                             <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>
                                 {floor.title}
@@ -153,7 +154,7 @@ export const FloorIntro = ({ floor, onEnter }) => {
                 </motion.div>
             </div>
 
-            <EntranceDoor scrollYProgress={scrollYProgress} label={`${floor.id}のフロアへ進む`} onEnter={onEnter} />
+            <EntranceDoor scrollYProgress={scrollYProgress} label={`${floorLabel(floor.id)}のフロアへ進む`} onEnter={onEnter} />
         </div>
     );
 };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, User, MessageCircle, Filter, Trash2 } from 'lucide-react';
-import { floors } from '../data/floors';
+import { floors, floorLabel } from '../data/floors';
 
 const STORAGE_KEY = 'mind_university_responses_v1';
 
@@ -89,7 +89,7 @@ export function WorkshopWall({ currentFloorId }) {
                             display: 'flex',
                             alignItems: 'center'
                         }}>
-                            {currentFloorId ? `${currentFloorId}から投稿` : '場所を選択中'}
+                            {currentFloorId ? `${floorLabel(currentFloorId)}から投稿` : '場所を選択中'}
                         </div>
                     </div>
                     <textarea
@@ -160,7 +160,7 @@ export function WorkshopWall({ currentFloorId }) {
                             whiteSpace: 'nowrap'
                         }}
                     >
-                        {f.id} {f.domain}
+                        {floorLabel(f.id)} {f.domain}
                     </button>
                 ))}
             </div>
@@ -194,7 +194,7 @@ export function WorkshopWall({ currentFloorId }) {
                                         background: 'rgba(255,255,255,0.1)',
                                         color: floorData ? floorData.color : 'white'
                                     }}>
-                                        {floorData ? `${floorData.id} ${floorData.domain}` : r.floor}
+                                        {floorData ? `${floorLabel(floorData.id)} ${floorData.domain}` : r.floor}
                                     </span>
                                 </div>
                                 {/* Prompt Display (Optional) */}

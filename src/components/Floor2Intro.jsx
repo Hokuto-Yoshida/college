@@ -137,7 +137,7 @@ export const Floor2Intro = ({ onEnter }) => {
                 <div style={sectionStyle}>
                     <div style={textContainerStyle}>
                         <div style={blockStyle}>
-                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-2)' }}>2F</p>
+                            <p style={{ ...lineStyle, fontSize: '2em', fontWeight: 'bold', color: 'var(--floor-2)' }}>2階</p>
                             <p style={{ ...lineStyle, fontSize: '1.5em', fontWeight: 'bold' }}>心が整うと、本来の可能性は動き始める</p>
                         </div>
                     </div>

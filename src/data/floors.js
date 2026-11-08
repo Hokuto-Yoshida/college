@@ -91,3 +91,8 @@ export const floors = [
         icon: 'Zap'
     },
 ];
+
+// 画面に出す階の名前（id の「7F」→「7階」。B1 などはそのまま）
+export function floorLabel(id) {
+    return typeof id === 'string' ? id.replace(/^(\d+)F$/, '$1階') : id;
+}
