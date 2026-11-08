@@ -6,7 +6,7 @@ import { buildings } from './data/buildings';
 import { CampusMap } from './components/CampusMap';
 import { TransitionOverlay } from './components/TransitionOverlay';
 import { SpiralNav } from './components/SpiralNav';
-import { Classroom } from './components/Classroom';
+import { Classroom, floor0ShelfScrollDistance } from './components/Classroom';
 import { AdminDashboard } from './components/AdminDashboard';
 import { IntroSequence } from './components/IntroSequence';
 import { MainBuildingIntro } from './components/MainBuildingIntro';
@@ -226,13 +226,13 @@ function App() {
     return () => window.removeEventListener('scroll', update);
   }, [currentFloorId, showFloorIntro, fiveFRoomEntered]);
 
-  // 0F: 入った直後は本棚全体、下へスクロールすると本棚にズームアップする（画面1枚分のスクロールで 0 → 1）
+  // 0F: 入った直後は本棚全体。下へスクロールすると、ぼやっとアップの本棚に切り替わる（0 → 1）
   const floor0ShelfProgress = useMotionValue(0);
   useEffect(() => {
     floor0ShelfProgress.set(0);
     if (currentFloorId !== '0F' || showFloorIntro) return;
     const update = () => {
-      floor0ShelfProgress.set(Math.min(1, Math.max(0, window.scrollY / Math.max(1, window.innerHeight * 0.8))));
+      floor0ShelfProgress.set(Math.min(1, Math.max(0, window.scrollY / Math.max(1, floor0ShelfScrollDistance()))));
     };
     window.addEventListener('scroll', update, { passive: true });
     update();
@@ -437,7 +437,10 @@ function App() {
   // 0F: 本棚ゾーン(0) ↔ テーブルゾーン(1) の横スクロール位置。背景も同じだけ横に流す
   const floor0ZoneProgress = useMotionValue(0);
   const floor0BgX = useTransform(floor0ZoneProgress, [0, 1], ['0vw', '-100vw']);
-  const floor0ShelfScale = useTransform(floor0ShelfProgress, [0, 1], [1, 2]); // 本棚の背景を倍までアップ
+  // 7F の部屋と同じく、1枚目（本棚全体）から2枚目（倍にアップした本棚）へクロスフェード。切り替わりの途中は少しぼかす
+  const floor0ShelfBaseOpacity = useTransform(floor0ShelfProgress, [0.35, 0.85], [1, 0]);
+  const floor0ShelfZoomOpacity = useTransform(floor0ShelfProgress, [0.35, 0.85], [0, 1]);
+  const floor0ShelfBlur = useTransform(floor0ShelfProgress, [0.35, 0.6, 0.85], ['blur(0px)', 'blur(6px)', 'blur(0px)']);
 
   // 5F: 廊下 → 開いた扉越しの部屋 → 扉前 の3枚を順にクロスフェードし、最後にじわっとズーム
   const floor5HallwayOpacity = useTransform(floor5Progress, [0, 0.28], [1, 0]);
@@ -926,14 +929,19 @@ function App() {
                  本棚の背景は、下へスクロールすると倍までズームアップする */
               <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
                 <motion.div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '200vw', display: 'flex', x: floor0BgX }}>
-                  {[imgFloor0Shelf, imgFloor0Table].map((img) => (
-                    <div key={img} style={{ width: '100vw', height: '100%', overflow: 'hidden' }}>
-                      <motion.div style={{
-                        width: '100%', height: '100%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                        scale: img === imgFloor0Shelf ? floor0ShelfScale : 1,
-                      }} />
-                    </div>
-                  ))}
+                  {/* 本棚ゾーン: 本棚全体 → 倍にアップした本棚 */}
+                  <motion.div style={{ position: 'relative', width: '100vw', height: '100%', overflow: 'hidden', filter: floor0ShelfBlur }}>
+                    <motion.div style={{
+                      position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0Shelf})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: floor0ShelfBaseOpacity,
+                    }} />
+                    <motion.div style={{
+                      position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0Shelf})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                      scale: 2, opacity: floor0ShelfZoomOpacity,
+                    }} />
+                  </motion.div>
+                  {/* テーブルゾーン */}
+                  <div style={{ width: '100vw', height: '100%', backgroundImage: `url(${imgFloor0Table})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                 </motion.div>
               </div>
             ) : (
@@ -2412,7 +2420,7 @@ function App() {
                     </div>
 
                     {/* Enhanced Classroom Component */}
-                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} floor0Series={floor0Books.series} floor0Pickup={floor0Books.pickup} floor0ZoneProgress={floor0ZoneProgress} floor0Zone={floor0Zone} onFloor0ZoneChange={setFloor0Zone} room7RevealOpacity={room7RevealOpacity} />}
+                    {currentFloorId !== 'B1' && <Classroom currentFloorId={currentFloorId} lectures={lectures} sixFRoomEntered={sixFRoomEntered} sevenFRoomEntered={sevenFRoomEntered} fiveFRoomEntered={fiveFRoomEntered} fourFRoomEntered={fourFRoomEntered} threeFRoomEntered={threeFRoomEntered} twoFRoomEntered={twoFRoomEntered} floor0Books={floor0Books.books} floor0Series={floor0Books.series} floor0Pickup={floor0Books.pickup} floor0ZoneProgress={floor0ZoneProgress} floor0ShelfProgress={floor0ShelfProgress} floor0Zone={floor0Zone} onFloor0ZoneChange={setFloor0Zone} room7RevealOpacity={room7RevealOpacity} />}
 
                     {/* 7F 部屋の中の背景クロスフェード用に、スクロールできる余地を確保 */}
                     {currentFloorId === '7F' && sevenFRoomEntered && (

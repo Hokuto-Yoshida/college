@@ -384,6 +384,8 @@ const FLOOR0_UNSORTED_ID = '__unsorted__';
 
 // 0F: 横スクロールで切り替わるゾーン（左から順に）
 const FLOOR0_ZONES = ["KURU'S BOOKSHELF", 'LECTURE PICKS'];
+// 0F に入ってから、本棚がアップの背景に切り替わり中身が出てくるまでのスクロール量（App の背景の切り替えと同じ）
+export const floor0ShelfScrollDistance = () => window.innerHeight * 0.8;
 const FLOOR0_ZONE_PATHS = [null, 'pickup']; // 各ゾーンの URL（/main/0F/pickup）。本棚ゾーンは /main/0F のまま
 
 // 0F: 本棚と本を読む画面に出す、無断ダウンロード等へのお願い
@@ -452,7 +454,7 @@ const FLOOR0_TABLE_CSS = `
 
 // 0F テーブルゾーンのテーブルの上に、今週のピックアップの本と章を置く。
 // 背景（App 側、画面全体に cover で表示）とぴったり重なるよう、画面に固定して同じ大きさ・同じ横スクロールで動かす
-function Floor0PickupTable({ zoneProgress, pickupSeries, pickupChapter, pickupChapterSeries, onOpenSeries, onOpenChapter }) {
+function Floor0PickupTable({ zoneProgress, contentOpacity, pickupSeries, pickupChapter, pickupChapterSeries, onOpenSeries, onOpenChapter }) {
     const fallbackProgress = useMotionValue(0);
     // テーブルゾーンの背景は本棚ゾーンの右隣（+100vw）にあり、スクロールに合わせて 0 まで流れてくる
     const x = useTransform(zoneProgress || fallbackProgress, [0, 1], ['100vw', '0vw']);
@@ -470,7 +472,7 @@ function Floor0PickupTable({ zoneProgress, pickupSeries, pickupChapter, pickupCh
     ].filter(Boolean);
 
     return createPortal(
-        <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 5, x }}>
+        <motion.div style={{ position: 'fixed', inset: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: 5, x, opacity: contentOpacity ?? 1 }}>
             {/* 背景画像の cover 表示と同じ大きさ・位置の枠。この中の % は画像に対する位置になる */}
             <div style={{
                 position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)',
@@ -653,7 +655,8 @@ function normalizeForSearch(text) {
 
 // 0F: 地下ホールの書庫。まず本（表紙）を選び、その本の章（PDF）を本のようにめくって読める。
 // zone / onZoneChange: 見ているゾーンの URL 名（null = 本棚ゾーン, 'pickup'）。App が URL と合わせる
-function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zone = null, onZoneChange }) {
+// shelfProgress: App の背景の切り替え（0 = 本棚全体, 1 = アップ）。1 に近づいたら中身をふわっと出す
+function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, shelfProgress, zone = null, onZoneChange }) {
     const [activeBook, setActiveBook] = useState(null);
     const [transitioningBook, setTransitioningBook] = useState(null);
     const [openSeriesId, setOpenSeriesId] = useState(null);
@@ -724,14 +727,19 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [zoneIndex]);
 
-    // 「スクロールして本棚へ」の案内は、少しスクロールしたら消す
+    // 入った直後は背景（本棚全体）だけ。スクロールして背景がアップに切り替わったところで、中身がその場にふわっと出る。
+    // 切り替わるまでは中身をスクロールに合わせて下げ、下から上がってこないようにする（切り替わった後は普通にスクロール）
+    const fallbackShelfProgress = useMotionValue(1);
+    const progress = shelfProgress || fallbackShelfProgress;
+    const contentOpacity = useTransform(progress, [0.85, 1], [0, 1]);
+    const contentPointer = useTransform(progress, (v) => (v > 0.9 ? 'auto' : 'none'));
+    const scrollHintOpacity = useTransform(progress, [0, 0.3], [1, 0]);
     const { scrollY } = useScroll();
-    const scrollHintOpacity = useTransform(scrollY, [0, 160], [1, 0]);
+    const contentY = useTransform(scrollY, (v) => Math.min(Math.max(v, 0), floor0ShelfScrollDistance()));
 
-    // ピックアップの URL（/main/0F/pickup）で開いたときは、導入の余白を飛ばしてゾーンまでスクロールしておく
-    const zonesTopRef = useRef(null);
+    // ピックアップの URL（/main/0F/pickup）で開いたときは、背景が切り替わった後の位置までスクロールしておく
     useEffect(() => {
-        if (zoneIndex > 0) zonesTopRef.current?.scrollIntoView({ block: 'start', behavior: 'instant' });
+        if (zoneIndex > 0) window.scrollTo({ top: floor0ShelfScrollDistance(), behavior: 'instant' });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -747,10 +755,10 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
 
     return (
         <>
-            {/* 入った直後は本棚全体の背景を見せる余白。下へスクロールすると背景がアップになり、本棚の中身が出てくる */}
-            <div style={{
-                height: 'calc(100vh - 220px)', minHeight: '240px',
-                display: 'flex', alignItems: 'flex-end', justifyContent: 'center', paddingBottom: '24px',
+            {/* 入った直後だけ出す案内（画面の下に固定） */}
+            <motion.div style={{
+                position: 'fixed', left: 0, right: 0, bottom: '28px', zIndex: 4, pointerEvents: 'none',
+                display: 'flex', justifyContent: 'center', opacity: scrollHintOpacity,
             }}>
                 <motion.div
                     animate={{ y: [0, 8, 0] }}
@@ -758,16 +766,17 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
                     style={{
                         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
                         color: 'white', fontFamily: 'var(--font-jp)', fontSize: '0.85rem', letterSpacing: '0.1em',
-                        textShadow: '0 2px 8px rgba(0,0,0,0.8)', opacity: scrollHintOpacity,
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
                     }}
                 >
                     スクロールして本棚へ
                     <ChevronRight size={20} style={{ transform: 'rotate(90deg)' }} />
                 </motion.div>
-            </div>
+            </motion.div>
 
+            <motion.div style={{ y: contentY, opacity: contentOpacity, pointerEvents: contentPointer }}>
             {/* ゾーン切り替えのタブ（横スクロール・スワイプでも切り替わる） */}
-            <div ref={zonesTopRef} style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px', scrollMarginTop: '90px' }}>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '12px' }}>
                 {FLOOR0_ZONES.map((zone, i) => (
                     <button
                         key={zone}
@@ -940,9 +949,13 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
                 )}
             </div>
             </div>
+            </motion.div>
+            {/* 背景が切り替わるまでのスクロールの余地（中身はその間スクロールに合わせて下げているので、その分を下に足す） */}
+            <div style={{ height: '80vh' }} />
 
             <Floor0PickupTable
                 zoneProgress={zoneProgress}
+                contentOpacity={contentOpacity}
                 pickupSeries={pickupSeries}
                 pickupChapter={pickupChapter}
                 pickupChapterSeries={pickupChapterSeries}
@@ -1001,7 +1014,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, zon
     );
 }
 
-export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], floor0Series = [], floor0Pickup, floor0ZoneProgress, floor0Zone = null, onFloor0ZoneChange, room7RevealOpacity }) {
+export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = false, sevenFRoomEntered = false, fiveFRoomEntered = false, fourFRoomEntered = false, threeFRoomEntered = false, twoFRoomEntered = false, floor0Books = [], floor0Series = [], floor0Pickup, floor0ZoneProgress, floor0ShelfProgress, floor0Zone = null, onFloor0ZoneChange, room7RevealOpacity }) {
     // Find applicable lectures for this floor
     const floorLectures = lectures.filter(l => l.floorId === currentFloorId);
 
@@ -1072,7 +1085,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     if (currentFloorId === '4F' && !fourFRoomEntered) return <Floor4View />;
     if (currentFloorId === '3F' && !threeFRoomEntered) return <Floor3View />;
     if (currentFloorId === '2F' && !twoFRoomEntered) return <Floor2View />;
-    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} series={floor0Series} pickup={floor0Pickup} zoneProgress={floor0ZoneProgress} zone={floor0Zone} onZoneChange={onFloor0ZoneChange} />;
+    if (currentFloorId === '0F') return <Floor0Library books={floor0Books} series={floor0Series} pickup={floor0Pickup} zoneProgress={floor0ZoneProgress} shelfProgress={floor0ShelfProgress} zone={floor0Zone} onZoneChange={onFloor0ZoneChange} />;
 
     const handleLectureSelect = (l) => {
         setActiveLecture(l);
