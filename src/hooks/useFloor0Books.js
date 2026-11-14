@@ -7,7 +7,7 @@ const FILE_ENDPOINT = '/api/floor0-book-file';
 // 本（表紙）。各PDFは本の中の「章」として seriesId で本に紐づく
 const SERIES_ENDPOINT = '/api/floor0-series';
 const COVER_ENDPOINT = '/api/floor0-series-cover';
-// テーブルゾーンに置く「今週のピックアップ」（{ seriesId, chapterId }）
+// テーブルゾーンに置く「学びの準備室のピックアップ」（学びの一冊・注目の章）（{ seriesId, chapterId }）
 const PICKUP_ENDPOINT = '/api/floor0-pickup';
 
 // 表紙画像はアップロード前に縮小する（Netlify Functionsの送信サイズ上限に収めるため）
@@ -201,7 +201,7 @@ export function useFloor0Books() {
         }
     }, [refresh]);
 
-    // 今週のピックアップを変更する。{ seriesId, chapterId } のうち渡したものだけ（空文字で外す）
+    // 学びの準備室のピックアップを変更する。{ seriesId, chapterId } のうち渡したものだけ（空文字で外す）
     const setPickup = useCallback(async (changes) => {
         setPickupState((prev) => ({ ...prev, ...changes }));
         try {

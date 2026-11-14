@@ -370,15 +370,15 @@ function Floor0BooksPanel({ floor0Books }) {
                 {message && <div style={{ marginTop: '12px', fontSize: '0.9rem', color: '#9ae6b4' }}>{message}</div>}
             </div>
 
-            {/* 今週のピックアップ */}
+            {/* 学びの準備室のピックアップ（学びの一冊・注目の章） */}
             <div className="glass-panel" style={panelStyle}>
-                <h4 style={{ margin: '0 0 6px', color: '#ccc' }}>今週のピックアップ</h4>
+                <h4 style={{ margin: '0 0 6px', color: '#ccc' }}>学びの準備室のピックアップ</h4>
                 <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '16px' }}>
                     0階のピックアップのテーブルの上に、左に本の表紙・右に章が置かれます。選ぶとすぐ反映されます。
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
                     <div>
-                        <label style={labelStyle}>本（左に置く表紙）</label>
+                        <label style={labelStyle}>学びの一冊（左に置く本の表紙）</label>
                         <select
                             value={pickup.seriesId && seriesIds.has(pickup.seriesId) ? pickup.seriesId : ''}
                             onChange={(e) => run(() => setPickup({ seriesId: e.target.value }), 'ピックアップを保存しました。')}
@@ -390,7 +390,7 @@ function Floor0BooksPanel({ floor0Books }) {
                         </select>
                     </div>
                     <div>
-                        <label style={labelStyle}>章（右に置く）</label>
+                        <label style={labelStyle}>注目の章（右に置く章）</label>
                         <select
                             value={pickup.chapterId && rawBooks.some((b) => b.id === pickup.chapterId) ? pickup.chapterId : ''}
                             onChange={(e) => run(() => setPickup({ chapterId: e.target.value }), 'ピックアップを保存しました。')}

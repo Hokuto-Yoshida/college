@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { Layers, Activity, ChevronDown, MapPin, X, ArrowUpDown, Building2, ArrowUpCircle, ArrowDownCircle, Settings, User } from 'lucide-react';
 import './index.css';
@@ -33,7 +33,9 @@ import view4F from './assets/view_4f.png';   // 4F
 import viewHigh from './assets/view_high.png'; // 5F
 import view6F from './assets/view_6f.png';   // 6F
 import viewRoof from './assets/view_roof.png'; // 7F
-import imgFloor0Shelf from './assets/floor_0f_shelf.png'; // 0F 背景（本棚ゾーン）
+import imgFloor0Hall from './assets/floor_0f_hall.jpg'; // 0F 背景（本棚ゾーン・入った直後の広間）
+import imgFloor0ShelfNear from './assets/floor_0f_shelf_near.jpg'; // 0F 背景（本棚ゾーン・本棚に近づいたところ）
+import imgFloor0Shelf from './assets/floor_0f_shelf.png'; // 0F 背景（本棚ゾーン・最後に倍にアップした本棚）
 import imgFloor0Table from './assets/floor_0f_table.jpg'; // 0F 背景（テーブルゾーン）
 import imgFloorBgB1 from './assets/floor_bg_B1.png';
 import imgFloorBg from './assets/floor_bg2.png'; // 各階背景
@@ -141,6 +143,23 @@ function App() {
     if (currentFloorId !== '0F') setFloor0Zone(null);
   }
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // 右上の「大学ルームマップ」ボタンで開閉する移動メニュー（マップへ戻る / 本館フロアガイド / 階層選択）
+  const [navMenuOpen, setNavMenuOpen] = useState(false);
+  const navMenuRef = useRef(null);
+  useEffect(() => {
+    if (!navMenuOpen) return;
+    // メニューの外を押す・Esc で閉じる
+    const handlePointerDown = (e) => {
+      if (navMenuRef.current && !navMenuRef.current.contains(e.target)) setNavMenuOpen(false);
+    };
+    const handleKeyDown = (e) => { if (e.key === 'Escape') setNavMenuOpen(false); };
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [navMenuOpen]);
 
   const [isAdminMode, setIsAdminMode] = useState(false);
 
@@ -226,7 +245,7 @@ function App() {
     return () => window.removeEventListener('scroll', update);
   }, [currentFloorId, showFloorIntro, fiveFRoomEntered]);
 
-  // 0F: 入った直後は本棚全体。下へスクロールすると、ぼやっとアップの本棚に切り替わる（0 → 1）
+  // 0F: 入った直後は広間。下へスクロールすると、本棚に近づいたところ → アップの本棚 と切り替わる（0 → 1）
   const floor0ShelfProgress = useMotionValue(0);
   useEffect(() => {
     floor0ShelfProgress.set(0);
@@ -437,10 +456,15 @@ function App() {
   // 0F: 本棚ゾーン(0) ↔ テーブルゾーン(1) の横スクロール位置。背景も同じだけ横に流す
   const floor0ZoneProgress = useMotionValue(0);
   const floor0BgX = useTransform(floor0ZoneProgress, [0, 1], ['0vw', '-100vw']);
-  // 7F の部屋と同じく、1枚目（本棚全体）から2枚目（倍にアップした本棚）へクロスフェード。切り替わりの途中は少しぼかす
-  const floor0ShelfBaseOpacity = useTransform(floor0ShelfProgress, [0.35, 0.85], [1, 0]);
-  const floor0ShelfZoomOpacity = useTransform(floor0ShelfProgress, [0.35, 0.85], [0, 1]);
-  const floor0ShelfBlur = useTransform(floor0ShelfProgress, [0.35, 0.6, 0.85], ['blur(0px)', 'blur(6px)', 'blur(0px)']);
+  // 広間 → 本棚に近づいたところ → 倍にアップした本棚 の3枚を、スクロールに合わせて順にじわっとクロスフェード。
+  // 切り替わりの途中は少しぼかす。重ねた上の画像の不透明度だけを上げていく
+  const floor0ShelfNearOpacity = useTransform(floor0ShelfProgress, [0.085, 0.21], [0, 1]);
+  const floor0ShelfZoomOpacity = useTransform(floor0ShelfProgress, [0.79, 0.945], [0, 1]);
+  const floor0ShelfBlur = useTransform(
+    floor0ShelfProgress,
+    [0.085, 0.1475, 0.21, 0.79, 0.8675, 0.945],
+    ['blur(0px)', 'blur(4px)', 'blur(0px)', 'blur(0px)', 'blur(6px)', 'blur(0px)'],
+  );
 
   // 5F: 廊下 → 開いた扉越しの部屋 → 扉前 の3枚を順にクロスフェードし、最後にじわっとズーム
   const floor5HallwayOpacity = useTransform(floor5Progress, [0, 0.28], [1, 0]);
@@ -616,7 +640,7 @@ function App() {
       '5F': viewHigh,
       '6F': imgFloorBg,
       '7F': viewRoof,
-      '0F': imgFloor0Shelf,
+      '0F': imgFloor0Hall,
       'B1': imgFloorBgB1,
     };
     return map[fid] ?? imgFloorBg;
@@ -926,14 +950,17 @@ function App() {
               </>
             ) : currentFloorId === '0F' ? (
               /* 0F: 本棚ゾーンとテーブルゾーンの背景を横に並べ、横スクロールに合わせて流す。
-                 本棚の背景は、下へスクロールすると倍までズームアップする */
+                 本棚ゾーンの背景は、下へスクロールすると 広間 → 本棚に近づいたところ → 倍にアップした本棚 と切り替わる */
               <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
                 <motion.div style={{ position: 'absolute', top: 0, bottom: 0, left: 0, width: '200vw', display: 'flex', x: floor0BgX }}>
-                  {/* 本棚ゾーン: 本棚全体 → 倍にアップした本棚 */}
+                  {/* 本棚ゾーン: 広間 → 本棚に近づいたところ → 倍にアップした本棚 */}
                   <motion.div style={{ position: 'relative', width: '100vw', height: '100%', overflow: 'hidden', filter: floor0ShelfBlur }}>
+                    <div style={{
+                      position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0Hall})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                    }} />
                     <motion.div style={{
-                      position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0Shelf})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                      opacity: floor0ShelfBaseOpacity,
+                      position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0ShelfNear})`, backgroundSize: 'cover', backgroundPosition: 'center',
+                      opacity: floor0ShelfNearOpacity,
                     }} />
                     <motion.div style={{
                       position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0Shelf})`, backgroundSize: 'cover', backgroundPosition: 'center',
@@ -2226,51 +2253,64 @@ function App() {
           <header style={{ position: 'fixed', top: 0, left: 0, right: 0, padding: '20px', zIndex: 100, display: 'flex', justifyContent: 'space-between', alignItems: 'center', pointerEvents: 'none' }}>
             <div />
 
-            {/* 右上から: 設定 / 大学ルームマップ / 本館フロアガイド / 階層選択（エレベーター） */}
+            {/* 右上から: 設定 / 大学ルームマップ（押すと 大学ルームマップへ戻る・本館フロアガイド・階層選択 のメニューを開閉） */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', pointerEvents: 'auto' }}>
-              {/* 階層選択（エレベーター） */}
-              <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
-                <button
-                  onClick={handleOpenElevator}
-                  style={{
-                    background: 'transparent', border: '1px solid var(--glass-border)',
-                    color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
-                    fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
-                  }}
-                  title="階層選択（エレベーター）"
-                >
-                  <ArrowUpDown size={16} /> <span className="header-btn-label">階層選択</span>
-                </button>
-              </div>
+              {/* 大学ルームマップ（トグル） */}
+              <div ref={navMenuRef} style={{ position: 'relative' }}>
+                <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
+                  <button
+                    onClick={() => setNavMenuOpen((open) => !open)}
+                    style={{
+                      background: navMenuOpen ? 'rgba(255,255,255,0.15)' : 'transparent', border: '1px solid var(--glass-border)',
+                      color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
+                      fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
+                    }}
+                    title="大学ルームマップ"
+                    aria-haspopup="menu"
+                    aria-expanded={navMenuOpen}
+                  >
+                    <MapPin size={16} /> <span className="header-btn-label">大学ルームマップ</span>
+                    <ChevronDown size={14} style={{ transition: 'transform 0.2s', transform: navMenuOpen ? 'rotate(180deg)' : 'none' }} />
+                  </button>
+                </div>
 
-              {/* 本館フロアガイド */}
-              <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
-                <button
-                  onClick={handleOpenFloorGuide}
-                  style={{
-                    background: 'transparent', border: '1px solid var(--glass-border)',
-                    color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
-                    fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
-                  }}
-                  title="本館フロアガイド"
-                >
-                  <Building2 size={16} /> <span className="header-btn-label">本館フロアガイド</span>
-                </button>
-              </div>
-
-              {/* 大学ルームマップ */}
-              <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
-                <button
-                  onClick={handleBackToMap}
-                  style={{
-                    background: 'transparent', border: '1px solid var(--glass-border)',
-                    color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
-                    fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
-                  }}
-                  title="大学ルームマップ"
-                >
-                  <MapPin size={16} /> <span className="header-btn-label">大学ルームマップ</span>
-                </button>
+                <AnimatePresence>
+                  {navMenuOpen && (
+                    <motion.div
+                      role="menu"
+                      className="glass-panel"
+                      initial={{ opacity: 0, y: -6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -6 }}
+                      transition={{ duration: 0.15 }}
+                      style={{
+                        position: 'absolute', top: 'calc(100% + 8px)', right: 0, minWidth: '210px',
+                        padding: '6px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px',
+                      }}
+                    >
+                      {[
+                        { label: '大学ルームマップへ', icon: <MapPin size={16} />, onClick: handleBackToMap },
+                        { label: '本館フロアガイド', icon: <Building2 size={16} />, onClick: handleOpenFloorGuide },
+                        { label: '階層選択', icon: <ArrowUpDown size={16} />, onClick: handleOpenElevator },
+                      ].map(({ label, icon, onClick }) => (
+                        <button
+                          key={label}
+                          role="menuitem"
+                          onClick={() => { setNavMenuOpen(false); onClick(); }}
+                          style={{
+                            background: 'transparent', border: 'none', color: 'white', cursor: 'pointer',
+                            padding: '10px 14px', borderRadius: '12px', fontSize: '0.9rem', textAlign: 'left',
+                            display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap',
+                          }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
+                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                        >
+                          {icon} {label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* Admin Toggle Button */}
