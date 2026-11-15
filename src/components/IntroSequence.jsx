@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { ArrowRight } from 'lucide-react';
 
 import imgPath1 from '../assets/intro_new_1.png';
@@ -93,18 +94,24 @@ export const IntroSequence = ({ onEnter }) => {
     // 白幕3: 1テキスト
     const t3Y = useTransform(scrollYProgress, [0.82, 0.84, 0.87, 0.89], ['60vh', '0vh', '0vh', '-60vh']);
 
+    // スマホでは文字を少し大きく、行間と段落の間を詰めて、1画面に収まるようにする
+    const isMobile = useIsMobile();
+
     // ── スタイル ──────────────────────────────────────────────────
     const textStyle = {
         maxWidth: '720px',
         width: '100%',
         textAlign: 'center',
-        fontSize: 'clamp(0.75rem, 1.5vw, 1rem)',
+        fontSize: isMobile ? '0.85rem' : 'clamp(0.75rem, 1.5vw, 1rem)',
         color: '#333',
         fontFamily: 'var(--font-jp)',
-        letterSpacing: '0.12em',
-        padding: '0 32px',
+        letterSpacing: isMobile ? '0.06em' : '0.12em',
+        padding: isMobile ? '0 24px' : '0 32px',
+        boxSizing: 'border-box',
     };
-    const ln = { margin: 0, paddingBottom: '1.8rem', lineHeight: 2.8 };
+    const ln = isMobile
+        ? { margin: 0, paddingBottom: '1.1rem', lineHeight: 2 }
+        : { margin: 0, paddingBottom: '1.8rem', lineHeight: 2.8 };
 
     const sections = [
         {

@@ -3,8 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import doorInterior from '../assets/door_interior.png';
 import doorPanelLeft from '../assets/door_panel_left.png';
 import doorPanelRight from '../assets/door_panel_right.png';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 export function TransitionOverlay({ isVisible, type = 'door', images = {}, targetFloorId, onComplete }) {
+    // スマホ: 流れる文章を小さく・行間を狭くする。
+    // 文章が長く折り返して背が高くなると、流れ終わるまでに最後の「第N原理」が画面に出てこないため
+    const isMobile = useIsMobile();
+    const bodyText = isMobile ? { fontSize: '0.95rem', lineHeight: 2 } : { fontSize: '1.2rem', lineHeight: 2.4 };
+    const headSize = isMobile ? '1.1rem' : '1.4rem';
     // Default fallback visuals (CSS) if no image provided
     const getVisual = () => {
         const imgSrc = images[type];
@@ -111,20 +117,20 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                 transition={{ duration: 10, ease: "linear", times: [0, 0.1, 0.8, 1] }}
                                 style={{
                                     width: '90%', maxWidth: '900px',
-                                    display: 'flex', flexDirection: 'column', gap: '80px',
+                                    display: 'flex', flexDirection: 'column', gap: isMobile ? '44px' : '80px',
                                     alignItems: 'center', textAlign: 'center',
                                     position: 'absolute'
                                 }}
                             >
                                 {['1F', '2F', '3F', '4F', '5F', '6F', '7F'].includes(String(targetFloorId)) ? (
                                     <>
-                                        <div style={{ color: 'white', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'white', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             人は、「何を見るか」によって人生が変わります。<br />
                                             そしてそれは、視界ではなく心の視点の高さによって決まります。<br />
                                             マインド大学が扱うのは、知識でも、スキルでもありません。<br />
                                             私たちが扱うのは心の視点そのものです。
                                         </div>
-                                        <div style={{ color: 'white', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'white', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             人間の目が上にあるように、人は本来、より高い視点から世界を見ることができます。<br />
                                             その視点を取り戻すための最もベーシックなマインドセットが『マインドの法則』です。<br />
                                             私たちはこの法則を基盤に、人の心の成長を体系化した<br />
@@ -133,18 +139,18 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
 
                                         {/* Principles 1-7 Dynamic Rendering */}
                                         {String(targetFloorId) === '1F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第1原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>心の視点が現実を決める</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第1原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>心の視点が現実を決める</div>
                                                 人の現実は出来事によって決まるのではありません。<br />
                                                 それをどの視点から捉えるかによって決まります。<br />
                                                 視点が上がると可能性が見え始めます。
                                             </div>
                                         )}
                                         {String(targetFloorId) === '2F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第2原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>問いが可能性を開く</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第2原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>問いが可能性を開く</div>
                                                 答えは思考を終わらせます。<br />
                                                 しかし問いは思考を拡張します。<br />
                                                 問いを持つとき潜在意識が動き始めます。<br />
@@ -152,9 +158,9 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '3F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第3原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>潜在意識が未来を生み出す</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第3原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>潜在意識が未来を生み出す</div>
                                                 人の可能性の大部分は顕在意識ではなく<br />
                                                 潜在意識にあります。<br />
                                                 まだ言葉になっていない直感まだ形になっていない未来。<br />
@@ -162,18 +168,18 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '4F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第4原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>心には成長のプロセスがある</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第4原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>心には成長のプロセスがある</div>
                                                 人の意識は段階的に成長します。<br />
                                                 気づき、理解し、視点を高め、可能性を開いていく。<br />
                                                 この心の成長の流れがマインドプロセスです。
                                             </div>
                                         )}
                                         {String(targetFloorId) === '5F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第5原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>場と関係が意識を変える</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第5原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>場と関係が意識を変える</div>
                                                 人の意識は環境によって大きく変わります。<br />
                                                 人間関係組織文化空間それらはすべて意識の質を変えます。<br />
                                                 「マインドプロセスデザイン（MPD）」は<br />
@@ -181,9 +187,9 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '6F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第6原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>時間の質が未来を変える</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第6原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>時間の質が未来を変える</div>
                                                 時間は単なる時計の流れではありません。<br />
                                                 意識が変わると時間の密度が変わります。<br />
                                                 気づきの瞬間未来が見える瞬間人生が変わる瞬間。<br />
@@ -191,9 +197,9 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                             </div>
                                         )}
                                         {String(targetFloorId) === '7F' && (
-                                            <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '8px' }}>第7原理</div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '1.4rem', marginBottom: '16px' }}>心の進化は世界を変える</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '8px' }}>第7原理</div>
+                                                <div style={{ fontWeight: 'bold', fontSize: headSize, marginBottom: '16px' }}>心の進化は世界を変える</div>
                                                 一人の心の変化は個人にとどまりません。<br />
                                                 それは人間関係組織社会世界へと広がっていきます。<br />
                                                 つまり<span style={{fontWeight: 'bold'}}>世界は人の心の集合体</span>なのです。
@@ -202,15 +208,15 @@ export function TransitionOverlay({ isVisible, type = 'door', images = {}, targe
                                     </>
                                 ) : (
                                     <>
-                                        <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '0.1em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'white', fontSize: isMobile ? '1.1rem' : '1.5rem', fontWeight: 'bold', letterSpacing: '0.1em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             問いを立て、構造を描く。
                                         </div>
 
-                                        <div style={{ color: 'white', fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '0.1em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'white', fontSize: isMobile ? '1.1rem' : '1.5rem', fontWeight: 'bold', letterSpacing: '0.1em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             マインドプロセスデザインで思考を整える。
                                         </div>
 
-                                        <div style={{ color: 'rgba(255,255,255,0.9)', fontSize: '1.2rem', lineHeight: 2.4, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
+                                        <div style={{ color: 'rgba(255,255,255,0.9)', ...bodyText, letterSpacing: '0.05em', textShadow: '0 2px 10px rgba(0,0,0,0.8)' }}>
                                             この階層では、その瞬間のマインドに応じたワークが即興で生まれます。<br />
                                             答えを見つけるのではなく、向き合うことで階層が引き上がります。
                                         </div>

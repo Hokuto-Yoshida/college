@@ -1098,8 +1098,9 @@ function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 2.2 }}
+                    className="floor-door-text"
                     style={{
-                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31, // スマホでは右上のボタンと重ならないよう下げる（index.css の .floor-door-text）
                       overflowY: 'auto',
                       display: 'flex', justifyContent: 'center',
                     }}
@@ -1321,8 +1322,9 @@ function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 2.2 }}
+                    className="floor-door-text"
                     style={{
-                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31, // スマホでは右上のボタンと重ならないよう下げる（index.css の .floor-door-text）
                       overflowY: 'auto',
                       display: 'flex', justifyContent: 'center',
                     }}
@@ -1549,8 +1551,9 @@ function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 2.2 }}
+                    className="floor-door-text"
                     style={{
-                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31, // スマホでは右上のボタンと重ならないよう下げる（index.css の .floor-door-text）
                       overflowY: 'auto',
                       display: 'flex', justifyContent: 'center',
                     }}
@@ -1773,8 +1776,9 @@ function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 2.2 }}
+                    className="floor-door-text"
                     style={{
-                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31, // スマホでは右上のボタンと重ならないよう下げる（index.css の .floor-door-text）
                       overflowY: 'auto',
                       display: 'flex', justifyContent: 'center',
                     }}
@@ -1981,8 +1985,9 @@ function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 2.2 }}
+                    className="floor-door-text"
                     style={{
-                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31, // スマホでは右上のボタンと重ならないよう下げる（index.css の .floor-door-text）
                       overflowY: 'auto',
                       display: 'flex', justifyContent: 'center',
                     }}
@@ -2162,8 +2167,9 @@ function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.6, delay: 2.2 }}
+                    className="floor-door-text"
                     style={{
-                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31,
+                      position: 'fixed', top: '6vh', left: '5vw', right: '5vw', bottom: '22vh', zIndex: 31, // スマホでは右上のボタンと重ならないよう下げる（index.css の .floor-door-text）
                       overflowY: 'auto',
                       display: 'flex', justifyContent: 'center',
                     }}
@@ -2339,29 +2345,34 @@ function App() {
                 exit={{ opacity: 0, x: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 style={{
+                  // PC の右から出るエレベーターと同じく、明るいすりガラスにする（各階の文字は濃い色なので、暗い背景だと読めない）
                   position: 'fixed', inset: 0, zIndex: 200,
-                  background: 'rgba(5, 10, 20, 0.95)', backdropFilter: 'blur(12px)',
+                  background: 'rgba(236, 236, 240, 0.82)', backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
                   padding: '0', overflowY: 'auto',
                 }}
               >
                   <div style={{ position: 'relative' }}>
+                    {/* 上の帯: 見出しと閉じるボタン（階の番号と重ならないよう、一覧の上に分けて置く） */}
                     <div style={{
-                      position: 'absolute', top: 0, left: 0, zIndex: 2,
-                      width: '48px', height: 'calc(100vh / 9)',
-                      background: 'rgba(0,0,0,0.35)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      position: 'sticky', top: 0, zIndex: 2, height: '48px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '0 8px 0 16px', boxSizing: 'border-box',
+                      background: 'rgba(236, 236, 240, 0.92)', borderBottom: '1px solid rgba(0,0,0,0.08)',
+                      color: '#333', fontFamily: 'var(--font-jp)', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '0.1em',
                     }}>
+                      階層選択
                       <button
                         onClick={() => setMobileMenuOpen(false)}
                         style={{
-                          width: '32px', height: '32px', borderRadius: '50%',
+                          width: '40px', height: '40px', borderRadius: '50%',
                           background: 'transparent', border: 'none',
-                          color: 'white', cursor: 'pointer',
+                          color: '#333', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                         }}
                         title="閉じる"
+                        aria-label="閉じる"
                       >
-                        <X size={16} />
+                        <X size={20} />
                       </button>
                     </div>
                     <SpiralNav floors={activeFloors} onSelectFloor={(id) => {

@@ -14,6 +14,7 @@ import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
 import { titleTextStyle } from '../data/floor0TitleStyle';
 import { Floor0TitleText } from './Floor0TitleText';
+import { useIsMobile, useMediaQuery } from '../hooks/useMediaQuery';
 import workshopSide1 from '../assets/workshop_side_1.webp';
 import workshopSide2 from '../assets/workshop_side_2.webp';
 
@@ -195,6 +196,8 @@ const WorkshopLibrary = ({ workshops = [], activeWorkshop, onWorkshopSelect, get
 
     // Scale from 1.0 to 1.3 to simulate advancing deeper
     const scale = useTransform(scrollYProgress, [0, 1], [1, 1.3]);
+    // スマホでは部屋の幅が狭く、左右のテーブルの本が重なるので、本を小さくする
+    const isMobile = useIsMobile();
 
     const bookPositions = [
         { left: '33%', top: '65%' }, // Middle left table
@@ -239,26 +242,26 @@ const WorkshopLibrary = ({ workshops = [], activeWorkshop, onWorkshopSelect, get
                                     top: pos.top,
                                     x: '-50%',
                                     y: '-50%',
-                                    width: '110px',
-                                    height: '150px',
+                                    width: isMobile ? '78px' : '110px',
+                                    height: isMobile ? '106px' : '150px',
                                     borderRadius: '4px 10px 10px 4px',
                                     border: isActive ? '3px solid white' : '1px solid rgba(0,0,0,0.2)',
                                     background: wColor,
                                     borderLeft: '10px solid rgba(0,0,0,0.4)',
                                     color: '#1a202c',
                                     fontWeight: 'bold',
-                                    fontSize: '0.85rem',
+                                    fontSize: isMobile ? '0.7rem' : '0.85rem',
                                     cursor: 'pointer',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: isMobile ? '4px' : '8px',
                                     boxShadow: isActive ? '10px 10px 20px rgba(0,0,0,0.6), inset 2px 0 5px rgba(255,255,255,0.8)' : '5px 5px 15px rgba(0,0,0,0.5), inset 2px 0 5px rgba(255,255,255,0.4)',
-                                    padding: '12px',
+                                    padding: isMobile ? '6px' : '12px',
                                     textAlign: 'center',
                                     outline: 'none',
                                     zIndex: isActive ? 6 : 5
                                 }}
                             >
                                 <div style={{ position: 'absolute', top: 0, bottom: 0, right: 0, width: '3px', background: 'rgba(255,255,255,0.5)', borderRadius: '0 6px 6px 0' }} />
-                                <BookOpen size={24} color="#1a202c" style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.5))' }} />
+                                <BookOpen size={isMobile ? 18 : 24} color="#1a202c" style={{ filter: 'drop-shadow(0 1px 2px rgba(255,255,255,0.5))' }} />
                                 <span style={{ fontFamily: 'var(--font-jp)', lineHeight: 1.2, zIndex: 1 }}>{w.title}</span>
                             </motion.button>
                         );
@@ -296,6 +299,8 @@ const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
     const buttonOpacity = useTransform(scrollYProgress, [0.8, 1], [0, 1]);
     const buttonPointerEvents = useTransform(scrollYProgress, [0.8, 1], ['none', 'auto']);
     const introBg = lecture?.floorId === '7F' ? lectureBg7F : lectureBg;
+    // スマホ: 題名と本文を小さくし、左右の余白を詰める
+    const isMobile = useIsMobile();
 
     return (
         <div style={{ position: 'relative', marginTop: '20px', height: 'calc(100vh - 120px)', borderRadius: '20px', overflow: 'hidden' }}>
@@ -318,29 +323,29 @@ const LectureIntroSequence = ({ lecture, onComplete, onBack }) => {
                 <ArrowLeft size={14} /> 廊下へ戻る
             </button>
 
-            <div ref={scrollRef} style={{ position: 'relative', zIndex: 2, height: '100%', overflowY: 'auto', padding: '100px 40px', scrollbarWidth: 'none' }}>
+            <div ref={scrollRef} style={{ position: 'relative', zIndex: 2, height: '100%', overflowY: 'auto', padding: isMobile ? '76px 20px' : '100px 40px', scrollbarWidth: 'none', boxSizing: 'border-box' }}>
                 <style>{`::-webkit-scrollbar { display: none; }`}</style>
-                <div style={{ maxWidth: '800px', margin: '0 auto', color: 'white', textShadow: '0px 2px 4px rgba(0,0,0,0.9), 0px 0px 10px rgba(0,0,0,0.8), 0px 0px 20px rgba(0,0,0,0.8), 0px 0px 30px rgba(0,0,0,0.8)', fontSize: '1.2rem', lineHeight: '2.0', fontFamily: 'var(--font-jp)', fontWeight: 'bold' }}>
+                <div style={{ maxWidth: '800px', margin: '0 auto', color: 'white', textShadow: '0px 2px 4px rgba(0,0,0,0.9), 0px 0px 10px rgba(0,0,0,0.8), 0px 0px 20px rgba(0,0,0,0.8), 0px 0px 30px rgba(0,0,0,0.8)', fontSize: isMobile ? '0.95rem' : '1.2rem', lineHeight: '2.0', fontFamily: 'var(--font-jp)', fontWeight: 'bold' }}>
                     {lecture && (
-                        <h2 style={{ fontSize: '2.5rem', marginBottom: '60px', textAlign: 'center', color: 'white', textShadow: '0px 4px 10px rgba(0,0,0,0.9), 0px 0px 20px rgba(0,0,0,0.9)' }}>
+                        <h2 style={{ fontSize: isMobile ? '1.5rem' : '2.5rem', lineHeight: 1.5, marginBottom: isMobile ? '32px' : '60px', textAlign: 'center', wordBreak: 'keep-all', overflowWrap: 'anywhere', color: 'white', textShadow: '0px 4px 10px rgba(0,0,0,0.9), 0px 0px 20px rgba(0,0,0,0.9)' }}>
                             {lecture.title}
                         </h2>
                     )}
                     {introTextLines.map((text, idx) => (
-                        <p key={idx} style={{ marginBottom: '32px' }}>{text}</p>
+                        <p key={idx} style={{ marginBottom: isMobile ? '22px' : '32px' }}>{text}</p>
                     ))}
                     
                     <div style={{ height: '40vh' }} /> {/* Extra space to allow scrolling past text */}
 
                     <motion.div style={{ opacity: buttonOpacity, pointerEvents: buttonPointerEvents, display: 'flex', justifyContent: 'center', paddingBottom: '100px' }}>
-                        <button onClick={onComplete} style={{ background: '#e53e3e', color: 'white', fontSize: '1.2rem', padding: '16px 48px', borderRadius: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.5)', fontWeight: 'bold' }}>
+                        <button onClick={onComplete} style={{ background: '#e53e3e', color: 'white', fontSize: isMobile ? '1.05rem' : '1.2rem', padding: isMobile ? '14px 40px' : '16px 48px', borderRadius: '30px', border: 'none', cursor: 'pointer', boxShadow: '0 10px 20px rgba(0,0,0,0.5)', fontWeight: 'bold' }}>
                             授業を受ける
                         </button>
                     </motion.div>
                 </div>
             </div>
             
-            <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 3, color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <div style={{ position: 'absolute', bottom: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 3, color: 'rgba(255,255,255,0.7)', fontSize: isMobile ? '0.75rem' : '0.9rem', whiteSpace: 'nowrap', textShadow: '0 1px 4px rgba(0,0,0,0.8)', pointerEvents: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                 <motion.div animate={{ y: [0, 10, 0] }} transition={{ repeat: Infinity, duration: 1.5 }}>
                     ↓ スクロールして講義へ進む
                 </motion.div>
@@ -397,10 +402,12 @@ const FLOOR0_COPY_NOTICE = '※ 本の内容の無断でのダウンロード・
 // 0F のタブ・見出し・検索窓を固定する位置（画面上端から）。
 // 広い画面では右上の「大学ルームマップ」ボタンと同じ高さにタブを並べ、狭い画面ではボタンと重ならないようその下に置く
 const FLOOR0_CONTROLS_TOP = 78;
-const FLOOR0_CONTROLS_TOP_WIDE = 22;
+const FLOOR0_CONTROLS_TOP_WIDE = 24;
 const FLOOR0_CONTROLS_CSS = `
 .floor0-controls { padding-top: ${FLOOR0_CONTROLS_TOP}px; }
 @media (min-width: 1100px) { .floor0-controls { padding-top: ${FLOOR0_CONTROLS_TOP_WIDE}px; } }
+/* スマホを横にした（背の低い）画面: 上下が狭いので、横幅が足りればタブを右上のボタンと同じ高さに上げる */
+@media (max-height: 500px) and (min-width: 700px) { .floor0-controls { padding-top: ${FLOOR0_CONTROLS_TOP_WIDE}px; } }
 .floor0-controls-on button, .floor0-controls-on input { pointer-events: auto; }
 `;
 
@@ -696,6 +703,10 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
     const [transitioningBook, setTransitioningBook] = useState(null);
     const [openSeriesId, setOpenSeriesId] = useState(null);
     const [searchQuery, setSearchQuery] = useState('');
+    // スマホ: 上に固定するタブ・見出し・検索窓を詰めて、本の見える部分を広くする。本は1段3冊
+    const isMobile = useIsMobile();
+    // スマホを横にした（背の低い）画面: さらに見出しと検索窓を1行に並べ、「読みたい本を選んでください」は省く
+    const isShort = useMediaQuery('(max-height: 500px)');
 
     // 本棚に並べる本: 登録された本すべて（章がまだない本も）と、どの本にも入っていない章をまとめた「未分類」
     const seriesIds = new Set(series.map(s => s.id));
@@ -774,16 +785,27 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
     const [controlsActive, setControlsActive] = useState(() => progress.get() > 0.9);
     useMotionValueEvent(progress, 'change', (v) => setControlsActive(v > 0.9));
 
-    // 上に固定したタブ・見出し・検索窓の高さ（画面幅で折り返すと変わる）。本の一覧はその下から始める
+    // 本の一覧が、上に固定したタブ・見出し・検索窓のすぐ下から始まるよう、間に入れる空きの高さを測る。
+    // 中身が出たとき（スクロールに合わせて下げている分を除いた位置）の空きの上端から、固定した部分の下端までの差
     const controlsRef = useRef(null);
-    const [controlsHeight, setControlsHeight] = useState(0);
+    const controlsSpacerRef = useRef(null);
+    const [controlsSpacerHeight, setControlsSpacerHeight] = useState(0);
     useEffect(() => {
-        const el = controlsRef.current;
-        if (!el) return;
-        const observer = new ResizeObserver(() => setControlsHeight(el.offsetHeight));
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
+        const controls = controlsRef.current;
+        const spacer = controlsSpacerRef.current;
+        if (!controls || !spacer) return;
+        const measure = () => {
+            const spacerTop = spacer.getBoundingClientRect().top + window.scrollY - contentY.get();
+            setControlsSpacerHeight(Math.max(0, Math.round(controls.offsetHeight - spacerTop)));
+        };
+        const observer = new ResizeObserver(measure);
+        observer.observe(controls);
+        window.addEventListener('resize', measure);
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', measure);
+        };
+    }, [contentY]);
 
     // ピックアップの URL（/main/0F/pickup）で開いたときは、背景が切り替わった後の位置までスクロールしておく
     useEffect(() => {
@@ -837,25 +859,27 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                 >
                     <style>{FLOOR0_CONTROLS_CSS}</style>
                     {/* ゾーン切り替えのタブ（横スクロール・スワイプでも切り替わる） */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: 'center', gap: isMobile ? '6px' : '8px' }}>
                         {FLOOR0_ZONES.map((zone, i) => (
                             <button
                                 key={zone.en}
                                 onClick={() => scrollToZone(i)}
                                 style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                                    padding: '7px 18px', borderRadius: '20px', fontSize: '0.85rem', cursor: 'pointer',
+                                    display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0,
+                                    padding: isMobile ? '6px 10px' : '7px 18px', borderRadius: '20px',
+                                    fontSize: isMobile ? '0.68rem' : '0.85rem', cursor: 'pointer',
                                     fontFamily: 'var(--font-jp)', color: 'white', backdropFilter: 'blur(8px)',
                                     background: activeZone === i ? 'rgba(79,195,176,0.35)' : 'rgba(0,0,0,0.45)',
                                     border: activeZone === i ? '1px solid var(--floor-0)' : '1px solid rgba(255,255,255,0.2)',
                                 }}
                             >
-                                {i < activeZone && <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }} />}
+                                {/* スマホでは2つを1行に並べるため、左右の矢印は省く */}
+                                {!isMobile && i < activeZone && <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }} />}
                                 <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.25 }}>
-                                    <span style={{ letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{zone.en}</span>
+                                    <span style={{ letterSpacing: isMobile ? 0 : '0.04em', whiteSpace: 'nowrap' }}>{zone.en}</span>
                                     <span style={{ whiteSpace: 'nowrap' }}>{zone.ja}</span>
                                 </span>
-                                {i > activeZone && <ChevronRight size={14} />}
+                                {!isMobile && i > activeZone && <ChevronRight size={14} />}
                             </button>
                         ))}
                     </div>
@@ -863,15 +887,20 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                     {/* 本棚ゾーンの見出し・注意書きと、検索窓（本の一覧のとき）/ 本の一覧に戻る（章の一覧のとき） */}
                     {activeZone === 0 && (
                         <>
+                        <div style={isShort ? {
+                            // 背の低い画面: 見出し（と戻るボタン）・検索窓を1行に並べる
+                            display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center', gap: '6px 16px', marginTop: '8px',
+                        } : undefined}>
                         <div style={{
-                            marginTop: '20px', color: 'white', fontFamily: 'var(--font-jp)',
+                            marginTop: isShort ? 0 : isMobile ? '10px' : '20px', color: 'white', fontFamily: 'var(--font-jp)',
                             textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                            ...(isShort && { display: 'flex', alignItems: 'center', gap: '12px' }),
                         }}>
                             {openSeries && (
                                 <button
                                     onClick={() => setOpenSeriesId(null)}
                                     style={{
-                                        display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: '14px',
+                                        display: 'inline-flex', alignItems: 'center', gap: '6px', marginBottom: isShort ? 0 : isMobile ? '8px' : '14px', whiteSpace: 'nowrap',
                                         padding: '8px 18px', borderRadius: '20px', background: 'rgba(0,0,0,0.45)',
                                         border: '1px solid rgba(255,255,255,0.2)', color: 'white', cursor: 'pointer', fontSize: '0.8rem',
                                     }}
@@ -879,20 +908,23 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                                     <ArrowLeft size={14} /> 本の一覧に戻る
                                 </button>
                             )}
-                            <h3 style={{ margin: '0 0 8px', fontSize: '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
+                            <h3 style={{ margin: isShort ? 0 : isMobile ? '0 0 4px' : '0 0 8px', fontSize: isMobile ? '1.05rem' : '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
                                 {openSeries ? openSeries.title : '地下書庫'}
                             </h3>
-                            <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.75 }}>
-                                {openSeries ? '読みたい章を選んでください' : '読みたい本を選んでください'}
-                            </p>
-                            <p style={{ margin: '10px 0 0', fontSize: '0.75rem', opacity: 0.6 }}>
-                                {FLOOR0_COPY_NOTICE}
-                            </p>
+                            {!isShort && (
+                                <p style={{ margin: 0, fontSize: isMobile ? '0.8rem' : '0.85rem', opacity: 0.75 }}>
+                                    {openSeries ? '読みたい章を選んでください' : '読みたい本を選んでください'}
+                                </p>
+                            )}
+                            {!isShort && (
+                                <p style={{ margin: isMobile ? '6px 0 0' : '10px 0 0', fontSize: isMobile ? '0.65rem' : '0.75rem', opacity: 0.6 }}>
+                                    {FLOOR0_COPY_NOTICE}
+                                </p>
+                            )}
                         </div>
                         {!openSeries && (
-                            <div style={{ display: 'flex', justifyContent: 'center', padding: '0 4px', marginTop: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'center', padding: '0 4px', marginTop: isShort ? 0 : isMobile ? '10px' : '20px', ...(isShort && { flex: '0 1 300px' }) }}>
                                 <div style={{ position: 'relative', width: '100%', maxWidth: '360px' }}>
-                                    <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.7)', pointerEvents: 'none' }} />
                                     <input
                                         type="search"
                                         value={searchQuery}
@@ -901,12 +933,14 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                                         aria-label="本をタイトルで検索"
                                         className="floor0-search"
                                         style={{
-                                            width: '100%', boxSizing: 'border-box', padding: '10px 38px 10px 38px',
+                                            width: '100%', boxSizing: 'border-box', padding: isMobile ? '8px 38px' : '10px 38px 10px 38px',
                                             borderRadius: '20px', border: '1px solid rgba(255,255,255,0.25)',
                                             background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(8px)',
                                             color: 'white', fontSize: '0.9rem', fontFamily: 'var(--font-jp)', outline: 'none',
                                         }}
                                     />
+                                    {/* 虫めがね。検索窓（ぼかしで重なり順が上がる）に隠れないよう、入力欄より後に置く */}
+                                    <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.7)', pointerEvents: 'none' }} />
                                     {searchQuery && (
                                         <button
                                             onClick={() => setSearchQuery('')}
@@ -928,6 +962,16 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                                 `}</style>
                             </div>
                         )}
+                        </div>
+                        {/* 背の低い画面では、注意書きは見出しの行の下に小さく1行で */}
+                        {isShort && (
+                            <p style={{
+                                margin: '6px 0 0', fontSize: '0.62rem', opacity: 0.6, color: 'white', textAlign: 'center',
+                                fontFamily: 'var(--font-jp)', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                            }}>
+                                {FLOOR0_COPY_NOTICE}
+                            </p>
+                        )}
                         </>
                     )}
                 </motion.div>,
@@ -935,8 +979,8 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
             )}
 
             <motion.div style={{ y: contentY, opacity: contentOpacity, pointerEvents: contentPointer }}>
-            {/* 上に固定したタブ・見出し・検索窓のぶんだけ空けて、本が下から始まるようにする（固定位置が上がった分だけ本も上がる） */}
-            <div style={{ height: `${Math.max(0, controlsHeight - FLOOR0_CONTROLS_TOP)}px` }} />
+            {/* 上に固定したタブ・見出し・検索窓のぶんだけ空けて、本がそのすぐ下から始まるようにする */}
+            <div ref={controlsSpacerRef} style={{ height: `${controlsSpacerHeight}px` }} />
 
             <div
                 ref={zoneScrollRef}
@@ -976,7 +1020,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                             ) : (
                             <Floor0ChapterSlider key={openSeries.id}>
                                 {openSeries.chapters.map((b) => (
-                                    <div key={b.id} style={{ flex: '0 0 150px', width: '150px', minWidth: 0, scrollSnapAlign: 'start' }}>
+                                    <div key={b.id} style={{ flex: `0 0 ${isMobile ? 120 : 150}px`, width: `${isMobile ? 120 : 150}px`, minWidth: 0, scrollSnapAlign: 'start' }}>
                                         <Floor0Cover title={b.title} coverUrl={floor0ChapterCover} titleStyle={b} titleInside onClick={() => handleSelectBook(b)} />
                                     </div>
                                 ))}
@@ -996,7 +1040,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                     )}
                     {/* 3段の横スライダー（1段に5冊ほど）。入りきらない分は横に送る */}
                     {visibleShelf.length > 0 && (
-                        <Floor0ChapterSlider key={normalizedQuery} rows={3} visible={5} autoSlide={false} label="本">
+                        <Floor0ChapterSlider key={`${normalizedQuery}-${isMobile}-${isShort}`} rows={3} visible={isShort ? 6 : isMobile ? 3 : 5} autoSlide={false} label="本">
                             {visibleShelf.map((s) => (
                                 <div key={s.id} style={{ minWidth: 0, scrollSnapAlign: 'start' }}>
                                     <Floor0Cover
@@ -1123,6 +1167,8 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     const [viewMode, setViewMode] = useState('WALL'); // 'FORM' or 'WALL'
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0); // 1問ずつ表示
     const [selectedResponse, setSelectedResponse] = useState(null); // For Modal
+    // スマホ: 講義室の映像・オンライン講義のボタンを部屋の写真の中に収める
+    const isMobile = useIsMobile();
 
     // Reset selection when floor changes
     useEffect(() => {
@@ -1414,7 +1460,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
     // --- LECTURE ROOM VIEW ---
     return (
         <div style={{ marginTop: '20px' }}>
-            <div className="glass-panel" style={{ padding: '24px', borderRadius: '20px', marginBottom: '24px', position: 'relative' }}>
+            <div className="glass-panel" style={{ padding: isMobile ? '16px 12px' : '24px', borderRadius: '20px', marginBottom: '24px', position: 'relative' }}>
                 <button
                     onClick={handleBackToHallway}
                     style={{ position: 'absolute', top: '-10px', left: '20px', padding: '8px 16px', borderRadius: '20px', background: 'var(--glass-surface)', border: '1px solid var(--glass-border)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', zIndex: 10 }}
@@ -1422,8 +1468,8 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                     <ArrowLeft size={14} /> 廊下へ戻る
                 </button>
 
-                <h2 style={{ margin: '20px 0 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <BookOpen size={24} color="var(--floor-4)" />
+                <h2 style={{ margin: '20px 0 16px', display: 'flex', alignItems: 'center', gap: '12px', fontSize: isMobile ? '1.15rem' : undefined }}>
+                    <BookOpen size={24} color="var(--floor-4)" style={{ flexShrink: 0 }} />
                     {activeLecture.title}
                 </h2>
 
@@ -1449,7 +1495,7 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                             marginTop: '24px', 
                             position: 'relative',
                             width: '100%',
-                            aspectRatio: '16/10', // roughly matches the room photo
+                            aspectRatio: isMobile ? '4/3' : '16/10', // roughly matches the room photo（スマホではボタンが入るよう少し縦長に）
                             backgroundImage: `url(${avRoomBg})`,
                             backgroundSize: 'cover',
                             backgroundPosition: 'center',
@@ -1461,15 +1507,15 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                             {recordedLinks.length > 0 && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: '32%',
+                                    top: isMobile ? '26%' : '32%',
                                     left: '50%',
                                     transform: 'translateX(-50%)',
-                                    width: '70%',
-                                    height: '25%',
+                                    width: isMobile ? '88%' : '70%',
+                                    height: isMobile ? '28%' : '25%',
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
-                                    gap: '20px',
+                                    gap: isMobile ? '10px' : '20px',
                                     zIndex: 5
                                 }}>
                                     {recordedLinks.map((link, idx) => (
@@ -1491,17 +1537,18 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                                                 cursor: 'pointer',
                                                 display: 'flex',
                                                 alignItems: 'flex-end',
-                                                padding: '12px',
+                                                padding: isMobile ? '6px 8px' : '12px',
+                                                minWidth: 0,
                                                 position: 'relative',
                                                 overflow: 'hidden'
                                             }}
                                         >
                                             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }} />
-                                            <div style={{ position: 'relative', zIndex: 1, color: 'white', width: '100%' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', marginBottom: '4px' }}>
+                                            <div style={{ position: 'relative', zIndex: 1, color: 'white', width: '100%', minWidth: 0 }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.62rem' : '0.8rem', marginBottom: isMobile ? '2px' : '4px', whiteSpace: 'nowrap' }}>
                                                     <PlayCircle size={14} /> シアター室へ
                                                 </div>
-                                                <div style={{ fontWeight: 'bold', fontSize: '0.95rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                <div style={{ fontWeight: 'bold', fontSize: isMobile ? '0.75rem' : '0.95rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                     {link.title}
                                                 </div>
                                             </div>
@@ -1514,15 +1561,15 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                             {sofaLinks.length > 0 && (
                                 <div style={{
                                     position: 'absolute',
-                                    top: '68%',
+                                    top: isMobile ? '62%' : '68%',
                                     left: '50%',
                                     transform: 'translateX(-50%)',
-                                    width: '80%',
-                                    height: '22%',
+                                    width: isMobile ? '92%' : '80%',
+                                    height: isMobile ? '28%' : '22%',
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'flex-end',
-                                    gap: '30px',
+                                    gap: isMobile ? '10px' : '30px',
                                     zIndex: 5
                                 }}>
                                     {sofaLinks.map((link, idx) => {
@@ -1547,18 +1594,19 @@ export function Classroom({ currentFloorId, lectures = [], sixFRoomEntered = fal
                                                     cursor: 'pointer',
                                                     display: 'flex',
                                                     alignItems: 'flex-end',
-                                                    padding: '12px',
+                                                    padding: isMobile ? '6px 8px' : '12px',
+                                                    minWidth: 0,
                                                     position: 'relative',
                                                     overflow: 'hidden'
                                                 }}
                                             >
                                                 {!isExternal && <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)' }} />}
-                                                <div style={{ position: 'relative', zIndex: 1, color: 'white', width: '100%' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.75rem', marginBottom: '4px' }}>
+                                                <div style={{ position: 'relative', zIndex: 1, color: 'white', width: '100%', minWidth: 0 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: isMobile ? '0.6rem' : '0.75rem', marginBottom: isMobile ? '2px' : '4px', whiteSpace: 'nowrap' }}>
                                                         {isExternal ? <ExternalLink size={12} /> : <User size={12} />}
                                                         {isExternal ? '外部リンク' : 'オンライン講義室へ'}
                                                     </div>
-                                                    <div style={{ fontWeight: 'bold', fontSize: '0.85rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    <div style={{ fontWeight: 'bold', fontSize: isMobile ? '0.72rem' : '0.85rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                         {link.title}
                                                     </div>
                                                 </div>

@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import cinemaBg from '../assets/cinema_room.png';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 export function CinemaModal({ isOpen, onClose, videoUrl, title }) {
+    // スマホ: 縦長の画面では映画館の写真に合わせた枠だと映像が小さくなるので、画面幅いっぱいの 16:9 の枠にする
+    const isMobile = useIsMobile();
     const [embedUrl, setEmbedUrl] = useState('');
     const [mediaType, setMediaType] = useState(null); // 'iframe' or 'video'
 
@@ -107,10 +110,11 @@ export function CinemaModal({ isOpen, onClose, videoUrl, title }) {
                 {/* Title (Optional, subtle) */}
                 <div style={{
                     position: 'absolute',
-                    top: '30px',
-                    left: '40px',
+                    top: isMobile ? '28px' : '30px',
+                    left: isMobile ? '16px' : '40px',
+                    right: isMobile ? '76px' : undefined, // 右上の閉じるボタンと重ならないように
                     color: 'rgba(255,255,255,0.5)',
-                    fontSize: '1.2rem',
+                    fontSize: isMobile ? '0.8rem' : '1.2rem',
                     pointerEvents: 'none',
                     letterSpacing: '0.1em'
                 }}>
@@ -123,17 +127,22 @@ export function CinemaModal({ isOpen, onClose, videoUrl, title }) {
                 {embedUrl ? (
                     <div style={{
                         position: 'absolute',
-                        top: '20%',    // Distance from top
-                        left: '12%',   // Distance from left
-                        width: '76%',  // Width of the screen area
-                        height: '56%', // Height of the screen area
+                        ...(isMobile ? {
+                            top: '50%', left: '3%', width: '94%', aspectRatio: '16 / 9',
+                            translate: '0 -50%', boxSizing: 'border-box', // 枠線も幅に含め、画面からはみ出さないようにする
+                        } : {
+                            top: '20%',    // Distance from top
+                            left: '12%',   // Distance from left
+                            width: '76%',  // Width of the screen area
+                            height: '56%', // Height of the screen area
+                        }),
                         background: '#0a0a0a', // Dark screen background
                         boxShadow: '0 0 80px rgba(100,200,255,0.1), inset 0 0 20px rgba(0,0,0,0.8)', // Glow and inner shadow
                         borderRadius: '2px', // Very slight curve like a real screen
                         border: '8px solid #111', // Physical frame of the screen
                         borderBottom: '12px solid #0a0a0a', // Thicker bottom lip
                         overflow: 'hidden',
-                        transform: 'perspective(1000px) rotateX(2deg)', // Slight 3D tilt
+                        transform: isMobile ? 'none' : 'perspective(1000px) rotateX(2deg)', // Slight 3D tilt
                         transformOrigin: 'bottom center'
                     }}>
                         {mediaType === 'video' ? (
@@ -168,9 +177,10 @@ export function CinemaModal({ isOpen, onClose, videoUrl, title }) {
                     <div style={{
                         position: 'absolute',
                         top: '30%',
-                        left: '20%',
-                        width: '60%',
+                        left: isMobile ? '6%' : '20%',
+                        width: isMobile ? '88%' : '60%',
                         height: '40%',
+                        padding: '0 16px', boxSizing: 'border-box', textAlign: 'center',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -180,7 +190,7 @@ export function CinemaModal({ isOpen, onClose, videoUrl, title }) {
                         flexDirection: 'column',
                         gap: '16px'
                     }}>
-                        <p style={{ fontSize: '1.2rem', opacity: 0.8 }}>このURL形式はシネマビューに対応していません</p>
+                        <p style={{ fontSize: isMobile ? '0.95rem' : '1.2rem', opacity: 0.8 }}>このURL形式はシネマビューに対応していません</p>
                         <a
                             href={videoUrl}
                             target="_blank"

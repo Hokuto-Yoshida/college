@@ -124,3 +124,18 @@ h6 {
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+/* 入力欄は幅 100% に余白を含める（含めないと、余白の分だけ枠からはみ出す。狭い画面だと画面の外まで出る） */
+input,
+textarea,
+select {
+  box-sizing: border-box;
+}
+
+/* ===== スマホ用レイアウト =====
+   条件は src/hooks/useMediaQuery.js の MOBILE_QUERY と同じ（幅 640px 以下、縦長、または高さ 500px 以下） */
+@media (max-width: 640px), (max-aspect-ratio: 3/4), (max-height: 500px) {
+  /* 各階の扉が開いた後の紹介文: 右上の「大学ルームマップ」などのボタンと重ならないよう、その下から始める */
+  .floor-door-text {
+    top: 84px !important;
+  }
+}

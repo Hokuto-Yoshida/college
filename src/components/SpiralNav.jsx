@@ -11,6 +11,7 @@ import thumb5F from '../assets/floor_thumb_5F.png';
 import thumb6F from '../assets/floor_thumb_6F.png';
 import thumb7F from '../assets/floor_thumb_7F.png';
 import { floorLabel } from '../data/floors';
+import { useIsMobile } from '../hooks/useMediaQuery';
 
 const thumbMap = {
     '7F': thumb7F, '6F': thumb6F, '5F': thumb5F, '4F': thumb4F,
@@ -30,8 +31,10 @@ const processMap = {
 };
 
 export function SpiralNav({ floors, onSelectFloor, compact = false }) {
+    // スマホ: 行の高さは画面の 1/9 のまま、サムネイルと各列を細くし、右の言葉は折り返して全部見せる
+    const narrow = useIsMobile() && !compact;
     const rowH = compact ? '52px' : 'calc(100vh / 9)';
-    const thumbS = compact ? '40px' : 'calc(100vh / 9)';
+    const thumbS = compact ? '40px' : narrow ? 'min(calc(100vh / 9), 64px)' : 'calc(100vh / 9)';
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -64,15 +67,17 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                             display: 'grid',
                             gridTemplateColumns: compact
                                 ? `30px ${thumbS} 76px 1fr`
-                                : `48px ${thumbS} 112px minmax(0, 1fr)`,
+                                : narrow
+                                    ? `36px ${thumbS} 76px minmax(0, 1fr)`
+                                    : `48px ${thumbS} 112px minmax(0, 1fr)`,
                             alignItems: 'center',
-                            gap: compact ? '8px' : '12px',
+                            gap: compact || narrow ? '8px' : '12px',
                             backgroundColor: 'rgba(255,255,255,0.18)',
                             backdropFilter: 'blur(6px)',
                             WebkitBackdropFilter: 'blur(6px)',
                             border: 'none',
                             borderBottom: '1px solid rgba(255,255,255,0.25)',
-                            padding: compact ? '0 10px 0 8px' : '0 14px 0 10px',
+                            padding: compact || narrow ? '0 10px 0 8px' : '0 14px 0 10px',
                             cursor: 'pointer',
                             textAlign: 'left',
                             width: '100%',
@@ -81,7 +86,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                     >
                         {/* 階番号 */}
                         <div style={{
-                            fontSize: compact ? '0.85rem' : '1.35rem',
+                            fontSize: compact ? '0.85rem' : narrow ? '1.05rem' : '1.35rem',
                             fontWeight: '700',
                             color: '#333',
                             fontFamily: 'var(--font-en)',
@@ -121,7 +126,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                                 marginBottom: '3px',
                             }}>
                                 <span style={{
-                                    fontSize: compact ? '0.62rem' : '0.8rem',
+                                    fontSize: compact ? '0.62rem' : narrow ? '0.68rem' : '0.8rem',
                                     color: '#1d4ed8',
                                     fontFamily: 'var(--font-jp)',
                                     letterSpacing: '0.04em',
@@ -129,7 +134,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                                     プロセス
                                 </span>
                                 <span style={{
-                                    fontSize: compact ? '1rem' : '1.5rem',
+                                    fontSize: compact ? '1rem' : narrow ? '1.25rem' : '1.5rem',
                                     fontWeight: '700',
                                     color: '#1d4ed8',
                                     fontFamily: 'var(--font-en)',
@@ -139,7 +144,7 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
                                 </span>
                             </div>
                             <div style={{
-                                fontSize: compact ? '0.62rem' : '0.85rem',
+                                fontSize: compact ? '0.62rem' : narrow ? '0.75rem' : '0.85rem',
                                 fontWeight: '700',
                                 color: '#333',
                                 fontFamily: 'var(--font-jp)',
@@ -155,12 +160,13 @@ export function SpiralNav({ floors, onSelectFloor, compact = false }) {
 
                         {/* アクション（右側） */}
                         <div style={{
-                            fontSize: compact ? '0.78rem' : '1.25rem',
+                            fontSize: compact ? '0.78rem' : narrow ? '0.95rem' : '1.25rem',
                             fontWeight: '700',
                             color: '#333',
                             fontFamily: 'var(--font-jp)',
                             lineHeight: 1.3,
-                            whiteSpace: 'nowrap',
+                            whiteSpace: narrow ? 'normal' : 'nowrap',
+                            wordBreak: 'keep-all', overflowWrap: 'anywhere',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             letterSpacing: '0.06em',

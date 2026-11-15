@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useTransform } from 'framer-motion';
+import { useIsMobile } from '../hooks/useMediaQuery';
 import { X } from 'lucide-react';
 import { SpiralNav } from './SpiralNav';
 
@@ -103,18 +104,24 @@ export const MainBuildingIntro = ({ onEnter, floors = [], onSelectFloor }) => {
     const t2Y = useTransform(scrollYProgress, [0.65, 0.67, 0.68, 0.70], ['50vh', '0vh', '0vh', '-50vh']);
     const t3Y = useTransform(scrollYProgress, [0.90, 0.92, 0.93, 0.95], ['50vh', '0vh', '0vh', '-50vh']);
 
+    // スマホでは文字を少し大きく、行間と段落の間を詰めて、1画面に収まるようにする
+    const isMobile = useIsMobile();
+
     // ── スタイル ───────────────────────────────────────────────────
     const textStyle = {
         maxWidth: '720px',
         width: '100%',
         textAlign: 'center',
-        fontSize: 'clamp(0.75rem, 1.5vw, 1rem)',
+        fontSize: isMobile ? '0.85rem' : 'clamp(0.75rem, 1.5vw, 1rem)',
         color: '#333',
         fontFamily: 'var(--font-jp)',
-        letterSpacing: '0.12em',
-        padding: '0 32px',
+        letterSpacing: isMobile ? '0.06em' : '0.12em',
+        padding: isMobile ? '0 24px' : '0 32px',
+        boxSizing: 'border-box',
     };
-    const ln = { margin: 0, paddingBottom: '1.8rem', lineHeight: 2.8 };
+    const ln = isMobile
+        ? { margin: 0, paddingBottom: '1.1rem', lineHeight: 2 }
+        : { margin: 0, paddingBottom: '1.8rem', lineHeight: 2.8 };
 
     const sections = [
         {

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 
 export const CustomCursor = () => {
+    // スマホ・タブレット（マウスで指せない端末）では出さない。タップの位置に丸が残ってしまうため
+    const noHover = useMediaQuery('(hover: none)');
     const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
     const [isHovering, setIsHovering] = useState(false);
 
@@ -31,6 +34,8 @@ export const CustomCursor = () => {
             window.removeEventListener('mouseover', handleMouseOver);
         };
     }, []);
+
+    if (noHover) return null;
 
     return (
         <motion.div
