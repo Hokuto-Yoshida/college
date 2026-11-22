@@ -27,12 +27,18 @@ const SLOT_W = (SHELF_INNER.right - SHELF_INNER.left) / BOOKS_PER_ROW;
 const ROW_H = 106; // 1段の高さの目安（カメラの寄り具合を決める）
 const EDGE_PAD = 36; // 左右の端まで行ったとき、棚の外側をどれだけ見せるか
 
+// 最初に見せる段（上から2段目。本棚の真ん中あたり）
+const START_ROW = 1;
+// 本を並べ始める段。全部の段を使わないときは、最初に見せる段（2段目）から並べる（最初に空の段が映らないように）
+const firstRowFor = (count) => (Math.ceil(count / BOOKS_PER_ROW) >= SHELF_ROWS.length ? 0 : START_ROW);
+
 // 本の置き場所（写真のピクセル）。段の途中で終わる最後の段は、真ん中に寄せて並べる
 function slotPositions(count) {
     const positions = [];
+    const firstRow = firstRowFor(count);
     for (let i = 0; i < count; i++) {
-        const row = Math.floor(i / BOOKS_PER_ROW);
-        const inRow = Math.min(BOOKS_PER_ROW, count - row * BOOKS_PER_ROW);
+        const row = firstRow + Math.floor(i / BOOKS_PER_ROW);
+        const inRow = Math.min(BOOKS_PER_ROW, count - (row - firstRow) * BOOKS_PER_ROW);
         const col = i % BOOKS_PER_ROW;
         const offset = (BOOKS_PER_ROW - inRow) / 2; // 途中までの段は真ん中に寄せる
         const cx = SHELF_INNER.left + SLOT_W * (col + offset + 0.5);
@@ -83,15 +89,15 @@ export function Floor0ShelfScene({ items, imageSrc, opacity, blur, x, interactiv
     const scale = cameraScale(view.w, view.h - topInset - bottomInset);
     const pageCount = Math.max(1, Math.ceil(items.length / BOOKS_PER_PAGE));
     const [pageState, setPage] = useState(0);
-    const [rowState, setRow] = useState(0);
+    const [rowState, setRow] = useState(START_ROW);
     const [camX, setCamX] = useState(null); // 見ている真ん中（写真のピクセル）。null = 棚の真ん中
 
-    // 検索の言葉などが変わったら、最初のページの上の段・真ん中に戻す
+    // 検索の言葉などが変わったら、最初のページの2段目・真ん中に戻す
     const [lastResetKey, setLastResetKey] = useState(resetKey);
     if (lastResetKey !== resetKey) {
         setLastResetKey(resetKey);
         setPage(0);
-        setRow(0);
+        setRow(START_ROW);
         setCamX(null);
     }
 
@@ -99,8 +105,11 @@ export function Floor0ShelfScene({ items, imageSrc, opacity, blur, x, interactiv
     const page = Math.min(pageState, pageCount - 1);
     const pageItems = useMemo(() => items.slice(page * BOOKS_PER_PAGE, (page + 1) * BOOKS_PER_PAGE), [items, page]);
     const positions = useMemo(() => slotPositions(pageItems.length), [pageItems.length]);
+    // 本が並んでいる段の範囲（この中だけ上下に動ける）
     const rowsUsed = Math.max(1, Math.ceil(pageItems.length / BOOKS_PER_ROW));
-    const row = Math.min(rowState, rowsUsed - 1);
+    const firstRow = firstRowFor(pageItems.length);
+    const lastRow = firstRow + rowsUsed - 1;
+    const row = Math.min(lastRow, Math.max(firstRow, rowState));
 
     // 横に動ける範囲（写真のピクセル）。画面の方が棚より広いときは真ん中に固定
     const halfViewW = view.w / 2 / scale;
@@ -136,8 +145,8 @@ export function Floor0ShelfScene({ items, imageSrc, opacity, blur, x, interactiv
     const can = {
         left: !atLeft || page > 0,
         right: !atRight || page < pageCount - 1,
-        up: row > 0,
-        down: row < rowsUsed - 1,
+        up: row > firstRow,
+        down: row < lastRow,
     };
     const move = (dir) => {
         if (!can[dir]) return;
@@ -145,10 +154,10 @@ export function Floor0ShelfScene({ items, imageSrc, opacity, blur, x, interactiv
         else if (dir === 'down') setRow(row + 1);
         else if (dir === 'left') {
             if (!atLeft) setCamX(clampX(curX - SLOT_W));
-            else { setPage(page - 1); setCamX(maxX); setRow(0); } // 前の棚（ページ）の右端へ
+            else { setPage(page - 1); setCamX(maxX); setRow(START_ROW); } // 前の棚（ページ）の右端へ
         } else if (dir === 'right') {
             if (!atRight) setCamX(clampX(curX + SLOT_W));
-            else { setPage(page + 1); setCamX(minX); setRow(0); } // 次の棚（ページ）の左端へ
+            else { setPage(page + 1); setCamX(minX); setRow(START_ROW); } // 次の棚（ページ）の左端へ
         }
     };
     const moveRef = useRef(move);

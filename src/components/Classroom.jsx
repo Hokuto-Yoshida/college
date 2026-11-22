@@ -988,7 +988,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                 interactive={controlsActive && activeZone === 0}
                 topInset={controlsBottom}
                 bottomInset={isMobile ? 64 : 72}
-                // 本を開いた・閉じた・検索の言葉を変えたときは、棚の最初（上の段・真ん中）から見せる
+                // 本を開いた・閉じた・検索の言葉を変えたときは、棚の最初（2段目・真ん中）から見せる
                 resetKey={openSeries ? `series:${openSeries.id}` : `search:${normalizedQuery}`}
                 emptyMessage={openSeries
                     ? 'この本にはまだ章がありません'
