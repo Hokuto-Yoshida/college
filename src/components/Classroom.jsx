@@ -558,7 +558,7 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick, captionTo
 
 // 0F テーブルゾーンの背景画像（2309×1299）。テーブルの上の、表紙(左)・章(右)を置く位置（画像に対する%）
 // 縦長の画面では画像の左右が切れて見えなくなるので、テーブルの中央に上下に並べる
-const FLOOR0_TABLE_ASPECT = 2309 / 1299;
+const FLOOR0_TABLE_ASPECT = 1672 / 941; // テーブルの背景画像（floor_0f_table_marble.jpg）の縦横比
 const FLOOR0_TABLE_CSS = `
 .floor0-pick { position: absolute; top: 51%; width: 13%; transform: translate(-50%, -50%); }
 .floor0-pick-series { left: 33.5%; }
@@ -614,154 +614,6 @@ function Floor0PickupTable({ zoneProgress, contentOpacity, pickupSeries, pickupC
             </div>
         </motion.div>,
         document.body,
-    );
-}
-
-// 0F: 本の中の章を1行に並べ、横スライド（スワイプ・横スクロール・左右の矢印・下のスライダー）で送るスライダー。
-// 何もしていないときは自動で1章ずつ送り、最後まで行ったら最初に戻る
-const FLOOR0_SLIDER_STEPS = 1000; // 下のスライダーの細かさ
-const FLOOR0_AUTO_SLIDE_MS = 3500; // 自動で次の章へ送る間隔
-const FLOOR0_AUTO_RESUME_MS = 6000; // 手で動かしたあと、自動送りを再開するまでの時間
-const FLOOR0_SLIDER_CSS = `
-.floor0-chapter-track::-webkit-scrollbar { display: none; }
-.floor0-chapter-range { -webkit-appearance: none; appearance: none; width: 100%; height: 20px; background: transparent; cursor: pointer; margin: 0; }
-.floor0-chapter-range::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.35); box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-.floor0-chapter-range::-moz-range-track { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.35); box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-.floor0-chapter-range::-webkit-slider-thumb { -webkit-appearance: none; width: 48px; height: 10px; margin-top: -3px; border-radius: 5px; background: #d4af37; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
-.floor0-chapter-range::-moz-range-thumb { width: 48px; height: 10px; border: none; border-radius: 5px; background: #d4af37; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
-`;
-
-// rows: 段数（1 = 横1列）。2 以上なら本棚のように左から右へ1段ずつ並べ、rows 段に収まらない分は右へ伸ばす
-// visible: 1段に見せる冊数の目安
-// autoSlide: 何もしていないときに自動で送るか
-function Floor0ChapterSlider({ children, rows = 1, visible = null, autoSlide = true, label = '章' }) {
-    const trackRef = useRef(null);
-    const [canPrev, setCanPrev] = useState(false);
-    const [canNext, setCanNext] = useState(false);
-    const [position, setPosition] = useState(0); // 下のスライダーの位置（0〜FLOOR0_SLIDER_STEPS）
-    // 複数段のときの列数: 少なくとも visible 列。rows 段に入りきらなければ列を増やす（＝横にスライド）
-    const columns = Math.max(visible || 1, Math.ceil(React.Children.count(children) / rows));
-    const hoveringRef = useRef(false); // マウスが乗っている間は自動送りを止める
-    const lastManualRef = useRef(0); // 最後に手で動かした時刻
-    const markManual = () => { lastManualRef.current = Date.now(); };
-
-    // 左右にまだ送れるかで矢印を出し分け、下のスライダーの位置も合わせる
-    const updateArrows = () => {
-        const el = trackRef.current;
-        if (!el) return;
-        const max = el.scrollWidth - el.clientWidth;
-        setCanPrev(el.scrollLeft > 4);
-        setCanNext(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
-        setPosition(max > 0 ? Math.round((el.scrollLeft / max) * FLOOR0_SLIDER_STEPS) : 0);
-    };
-
-    // 下のスライダーを動かしたら、章の列もその位置まで送る
-    const handleSliderChange = (e) => {
-        const el = trackRef.current;
-        if (!el) return;
-        const value = Number(e.target.value);
-        markManual();
-        setPosition(value);
-        el.scrollLeft = (value / FLOOR0_SLIDER_STEPS) * (el.scrollWidth - el.clientWidth);
-    };
-    useEffect(() => {
-        const el = trackRef.current;
-        if (!el) return;
-        const observer = new ResizeObserver(updateArrows);
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, []);
-
-    const slide = (direction) => {
-        const el = trackRef.current;
-        markManual();
-        if (el) el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' });
-    };
-
-    // 自動送り: 一定間隔で1章ぶん進め、端まで来たら最初に戻る。
-    // マウスが乗っている間・手で動かした直後・タブが裏にあるとき・「動きを減らす」設定のときは送らない
-    useEffect(() => {
-        if (!autoSlide || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-        const timer = setInterval(() => {
-            const el = trackRef.current;
-            if (!el || document.hidden || hoveringRef.current) return;
-            if (Date.now() - lastManualRef.current < FLOOR0_AUTO_RESUME_MS) return;
-            if (el.scrollWidth - el.clientWidth <= 4) return; // 全部入りきっていれば送らない
-            if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 4) {
-                el.scrollTo({ left: 0, behavior: 'smooth' });
-                return;
-            }
-            const card = el.querySelector(':scope > div');
-            const gap = parseFloat(getComputedStyle(el).columnGap) || 0;
-            el.scrollBy({ left: card ? card.offsetWidth + gap : el.clientWidth * 0.8, behavior: 'smooth' });
-        }, FLOOR0_AUTO_SLIDE_MS);
-        return () => clearInterval(timer);
-    }, [autoSlide]);
-
-    const arrowStyle = (side) => ({
-        position: 'absolute', top: '50%', [side]: '4px', transform: 'translateY(-50%)', zIndex: 2, // 枠の外に出すと隣のゾーンにはみ出して見える
-        width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.3)', color: 'white', cursor: 'pointer',
-        backdropFilter: 'blur(8px)',
-    });
-
-    return (
-        <div
-            style={{ margin: '10px 0 40px' }}
-            onPointerEnter={(e) => { if (e.pointerType === 'mouse') hoveringRef.current = true; }}
-            onPointerLeave={(e) => { if (e.pointerType === 'mouse') hoveringRef.current = false; }}
-        >
-        <div style={{ position: 'relative' }}>
-            {canPrev && (
-                <button onClick={() => slide(-1)} style={arrowStyle('left')} aria-label={`前の${label}へ`}>
-                    <ChevronRight size={20} style={{ transform: 'rotate(180deg)' }} />
-                </button>
-            )}
-            <div
-                ref={trackRef}
-                onScroll={updateArrows}
-                onPointerDown={markManual}
-                onTouchStart={markManual}
-                onWheel={markManual}
-                className="floor0-chapter-track"
-                style={{
-                    ...(rows > 1
-                        ? {
-                            // 1段に visible 冊ほど見える幅にする（狭い画面では 96px より細くしない）
-                            display: 'grid',
-                            gridTemplateColumns: `repeat(${columns}, ${visible ? `clamp(96px, calc((100% - ${visible - 1} * 20px) / ${visible}), 180px)` : '150px'})`,
-                            alignItems: 'start', columnGap: '20px', rowGap: '22px',
-                        }
-                        : { display: 'flex', alignItems: 'flex-start', gap: '28px' }),
-                    overflowX: 'auto', overflowY: 'hidden', padding: '10px 4px',
-                    scrollSnapType: 'x proximity', scrollbarWidth: 'none',
-                    overscrollBehaviorX: 'contain', // 端まで送っても、本棚ゾーン/テーブルゾーンの切り替えにつながらないようにする
-                }}
-            >
-                <style>{FLOOR0_SLIDER_CSS}</style>
-                {children}
-            </div>
-            {canNext && (
-                <button onClick={() => slide(1)} style={arrowStyle('right')} aria-label={`次の${label}へ`}>
-                    <ChevronRight size={20} />
-                </button>
-            )}
-        </div>
-            {/* 章が画面に入りきらないときだけ、下にスライダーを出す */}
-            {(canPrev || canNext) && (
-                <div style={{ padding: '8px 4px 0' }}>
-                    <input
-                        type="range"
-                        className="floor0-chapter-range"
-                        min={0}
-                        max={FLOOR0_SLIDER_STEPS}
-                        value={position}
-                        onChange={handleSliderChange}
-                        aria-label={`${label}の一覧を横に送る`}
-                    />
-                </div>
-            )}
-        </div>
     );
 }
 
@@ -1088,40 +940,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
 
             {/* 本棚ゾーン */}
             <div style={{ flex: '0 0 100%', minWidth: 0, scrollSnapAlign: 'start', marginTop: '12px' }}>
-                {openSeries ? (
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 'clamp(14px, 3vw, 28px)' }}>
-                        {/* いま開いている本の表紙（どの本の章かが分かるように、章の列の左に置く） */}
-                        <div style={{
-                            flex: '0 0 auto', width: 'clamp(100px, 24vw, 170px)', paddingTop: '20px',
-                            paddingRight: 'clamp(14px, 3vw, 28px)', borderRight: '1px solid rgba(212,175,55,0.45)',
-                        }}>
-                            <Floor0Cover
-                                title={openSeries.title}
-                                coverUrl={openSeries.coverUrl}
-                                titleStyle={openSeries}
-                                subLabel={floor0ChapterCountLabel(openSeries.chapters)}
-                            />
-                        </div>
-                        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-                            {openSeries.chapters.length === 0 ? (
-                                <p style={{
-                                    margin: '40px 0', color: 'white', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
-                                    opacity: 0.75, textAlign: 'center', textShadow: '0 2px 8px rgba(0,0,0,0.8)',
-                                }}>
-                                    この本にはまだ章がありません
-                                </p>
-                            ) : (
-                            <Floor0ChapterSlider key={openSeries.id}>
-                                {openSeries.chapters.map((b) => (
-                                    <div key={b.id} style={{ flex: `0 0 ${isMobile ? 120 : 150}px`, width: `${isMobile ? 120 : 150}px`, minWidth: 0, scrollSnapAlign: 'start' }}>
-                                        <Floor0Cover title={b.title} coverUrl={floor0ChapterCover} titleStyle={b} titleInside bookTitle={openSeries.id !== FLOOR0_UNSORTED_ID ? openSeries : null} onClick={() => handleSelectBook(b)} />
-                                    </div>
-                                ))}
-                            </Floor0ChapterSlider>
-                            )}
-                        </div>
-                    </div>
-                ) : null /* 本の一覧は、下の Floor0ShelfScene が棚板の上に並べる */}
+                {/* 本の一覧も章の一覧も、下の Floor0ShelfScene が棚板の上に並べる */}
             </div>
 
             {/* テーブルゾーン（背景は App 側で本棚ゾーンの右隣に並べている。ピックアップは下の Floor0PickupTable がテーブルの上に置く） */}
@@ -1165,23 +984,44 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                 opacity={sceneOpacity}
                 blur={sceneBlur}
                 x={sceneX}
-                listMode={!openSeries}
+                listMode
                 interactive={controlsActive && activeZone === 0}
                 topInset={controlsBottom}
                 bottomInset={isMobile ? 64 : 72}
-                resetKey={normalizedQuery}
-                emptyMessage={normalizedQuery ? `「${searchQuery.trim()}」に当てはまる本は見つかりませんでした` : 'まだ本がありません'}
-                items={visibleShelf.map((s) => ({
-                    key: s.id,
-                    node: (
-                        <Floor0Cover
-                            title={s.title}
-                            coverUrl={s.coverUrl}
-                            titleStyle={s}
-                            subLabel={floor0ChapterCountLabel(s.chapters)}
-                            titleOnHover // タイトルは本の下に出さず、マウスを乗せたときに表紙の手前に出す（タッチのときは表紙の下の方にいつも）
-                            onClick={() => setOpenSeriesId(s.id)}
-                        />
+                // 本を開いた・閉じた・検索の言葉を変えたときは、棚の最初（上の段・真ん中）から見せる
+                resetKey={openSeries ? `series:${openSeries.id}` : `search:${normalizedQuery}`}
+                emptyMessage={openSeries
+                    ? 'この本にはまだ章がありません'
+                    : normalizedQuery ? `「${searchQuery.trim()}」に当てはまる本は見つかりませんでした` : 'まだ本がありません'}
+                items={openSeries
+                    // 本を開いているとき: その本の章を、本の一覧と同じように棚板の上に並べる
+                    ? openSeries.chapters.map((b) => ({
+                        key: `chapter:${b.id}`,
+                        node: (
+                            <Floor0Cover
+                                title={b.title}
+                                coverUrl={floor0ChapterCover}
+                                titleStyle={b}
+                                titleInside
+                                bookTitle={openSeries.id !== FLOOR0_UNSORTED_ID ? openSeries : null}
+                                onClick={() => handleSelectBook(b)}
+                            />
+                        ),
+                    }))
+                    : visibleShelf.map((s) => ({
+                        key: s.id,
+                        node: (
+                            <Floor0Cover
+                                title={s.title}
+                                coverUrl={s.coverUrl}
+                                titleStyle={s}
+                                subLabel={floor0ChapterCountLabel(s.chapters)}
+                                titleOnHover // タイトルは本の下に出さず、マウスを乗せたときに表紙の手前に出す（タッチのときは表紙の下の方にいつも）
+                                onClick={() => setOpenSeriesId(s.id)}
+                            />
+                        ),
+                    }))}
+            />
                     ),
                 }))}
             />

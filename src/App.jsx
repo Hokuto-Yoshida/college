@@ -35,7 +35,7 @@ import view6F from './assets/view_6f.png';   // 6F
 import viewRoof from './assets/view_roof.png'; // 7F
 import imgFloor0Hall from './assets/floor_0f_hall.jpg'; // 0F 背景（本棚ゾーン・入った直後の広間）
 import imgFloor0ShelfNear from './assets/floor_0f_shelf_near.jpg'; // 0F 背景（本棚ゾーン・本棚に近づいたところ）
-import imgFloor0Table from './assets/floor_0f_table.jpg'; // 0F 背景（テーブルゾーン）
+import imgFloor0Table from './assets/floor_0f_table_marble.jpg'; // 0F 背景（テーブルゾーン・学びの準備室。薄い大理石のテーブル）
 import imgFloorBgB1 from './assets/floor_bg_B1.png';
 import imgFloorBg from './assets/floor_bg2.png'; // 各階背景
 import imgFloorBg6F from './assets/floor_bg.png'; // 6F背景
