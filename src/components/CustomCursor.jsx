@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useMediaQuery } from '../hooks/useMediaQuery';
+import { useHasMouse } from '../hooks/useMediaQuery';
 
 export const CustomCursor = () => {
-    // スマホ・タブレット（マウスで指せない端末）では出さない。タップの位置に丸が残ってしまうため
-    const noHover = useMediaQuery('(hover: none)');
+    // タッチで操作しているとき（スマホ・タブレットなど）は出さない。タップの位置に丸が残ってしまうため。
+    // CSS の (hover: none) はタッチパネル付きのパソコンでも true になることがあるので、実際の操作で判断する
+    const noHover = !useHasMouse();
     const [mousePosition, setMousePosition] = useState({ x: -100, y: -100 });
     const [isHovering, setIsHovering] = useState(false);
 

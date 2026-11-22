@@ -131,11 +131,99 @@ select {
   box-sizing: border-box;
 }
 
+/* ===== 右上のボタン（大学ルームマップ・設定） =====
+   同じ茶色（#423329）で濃さを3段階に変える: ふだんは塗りつぶし → マウスを乗せる・メニューを開くと透過 → メニューの項目に乗せるとさらに薄い色 */
+.hdr-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  border: none;
+  border-radius: 999px;
+  background: #423329;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: var(--font-jp);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: background 0.2s ease;
+}
+.hdr-btn.is-open {
+  background: rgba(66, 51, 41, 0.7);
+}
+/* (hover: hover) で囲まない: タッチパネル付きのパソコンでは、マウスがあっても (hover: hover) が false になるため */
+.hdr-btn:hover {
+  background: rgba(66, 51, 41, 0.7);
+}
+/* 大学ルームマップ: 下に開くメニューと同じ横幅にする */
+.hdr-nav-btn {
+  width: 220px;
+  padding: 0 18px;
+  box-sizing: border-box;
+}
+/* 設定: 丸いボタン（管理モード中は目印に色を変える） */
+.hdr-icon-btn {
+  width: 44px;
+  justify-content: center;
+  padding: 0;
+}
+.hdr-icon-btn.is-admin {
+  background: var(--floor-7);
+  color: #000;
+}
+/* 大学ルームマップを押すと、ボタンのすぐ下に同じ横幅で開くメニュー */
+.hdr-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  padding: 6px;
+  border-radius: 18px;
+  background: rgba(66, 51, 41, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.hdr-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-family: var(--font-jp);
+  text-align: left;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.hdr-menu-item:hover {
+  background: rgba(188, 163, 146, 0.4);
+}
+
 /* ===== スマホ用レイアウト =====
    条件は src/hooks/useMediaQuery.js の MOBILE_QUERY と同じ（幅 640px 以下、縦長、または高さ 500px 以下） */
 @media (max-width: 640px), (max-aspect-ratio: 3/4), (max-height: 500px) {
   /* 各階の扉が開いた後の紹介文: 右上の「大学ルームマップ」などのボタンと重ならないよう、その下から始める */
   .floor-door-text {
     top: 84px !important;
+  }
+}
+
+/* 幅の狭い画面: 右上のボタンは文字を出さない（App.jsx の .header-btn-label）ので、ボタンを小さくし、メニューは右寄せで中身の幅にする */
+@media (max-width: 899px) {
+  .hdr-nav-btn {
+    width: auto;
+    padding: 0 14px;
+  }
+  .hdr-menu {
+    left: auto;
+    min-width: 210px;
   }
 }

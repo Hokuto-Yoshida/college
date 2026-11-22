@@ -7,7 +7,7 @@ const INDEX_KEY = 'index';
 
 // タイトルのフォント・大きさとして受け付ける値（src/data/floor0TitleStyle.js と同じ）
 const TITLE_FONTS = ['gothic', 'mincho'];
-const TITLE_SIZES = ['small', 'medium', 'large'];
+const TITLE_SIZES = ['xsmall', 'small', 'medium', 'large'];
 
 // titleFont / titleSize / titleRuns のうち、正しい値だけを target に書き込む
 // （titleRuns は送られてきたときだけ変更。null や空なら部分指定をやめる）

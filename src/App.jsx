@@ -35,7 +35,6 @@ import view6F from './assets/view_6f.png';   // 6F
 import viewRoof from './assets/view_roof.png'; // 7F
 import imgFloor0Hall from './assets/floor_0f_hall.jpg'; // 0F 背景（本棚ゾーン・入った直後の広間）
 import imgFloor0ShelfNear from './assets/floor_0f_shelf_near.jpg'; // 0F 背景（本棚ゾーン・本棚に近づいたところ）
-import imgFloor0Shelf from './assets/floor_0f_shelf.png'; // 0F 背景（本棚ゾーン・最後に倍にアップした本棚）
 import imgFloor0Table from './assets/floor_0f_table.jpg'; // 0F 背景（テーブルゾーン）
 import imgFloorBgB1 from './assets/floor_bg_B1.png';
 import imgFloorBg from './assets/floor_bg2.png'; // 各階背景
@@ -459,7 +458,7 @@ function App() {
   // 広間 → 本棚に近づいたところ → 倍にアップした本棚 の3枚を、スクロールに合わせて順にじわっとクロスフェード。
   // 切り替わりの途中は少しぼかす。重ねた上の画像の不透明度だけを上げていく
   const floor0ShelfNearOpacity = useTransform(floor0ShelfProgress, [0.085, 0.21], [0, 1]);
-  const floor0ShelfZoomOpacity = useTransform(floor0ShelfProgress, [0.79, 0.945], [0, 1]);
+  // 3枚目（アップの本棚）は Classroom の Floor0ShelfScene が、同じ範囲 [0.79, 0.945] でふわっと出す
   const floor0ShelfBlur = useTransform(
     floor0ShelfProgress,
     [0.085, 0.1475, 0.21, 0.79, 0.8675, 0.945],
@@ -962,10 +961,7 @@ function App() {
                       position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0ShelfNear})`, backgroundSize: 'cover', backgroundPosition: 'center',
                       opacity: floor0ShelfNearOpacity,
                     }} />
-                    <motion.div style={{
-                      position: 'absolute', inset: 0, backgroundImage: `url(${imgFloor0Shelf})`, backgroundSize: 'cover', backgroundPosition: 'center',
-                      scale: 2, opacity: floor0ShelfZoomOpacity,
-                    }} />
+                    {/* 最後の「アップの本棚」は、本を棚板に並べてカメラで動かすので Classroom の Floor0ShelfScene が出す */}
                   </motion.div>
                   {/* テーブルゾーン */}
                   <div style={{ width: '100vw', height: '100%', backgroundImage: `url(${imgFloor0Table})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
@@ -2261,38 +2257,28 @@ function App() {
 
             {/* 右上から: 設定 / 大学ルームマップ（押すと 大学ルームマップへ戻る・本館フロアガイド・階層選択 のメニューを開閉） */}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', pointerEvents: 'auto' }}>
-              {/* 大学ルームマップ（トグル） */}
+              {/* 大学ルームマップ（トグル）。見た目は index.css の .hdr-btn / .hdr-menu（同じ茶色で、ふだん → マウスを乗せる・開く → メニューの項目に乗せる の順に薄くなる） */}
               <div ref={navMenuRef} style={{ position: 'relative' }}>
-                <div className="glass-panel" style={{ padding: '4px', borderRadius: '30px' }}>
-                  <button
-                    onClick={() => setNavMenuOpen((open) => !open)}
-                    style={{
-                      background: navMenuOpen ? 'rgba(255,255,255,0.15)' : 'transparent', border: '1px solid var(--glass-border)',
-                      color: 'white', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer',
-                      fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px'
-                    }}
-                    title="大学ルームマップ"
-                    aria-haspopup="menu"
-                    aria-expanded={navMenuOpen}
-                  >
-                    <MapPin size={16} /> <span className="header-btn-label">大学ルームマップ</span>
-                    <ChevronDown size={14} style={{ transition: 'transform 0.2s', transform: navMenuOpen ? 'rotate(180deg)' : 'none' }} />
-                  </button>
-                </div>
+                <button
+                  className={navMenuOpen ? 'hdr-btn hdr-nav-btn is-open' : 'hdr-btn hdr-nav-btn'}
+                  onClick={() => setNavMenuOpen((open) => !open)}
+                  title="大学ルームマップ"
+                  aria-haspopup="menu"
+                  aria-expanded={navMenuOpen}
+                >
+                  <MapPin size={16} /> <span className="header-btn-label">大学ルームマップ</span>
+                  <ChevronDown size={14} style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: navMenuOpen ? 'rotate(180deg)' : 'none' }} />
+                </button>
 
                 <AnimatePresence>
                   {navMenuOpen && (
                     <motion.div
                       role="menu"
-                      className="glass-panel"
+                      className="hdr-menu"
                       initial={{ opacity: 0, y: -6 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -6 }}
                       transition={{ duration: 0.15 }}
-                      style={{
-                        position: 'absolute', top: 'calc(100% + 8px)', right: 0, minWidth: '210px',
-                        padding: '6px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px',
-                      }}
                     >
                       {[
                         { label: '大学ルームマップへ', icon: <MapPin size={16} />, onClick: handleBackToMap },
@@ -2302,14 +2288,8 @@ function App() {
                         <button
                           key={label}
                           role="menuitem"
+                          className="hdr-menu-item"
                           onClick={() => { setNavMenuOpen(false); onClick(); }}
-                          style={{
-                            background: 'transparent', border: 'none', color: 'white', cursor: 'pointer',
-                            padding: '10px 14px', borderRadius: '12px', fontSize: '0.9rem', textAlign: 'left',
-                            display: 'flex', alignItems: 'center', gap: '10px', whiteSpace: 'nowrap',
-                          }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.12)'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
                           {icon} {label}
                         </button>
@@ -2320,19 +2300,13 @@ function App() {
               </div>
 
               {/* Admin Toggle Button */}
-              <div className="glass-panel" style={{ padding: '8px', borderRadius: '30px' }}>
-                <button
-                  onClick={() => setIsAdminMode(!isAdminMode)}
-                  style={{
-                    background: isAdminMode ? 'var(--floor-7)' : 'rgba(255,255,255,0.1)',
-                    border: 'none', color: isAdminMode ? 'black' : 'white', padding: '10px', borderRadius: '50%', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', justifyItems: 'center'
-                  }}
-                  title="設定（管理モード切り替え）"
-                >
-                  <Settings size={20} />
-                </button>
-              </div>
+              <button
+                className={isAdminMode ? 'hdr-btn hdr-icon-btn is-admin' : 'hdr-btn hdr-icon-btn'}
+                onClick={() => setIsAdminMode(!isAdminMode)}
+                title="設定（管理モード切り替え）"
+              >
+                <Settings size={20} />
+              </button>
             </div>
           </header>
 

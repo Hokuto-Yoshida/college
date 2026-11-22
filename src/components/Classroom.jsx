@@ -12,9 +12,9 @@ import floor6Reveal from '../assets/floor_6f_reveal.png';
 import floor6Base from '../assets/floor_bg2.png';
 import avRoomBg from '../assets/av_room_bg.jpg';
 import workshopLibraryBg from '../assets/workshop_library_bg.jpg';
-import { titleTextStyle } from '../data/floor0TitleStyle';
+import { titleTextStyle, runsFromItem, TITLE_SIZES, DEFAULT_TITLE_SIZE } from '../data/floor0TitleStyle';
 import { Floor0TitleText } from './Floor0TitleText';
-import { useIsMobile, useMediaQuery } from '../hooks/useMediaQuery';
+import { useIsMobile, useMediaQuery, useHasMouse } from '../hooks/useMediaQuery';
 import workshopSide1 from '../assets/workshop_side_1.webp';
 import workshopSide2 from '../assets/workshop_side_2.webp';
 
@@ -25,6 +25,8 @@ import imgClassroom from '../assets/virtual_classroom.png';
 import lectureBg from '../assets/lecture_bg2.png';
 import lectureBg7F from '../assets/lecture_bg_7f.png';
 import floor0ChapterCover from '../assets/floor0_chapter_cover.jpg'; // 0F の章（チャプター）の本の表紙。全章共通
+import floor0ShelfImage from '../assets/floor_0f_shelf.png'; // 0F のアップの本棚（本を並べる棚。App の背景の最後の1枚と同じ写真）
+import { Floor0ShelfScene } from './Floor0ShelfScene';
 
 const STORAGE_KEY = 'mind_university_classroom_v1';
 
@@ -398,11 +400,17 @@ export const floor0ShelfScrollDistance = () => window.innerHeight * 3.2;
 const FLOOR0_ZONE_PATHS = [null, 'pickup']; // 各ゾーンの URL（/main/0F/pickup）。本棚ゾーンは /main/0F のまま
 
 // 0F: 本棚と本を読む画面に出す、無断ダウンロード等へのお願い
-const FLOOR0_COPY_NOTICE = '※ 本の内容の無断でのダウンロード・複製・転載はご遠慮ください。';
+const FLOOR0_COPY_NOTICE = '※無断ダウンロード・複製・転載禁止';
+// 本棚のページの右下に常に出す、著作権についての詳しい注意書き
+const FLOOR0_COPY_NOTICE_DETAIL = [
+    '当サイトに掲載している文章・画像・写真等の著作権はすべて当方に帰属します。',
+    '無断での複製、転載、改変、再配布等は一切禁止します。',
+    '悪質な無断転載を発見した場合は、法的措置が下されます。',
+];
 // 0F のタブ・見出し・検索窓を固定する位置（画面上端から）。
 // 広い画面では右上の「大学ルームマップ」ボタンと同じ高さにタブを並べ、狭い画面ではボタンと重ならないようその下に置く
 const FLOOR0_CONTROLS_TOP = 78;
-const FLOOR0_CONTROLS_TOP_WIDE = 24;
+const FLOOR0_CONTROLS_TOP_WIDE = 18;
 const FLOOR0_CONTROLS_CSS = `
 .floor0-controls { padding-top: ${FLOOR0_CONTROLS_TOP}px; }
 @media (min-width: 1100px) { .floor0-controls { padding-top: ${FLOOR0_CONTROLS_TOP_WIDE}px; } }
@@ -414,20 +422,55 @@ const FLOOR0_CONTROLS_CSS = `
 // 本の表紙の下に出す章の数（章がまだない本は「準備中」）
 const floor0ChapterCountLabel = (chapters) => (chapters.length > 0 ? `全${chapters.length}章` : '準備中');
 
+// 章の本の上の方に小さく入れる「本のタイトル」。区切りごとの大きさ（小・中・大など）は、比率だけ保って親の文字の大きさに合わせる
+const FLOOR0_SIZE_REM = Object.fromEntries(TITLE_SIZES.map((s) => [s.value, parseFloat(s.css)]));
+// 表紙の中に書くタイトル。本の幅に合わせて文字も縮む（幅 150px の本で、管理画面で選んだ大きさ × scale になる）。
+// 表紙の枠に container-type: inline-size を付けておき、その幅に対する cqw で大きさを決める
+const FLOOR0_COVER_REF_WIDTH = 150;
+const floor0CoverFontSize = (rem) => `${((rem * 16) / FLOOR0_COVER_REF_WIDTH * 100).toFixed(2)}cqw`;
+function Floor0FitTitle({ item, fallback = '', scale = 1 }) {
+    const base = item?.titleSize || DEFAULT_TITLE_SIZE;
+    const baseRem = (FLOOR0_SIZE_REM[base] || FLOOR0_SIZE_REM[DEFAULT_TITLE_SIZE]) * scale;
+    const runs = item ? runsFromItem(item) : [];
+    // display: block にして、行の高さを外側（16px）ではなくこの縮めた文字の大きさで決める（外側の大きさだと行間が広がる）
+    if (runs.length === 0) return <span style={{ display: 'block', fontSize: floor0CoverFontSize(baseRem) }}>{fallback}</span>;
+    return (
+        <span style={{ display: 'block', fontSize: floor0CoverFontSize(baseRem), ...(item.titleFont && { fontFamily: titleTextStyle(item).fontFamily }) }}>
+            {runs.map((run, i) => (
+                <span key={i} style={{
+                    // 区切りごとの大きさは、タイトル全体の大きさとの比率で（本が小さくなっても比率は同じ）
+                    fontSize: `${((FLOOR0_SIZE_REM[run.size || base] || FLOOR0_SIZE_REM[base]) / FLOOR0_SIZE_REM[base]).toFixed(3)}em`,
+                    ...(run.font && { fontFamily: titleTextStyle({ titleFont: run.font }).fontFamily }),
+                }}>{run.text}</span>
+            ))}
+        </span>
+    );
+}
+
 // 0F の本。表紙画像があれば画像、なければ無地の表紙。タイトル（と subLabel）は本に重ねず、本の下に出す
 // titleStyle: 管理画面で選んだタイトルの見た目（{ titleFont, titleSize, titleRuns }。titleRuns は一部だけ変えた区切りと改行）
 // onClick がなければ、押せない飾りの本として出す（章の一覧の左に置く「いま開いている本」など）
 // captionTone: 本の下の文字色。暗い背景（本棚）では 'light'、明るい背景（ピックアップのテーブル）では 'dark'
 // titleInside: タイトルを本の下ではなく表紙の中（章の本の枠の中、著者名の上）に書く。章の本で使う
-function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick, captionTone = 'light', titleInside = false }) {
+// bookTitle: titleInside のとき、表紙の上の方に入れる「その章が入っている本」のタイトル（本のデータ。なければ出さない）
+// titleOnHover: タイトル（と subLabel）を本の下に出さず、マウスを乗せたときに表紙の手前に重ねて出す（本棚に並べる本で使う）。
+//   タッチで操作しているとき（スマホ・タブレットなど）は乗せられないので、これまでどおり本の下に出す
+function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick, captionTone = 'light', titleInside = false, bookTitle = null, titleOnHover = false }) {
     const titleCss = titleTextStyle(titleStyle);
     const Tag = onClick ? motion.button : motion.div;
+    const canHover = useHasMouse(); // マウスで操作しているときだけ（タッチでは乗せられない）
+    const [hovered, setHovered] = useState(false);
+    const hoverTitle = titleOnHover && canHover && !titleInside;
+    // タッチで操作しているときは乗せられないので、表紙の下の方にタイトルを帯のようにいつも重ねておく
+    const bannerTitle = titleOnHover && !canHover && !titleInside;
     const captionColor = captionTone === 'dark'
         ? { color: '#3b2f22' }
         : { color: 'white', textShadow: '0 1px 6px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.8)' };
     return (
         <Tag
             onClick={onClick}
+            onHoverStart={titleOnHover ? () => setHovered(true) : undefined}
+            onHoverEnd={titleOnHover ? () => setHovered(false) : undefined}
             whileHover={onClick ? { scale: 1.05, y: -6 } : undefined}
             whileTap={onClick ? { scale: 0.96 } : undefined}
             style={{
@@ -446,24 +489,57 @@ function Floor0Cover({ title, coverUrl, subLabel, titleStyle, onClick, captionTo
                     : 'linear-gradient(160deg, #223324 0%, #10190f 100%)',
                 boxShadow: '0 10px 24px rgba(0,0,0,0.5)',
                 position: 'relative', overflow: 'hidden',
+                containerType: 'inline-size', // 中に書くタイトルを、この表紙の幅に合わせて縮める（Floor0FitTitle）
             }}>
                 {!coverUrl && <div style={{ position: 'absolute', inset: '8px', border: '1px solid rgba(212,175,55,0.4)' }} />}
-                {titleInside && (
-                    // 章の本の表紙画像の、金の枠の内側（左に背表紙があるので少し右寄り）・著者名より上に収める
+                {titleInside && bookTitle && (
+                    // 章の本の上の方: その章が入っている本のタイトル（本の表紙と同じ改行・大きさの比率で、小さめに）
                     <div style={{
-                        position: 'absolute', left: '19%', right: '11%', top: '16%', bottom: '34%',
+                        position: 'absolute', left: '19%', right: '11%', top: '12%', height: '28%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                        color: '#423329', fontFamily: 'var(--font-jp)', textAlign: 'center', lineHeight: 1.35,
+                        wordBreak: 'keep-all', overflowWrap: 'anywhere',
+                    }}>
+                        <div style={{ fontWeight: 'bold', whiteSpace: 'pre-line' }}>
+                            <Floor0FitTitle item={bookTitle} fallback={bookTitle.title} scale={0.62} />
+                        </div>
+                    </div>
+                )}
+                {titleInside && (
+                    // 章の本の表紙画像の、金の枠の内側（左に背表紙があるので少し右寄り）・著者名より上に収める。
+                    // 上に本のタイトルを入れるときは、章のタイトルはその下（表紙の真ん中より下）に置く
+                    <div style={{
+                        position: 'absolute', left: '19%', right: '11%', top: bookTitle ? '42%' : '16%', bottom: '34%',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
                         color: '#4a3410', textShadow: '0 1px 0 rgba(255,250,235,0.6)',
                         fontFamily: 'var(--font-jp)', textAlign: 'center', lineHeight: 1.5,
                         wordBreak: 'keep-all', overflowWrap: 'anywhere',
                     }}>
-                        <div style={{ ...titleCss, fontWeight: 'bold', whiteSpace: 'pre-line' /* 管理画面で入れた改行 */ }}>
-                            <Floor0TitleText item={titleStyle} fallback={title} />
+                        <div style={{ fontWeight: 'bold', whiteSpace: 'pre-line' /* 管理画面で入れた改行 */ }}>
+                            <Floor0FitTitle item={titleStyle} fallback={title} />
                         </div>
                     </div>
                 )}
+                {(hoverTitle || bannerTitle) && (
+                    // マウスのとき: 乗せたときだけ、表紙の手前に半透明の黒を敷いてタイトルを出す
+                    // タッチのとき: 表紙の下の方に、下ほど濃い黒を敷いてタイトルをいつも出す
+                    <div style={{
+                        position: 'absolute', inset: 0, padding: bannerTitle ? '10% 8% 8%' : '10%', boxSizing: 'border-box',
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: bannerTitle ? 'flex-end' : 'center',
+                        background: bannerTitle ? 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.45) 35%, rgba(0,0,0,0) 60%)' : 'rgba(0,0,0,0.5)',
+                        color: 'white', fontFamily: 'var(--font-jp)',
+                        textAlign: 'center', lineHeight: 1.5, wordBreak: 'keep-all', overflowWrap: 'anywhere',
+                        textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                        opacity: bannerTitle || hovered ? 1 : 0, transition: 'opacity 0.2s ease', pointerEvents: 'none',
+                    }}>
+                        <div style={{ fontWeight: 'bold', whiteSpace: 'pre-line' /* 管理画面で入れた改行 */ }}>
+                            <Floor0FitTitle item={titleStyle} fallback={title} />
+                        </div>
+                        {subLabel && <div style={{ fontSize: floor0CoverFontSize(0.75), opacity: 0.9, marginTop: '6px' }}>{subLabel}</div>}
+                    </div>
+                )}
             </div>
-            {(!titleInside || subLabel) && (
+            {!hoverTitle && !bannerTitle && (!titleInside || subLabel) && (
                 <div style={{
                     ...captionColor, fontFamily: 'var(--font-jp)', textAlign: 'center', lineHeight: 1.5,
                     wordBreak: 'keep-all', overflowWrap: 'anywhere', // 長いタイトルは本の幅の中で折り返す（本が横に広がらないように）
@@ -509,7 +585,7 @@ function Floor0PickupTable({ zoneProgress, contentOpacity, pickupSeries, pickupC
         },
         pickupChapter && {
             key: 'chapter', label: '注目の章',
-            cover: <Floor0Cover title={pickupChapter.title} coverUrl={floor0ChapterCover} titleStyle={pickupChapter} titleInside subLabel={pickupChapterSeries?.title} onClick={onOpenChapter} captionTone="dark" />,
+            cover: <Floor0Cover title={pickupChapter.title} coverUrl={floor0ChapterCover} titleStyle={pickupChapter} titleInside bookTitle={pickupChapterSeries} subLabel={pickupChapterSeries?.title} onClick={onOpenChapter} captionTone="dark" />,
         },
     ].filter(Boolean);
 
@@ -778,6 +854,12 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
     const contentOpacity = useTransform(progress, [0.85, 1], [0, 1]);
     const contentPointer = useTransform(progress, (v) => (v > 0.9 ? 'auto' : 'none'));
     const scrollHintOpacity = useTransform(progress, [0, 0.3], [1, 0]);
+    // アップの本棚（Floor0ShelfScene）: App の背景の「本棚に近づいたところ」から、ぼやっと切り替わって出てくる
+    const sceneOpacity = useTransform(progress, [0.79, 0.945], [0, 1]);
+    const sceneBlur = useTransform(progress, [0.79, 0.8675, 0.945], ['blur(0px)', 'blur(6px)', 'blur(0px)']);
+    // 学びの準備室へ横に切り替えるときは、App の背景と一緒に左へ流す
+    const fallbackZoneProgress = useMotionValue(0);
+    const sceneX = useTransform(zoneProgress || fallbackZoneProgress, [0, 1], ['0vw', '-100vw']);
     const { scrollY } = useScroll();
     const contentY = useTransform(scrollY, (v) => Math.min(Math.max(v, 0), floor0ShelfScrollDistance()));
 
@@ -790,6 +872,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
     const controlsRef = useRef(null);
     const controlsSpacerRef = useRef(null);
     const [controlsSpacerHeight, setControlsSpacerHeight] = useState(0);
+    const [controlsBottom, setControlsBottom] = useState(0); // 上に固定した部分の下端（アップの本棚は、これより下に段が来るように寄る）
     useEffect(() => {
         const controls = controlsRef.current;
         const spacer = controlsSpacerRef.current;
@@ -797,6 +880,7 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
         const measure = () => {
             const spacerTop = spacer.getBoundingClientRect().top + window.scrollY - contentY.get();
             setControlsSpacerHeight(Math.max(0, Math.round(controls.offsetHeight - spacerTop)));
+            setControlsBottom(controls.offsetHeight);
         };
         const observer = new ResizeObserver(measure);
         observer.observe(controls);
@@ -859,27 +943,33 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                 >
                     <style>{FLOOR0_CONTROLS_CSS}</style>
                     {/* ゾーン切り替えのタブ（横スクロール・スワイプでも切り替わる） */}
-                    <div style={{ display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: 'center', gap: isMobile ? '6px' : '8px' }}>
+                    <div style={{ display: 'flex', flexWrap: isMobile ? 'nowrap' : 'wrap', justifyContent: 'center', gap: isMobile ? '8px' : '14px' }}>
                         {FLOOR0_ZONES.map((zone, i) => (
                             <button
                                 key={zone.en}
                                 onClick={() => scrollToZone(i)}
+                                aria-pressed={activeZone === i}
                                 style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: '6px', minWidth: 0,
-                                    padding: isMobile ? '6px 10px' : '7px 18px', borderRadius: '20px',
-                                    fontSize: isMobile ? '0.68rem' : '0.85rem', cursor: 'pointer',
-                                    fontFamily: 'var(--font-jp)', color: 'white', backdropFilter: 'blur(8px)',
-                                    background: activeZone === i ? 'rgba(79,195,176,0.35)' : 'rgba(0,0,0,0.45)',
-                                    border: activeZone === i ? '1px solid var(--floor-0)' : '1px solid rgba(255,255,255,0.2)',
+                                    position: 'relative', display: 'inline-flex', alignItems: 'center', minWidth: 0,
+                                    padding: isMobile ? '6px 16px' : '7px 30px',
+                                    border: 'none', background: 'none', cursor: 'pointer',
+                                    fontFamily: 'var(--font-jp)', color: 'white',
                                 }}
                             >
-                                {/* スマホでは2つを1行に並べるため、左右の矢印は省く */}
-                                {!isMobile && i < activeZone && <ChevronRight size={14} style={{ transform: 'rotate(180deg)' }} />}
-                                <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.25 }}>
-                                    <span style={{ letterSpacing: isMobile ? 0 : '0.04em', whiteSpace: 'nowrap' }}>{zone.en}</span>
-                                    <span style={{ whiteSpace: 'nowrap' }}>{zone.ja}</span>
+                                {/* 形: 右上の「大学ルームマップ」（角の丸いボタン）と見分けがつくよう、斜めの平行四辺形にする。
+                                    色: どちらも同じ緑。いま見ている方は透かし（薄く塗って枠線）、もう一方は塗りつぶしで見分ける */}
+                                <span aria-hidden="true" style={{
+                                    position: 'absolute', inset: 0, transform: 'skewX(-18deg)', borderRadius: '3px',
+                                    background: activeZone === i ? 'rgba(90,162,142,0.3)' : 'rgb(90,162,142)',
+                                    border: '1px solid rgb(90,162,142)',
+                                    backdropFilter: activeZone === i ? 'blur(6px)' : undefined,
+                                    boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                                }} />
+                                <span style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: 1.3, textShadow: '0 1px 3px rgba(0,0,0,0.35)' }}>
+                                    {/* 英字は小さく、日本語を大きく */}
+                                    <span style={{ fontSize: isMobile ? '0.5rem' : '0.62rem', letterSpacing: '0.06em', whiteSpace: 'nowrap', opacity: 0.95 }}>{zone.en}</span>
+                                    <span style={{ fontSize: isMobile ? '0.78rem' : '0.95rem', fontWeight: 'bold', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{zone.ja}</span>
                                 </span>
-                                {!isMobile && i > activeZone && <ChevronRight size={14} />}
                             </button>
                         ))}
                     </div>
@@ -908,16 +998,19 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                                     <ArrowLeft size={14} /> 本の一覧に戻る
                                 </button>
                             )}
-                            <h3 style={{ margin: isShort ? 0 : isMobile ? '0 0 4px' : '0 0 8px', fontSize: isMobile ? '1.05rem' : '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
-                                {openSeries ? openSeries.title : '地下書庫'}
-                            </h3>
-                            {!isShort && (
+                            {/* 見出しは章の一覧（本を開いたとき）だけ。本の一覧では「地下書庫」「読みたい本を選んでください」は出さない */}
+                            {openSeries && (
+                                <h3 style={{ margin: isShort ? 0 : isMobile ? '0 0 4px' : '0 0 8px', fontSize: isMobile ? '1.05rem' : '1.2rem', fontWeight: 'bold', color: 'var(--floor-0)' }}>
+                                    {openSeries.title}
+                                </h3>
+                            )}
+                            {openSeries && !isShort && (
                                 <p style={{ margin: 0, fontSize: isMobile ? '0.8rem' : '0.85rem', opacity: 0.75 }}>
-                                    {openSeries ? '読みたい章を選んでください' : '読みたい本を選んでください'}
+                                    読みたい章を選んでください
                                 </p>
                             )}
                             {!isShort && (
-                                <p style={{ margin: isMobile ? '6px 0 0' : '10px 0 0', fontSize: isMobile ? '0.65rem' : '0.75rem', opacity: 0.6 }}>
+                                <p style={{ margin: openSeries ? (isMobile ? '6px 0 0' : '10px 0 0') : 0, fontSize: isMobile ? '0.65rem' : '0.75rem', opacity: 0.6 }}>
                                     {FLOOR0_COPY_NOTICE}
                                 </p>
                             )}
@@ -1021,41 +1114,14 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                             <Floor0ChapterSlider key={openSeries.id}>
                                 {openSeries.chapters.map((b) => (
                                     <div key={b.id} style={{ flex: `0 0 ${isMobile ? 120 : 150}px`, width: `${isMobile ? 120 : 150}px`, minWidth: 0, scrollSnapAlign: 'start' }}>
-                                        <Floor0Cover title={b.title} coverUrl={floor0ChapterCover} titleStyle={b} titleInside onClick={() => handleSelectBook(b)} />
+                                        <Floor0Cover title={b.title} coverUrl={floor0ChapterCover} titleStyle={b} titleInside bookTitle={openSeries.id !== FLOOR0_UNSORTED_ID ? openSeries : null} onClick={() => handleSelectBook(b)} />
                                     </div>
                                 ))}
                             </Floor0ChapterSlider>
                             )}
                         </div>
                     </div>
-                ) : (
-                    <>
-                    {visibleShelf.length === 0 && (
-                        <p style={{
-                            textAlign: 'center', color: 'white', fontFamily: 'var(--font-jp)', fontSize: '0.9rem',
-                            textShadow: '0 2px 8px rgba(0,0,0,0.8)', margin: '24px 0 40px',
-                        }}>
-                            「{searchQuery.trim()}」に当てはまる本は見つかりませんでした
-                        </p>
-                    )}
-                    {/* 3段の横スライダー（1段に5冊ほど）。入りきらない分は横に送る */}
-                    {visibleShelf.length > 0 && (
-                        <Floor0ChapterSlider key={`${normalizedQuery}-${isMobile}-${isShort}`} rows={3} visible={isShort ? 6 : isMobile ? 3 : 5} autoSlide={false} label="本">
-                            {visibleShelf.map((s) => (
-                                <div key={s.id} style={{ minWidth: 0, scrollSnapAlign: 'start' }}>
-                                    <Floor0Cover
-                                        title={s.title}
-                                        coverUrl={s.coverUrl}
-                                        titleStyle={s}
-                                        subLabel={floor0ChapterCountLabel(s.chapters)}
-                                        onClick={() => setOpenSeriesId(s.id)}
-                                    />
-                                </div>
-                            ))}
-                        </Floor0ChapterSlider>
-                    )}
-                    </>
-                )}
+                ) : null /* 本の一覧は、下の Floor0ShelfScene が棚板の上に並べる */}
             </div>
 
             {/* テーブルゾーン（背景は App 側で本棚ゾーンの右隣に並べている。ピックアップは下の Floor0PickupTable がテーブルの上に置く） */}
@@ -1091,6 +1157,50 @@ function Floor0Library({ books = [], series = [], pickup = {}, zoneProgress, she
                 onOpenSeries={openPickupSeries}
                 onOpenChapter={() => handleSelectBook(pickupChapter)}
             />
+
+            {/* アップの本棚。本の一覧のときは棚板の上に本を立てて並べ、矢印・スワイプ・キーボードの矢印で棚の中を見て回る。
+                章の一覧のときは本を消して、背景としてだけ置く */}
+            <Floor0ShelfScene
+                imageSrc={floor0ShelfImage}
+                opacity={sceneOpacity}
+                blur={sceneBlur}
+                x={sceneX}
+                listMode={!openSeries}
+                interactive={controlsActive && activeZone === 0}
+                topInset={controlsBottom}
+                bottomInset={isMobile ? 64 : 72}
+                resetKey={normalizedQuery}
+                emptyMessage={normalizedQuery ? `「${searchQuery.trim()}」に当てはまる本は見つかりませんでした` : 'まだ本がありません'}
+                items={visibleShelf.map((s) => ({
+                    key: s.id,
+                    node: (
+                        <Floor0Cover
+                            title={s.title}
+                            coverUrl={s.coverUrl}
+                            titleStyle={s}
+                            subLabel={floor0ChapterCountLabel(s.chapters)}
+                            titleOnHover // タイトルは本の下に出さず、マウスを乗せたときに表紙の手前に出す（タッチのときは表紙の下の方にいつも）
+                            onClick={() => setOpenSeriesId(s.id)}
+                        />
+                    ),
+                }))}
+            />
+
+            {/* 著作権についての詳しい注意書き。0F の中身が出ている間は、画面の右下に常に出す
+                （学びの準備室の白いテーブルの上でも読めるよう、薄い黒を敷く） */}
+            {createPortal(
+                <motion.div style={{
+                    position: 'fixed', right: isMobile ? '8px' : '16px', bottom: isMobile ? '8px' : '12px', zIndex: 6,
+                    maxWidth: isMobile ? 'calc(100vw - 16px)' : '460px', boxSizing: 'border-box',
+                    padding: '6px 10px', borderRadius: '6px', background: 'rgba(0,0,0,0.35)',
+                    color: 'rgba(255,255,255,0.85)', fontFamily: 'var(--font-jp)',
+                    fontSize: isMobile ? '0.55rem' : '0.62rem', lineHeight: 1.6,
+                    opacity: contentOpacity, pointerEvents: 'none',
+                }}>
+                    {FLOOR0_COPY_NOTICE_DETAIL.map((line) => <div key={line}>{line}</div>)}
+                </motion.div>,
+                document.body,
+            )}
 
             {/* 本を開く演出（ワークショップの本と同じ3D演出を流用） */}
             <BookTransitionOverlay hinge="right" showIcon={false} resource={transitioningBook ? { title: transitioningBook.title, color: 'var(--floor-0)' } : null} />

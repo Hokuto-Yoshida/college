@@ -6,6 +6,7 @@ export const TITLE_FONTS = [
 ];
 
 export const TITLE_SIZES = [
+    { value: 'xsmall', label: '極小', css: '0.62rem' }, // 1文字だけ次の行に送られてしまう長いタイトル用
     { value: 'small', label: '小', css: '0.75rem' },
     { value: 'medium', label: '中', css: '0.9rem' },
     { value: 'large', label: '大', css: '1.2rem' },
