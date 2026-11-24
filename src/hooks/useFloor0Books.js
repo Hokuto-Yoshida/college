@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { adminHeaders } from '../data/adminAuth'; // 追加・変更・削除には管理画面のパスワードを付ける
 
 // 0Fの書庫に並ぶ複数のPDF本を、全訪問者で共有されるサーバー側
 // (Netlify Functions + Netlify Blobs) から取得・管理するフック。
@@ -103,7 +104,7 @@ export function useFloor0Books() {
         if (seriesId) form.append('seriesId', seriesId);
         appendTitleStyle(form, titleStyle);
 
-        const res = await fetch(LIST_ENDPOINT, { method: 'POST', body: form });
+        const res = await fetch(LIST_ENDPOINT, { method: 'POST', body: form, headers: adminHeaders() });
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.error || 'アップロードに失敗しました');
@@ -112,7 +113,7 @@ export function useFloor0Books() {
     }, [refresh]);
 
     const deleteBook = useCallback(async (id) => {
-        const res = await fetch(`${LIST_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const res = await fetch(`${LIST_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: adminHeaders() });
         if (!res.ok) throw new Error('削除に失敗しました');
         await refresh();
     }, [refresh]);
@@ -129,7 +130,7 @@ export function useFloor0Books() {
         try {
             const res = await fetch(LIST_ENDPOINT, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: adminHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ order: orderedIds }),
             });
             if (!res.ok) throw new Error('並び順の保存に失敗しました');
@@ -143,7 +144,7 @@ export function useFloor0Books() {
     const updateChapter = useCallback(async (id, changes) => {
         const res = await fetch(LIST_ENDPOINT, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: adminHeaders({ 'Content-Type': 'application/json' }),
             body: JSON.stringify({ id, ...changes }),
         });
         await throwIfFailed(res, '章の更新に失敗しました');
@@ -155,7 +156,7 @@ export function useFloor0Books() {
         form.append('title', title);
         appendTitleStyle(form, titleStyle);
         if (coverFile) form.append('cover', await shrinkCoverImage(coverFile));
-        const res = await fetch(SERIES_ENDPOINT, { method: 'POST', body: form });
+        const res = await fetch(SERIES_ENDPOINT, { method: 'POST', body: form, headers: adminHeaders() });
         await throwIfFailed(res, '本の追加に失敗しました');
         await refresh();
     }, [refresh]);
@@ -168,14 +169,14 @@ export function useFloor0Books() {
         appendTitleStyle(form, { titleFont, titleSize, titleRuns });
         if (removeCover) form.append('removeCover', '1');
         else if (coverFile) form.append('cover', await shrinkCoverImage(coverFile));
-        const res = await fetch(SERIES_ENDPOINT, { method: 'PATCH', body: form });
+        const res = await fetch(SERIES_ENDPOINT, { method: 'PATCH', body: form, headers: adminHeaders() });
         await throwIfFailed(res, '本の更新に失敗しました');
         await refresh();
     }, [refresh]);
 
     // 本を削除する（中の章は消さずに「未分類」に戻る）
     const deleteSeries = useCallback(async (id) => {
-        const res = await fetch(`${SERIES_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'DELETE' });
+        const res = await fetch(`${SERIES_ENDPOINT}?id=${encodeURIComponent(id)}`, { method: 'DELETE', headers: adminHeaders() });
         await throwIfFailed(res, '本の削除に失敗しました');
         await refresh();
     }, [refresh]);
@@ -192,7 +193,7 @@ export function useFloor0Books() {
         try {
             const res = await fetch(SERIES_ENDPOINT, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: adminHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify({ order: orderedIds }),
             });
             await throwIfFailed(res, '並び順の保存に失敗しました');
@@ -207,7 +208,7 @@ export function useFloor0Books() {
         try {
             const res = await fetch(PICKUP_ENDPOINT, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: adminHeaders({ 'Content-Type': 'application/json' }),
                 body: JSON.stringify(changes),
             });
             await throwIfFailed(res, 'ピックアップの保存に失敗しました');

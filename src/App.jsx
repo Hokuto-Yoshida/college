@@ -8,6 +8,8 @@ import { TransitionOverlay } from './components/TransitionOverlay';
 import { SpiralNav } from './components/SpiralNav';
 import { Classroom, floor0ShelfScrollDistance } from './components/Classroom';
 import { AdminDashboard } from './components/AdminDashboard';
+import { AdminLoginModal } from './components/AdminLoginModal';
+import { getAdminPassword } from './data/adminAuth';
 import { IntroSequence } from './components/IntroSequence';
 import { MainBuildingIntro } from './components/MainBuildingIntro';
 import { FloorIntro } from './components/FloorIntro';
@@ -161,6 +163,13 @@ function App() {
   }, [navMenuOpen]);
 
   const [isAdminMode, setIsAdminMode] = useState(false);
+  // 管理画面はパスワードを入れてから開く（そのタブを閉じるまでは聞き直さない）
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const toggleAdminMode = () => {
+    if (isAdminMode) setIsAdminMode(false);
+    else if (getAdminPassword()) setIsAdminMode(true);
+    else setShowAdminLogin(true);
+  };
 
   // Transition State
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -662,6 +671,14 @@ function App() {
     <div className="app-container" style={{ position: 'relative', minHeight: '100vh' }}>
 
       <TransitionOverlay isVisible={isTransitioning} type={transitionType} images={transitionImages} targetFloorId={transitionTargetFloor} onComplete={handleOverlayComplete} />
+
+      {/* 管理画面のパスワード入力 */}
+      {showAdminLogin && (
+        <AdminLoginModal
+          onSuccess={() => { setShowAdminLogin(false); setIsAdminMode(true); }}
+          onClose={() => setShowAdminLogin(false)}
+        />
+      )}
 
       {/* Admin Dashboard Overlay */}
       {isAdminMode && (
@@ -2302,7 +2319,7 @@ function App() {
               {/* Admin Toggle Button */}
               <button
                 className={isAdminMode ? 'hdr-btn hdr-icon-btn is-admin' : 'hdr-btn hdr-icon-btn'}
-                onClick={() => setIsAdminMode(!isAdminMode)}
+                onClick={toggleAdminMode}
                 title="設定（管理モード切り替え）"
               >
                 <Settings size={20} />

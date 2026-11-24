@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { requireAdmin } from '../lib/adminAuth.js';
 
 // 0Fの書庫の「本」（表紙）を管理するAPI。
 // 各PDFは本の中の「章」としてアップロードし（floor0-books）、seriesId でこの本に紐づける。
@@ -80,6 +81,12 @@ async function saveCover(store, id, cover) {
 }
 
 export default async (req) => {
+    // 一覧などを見る（GET）のは誰でも。追加・変更・削除は管理画面のパスワードが合っているときだけ
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        const denied = requireAdmin(req);
+        if (denied) return denied;
+    }
+
     const store = getStore({ name: STORE_NAME, consistency: 'strong' }); // 保存した直後に読み直しても最新の内容が返るようにする
 
     if (req.method === 'GET') {

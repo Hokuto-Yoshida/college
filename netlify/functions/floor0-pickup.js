@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { requireAdmin } from '../lib/adminAuth.js';
 
 // 0Fのテーブルゾーンに置く「今週のピックアップ」（本1冊・章1つ）を全訪問者で共有するAPI。
 // { seriesId, chapterId } を Netlify Blobs に保存する。どちらも空ならテーブルには何も置かない。
@@ -16,6 +17,12 @@ async function readPickup(store) {
 }
 
 export default async (req) => {
+    // 一覧などを見る（GET）のは誰でも。追加・変更・削除は管理画面のパスワードが合っているときだけ
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        const denied = requireAdmin(req);
+        if (denied) return denied;
+    }
+
     const store = getStore({ name: STORE_NAME, consistency: 'strong' }); // 保存した直後に読み直しても最新の内容が返るようにする
 
     if (req.method === 'GET') {

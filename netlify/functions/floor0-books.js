@@ -1,4 +1,5 @@
 import { getStore } from '@netlify/blobs';
+import { requireAdmin } from '../lib/adminAuth.js';
 
 // 0Fの「書庫」に並ぶ複数のPDF本を、全訪問者で共有するためのAPI。
 // Netlify Blobsに、本の一覧(index)と各PDF本体(file:<id>)を保存する。
@@ -62,6 +63,12 @@ function sortBooks(books) {
 }
 
 export default async (req) => {
+    // 一覧などを見る（GET）のは誰でも。追加・変更・削除は管理画面のパスワードが合っているときだけ
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+        const denied = requireAdmin(req);
+        if (denied) return denied;
+    }
+
     const store = getStore({ name: STORE_NAME, consistency: 'strong' }); // 保存した直後に読み直しても最新の内容が返るようにする
 
     if (req.method === 'GET') {
